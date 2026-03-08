@@ -129,7 +129,7 @@ export default function App() {
   const [mastery, setMastery] = useState(6.4);
   const [slots, setSlots] = useState<string[]>(["", "", "", ""]);
   
-  // Le niveau est désormais calculé dynamiquement
+  // Le niveau est calculé dynamiquement
   const level = useMemo(() => parseFloat(((potential * mastery) / 10).toFixed(1)), [potential, mastery]);
 
   // État des amplifications (0 = éteint, 1 = option 1, 2 = option 2, etc.)
@@ -138,14 +138,6 @@ export default function App() {
   const tierInfo = useMemo(() => getTierInfo(level), [level]);
   const slotsUsed = useMemo(() => slots.filter(s => s !== "").length, [slots]);
   
-  const maxBoostsAllowed = useMemo(() => {
-    if (mastery >= 10) return 4;
-    if (mastery >= 9.5) return 3;
-    if (mastery >= 8.5) return 2;
-    if (mastery >= 1.6) return 1;
-    return 0;
-  }, [mastery]);
-
   const activeBoostsCount = useMemo(() => Object.values(boostState).filter(v => v > 0).length, [boostState]);
 
   // --- MOTEUR DE FUSION ET IDENTIFICATION DES STATS FORTES/FAIBLES ---
@@ -288,11 +280,8 @@ export default function App() {
       const oldCost = currentIdx > 0 ? options[currentIdx - 1].cost : 0;
       const netCost = opt.cost - oldCost;
 
-      const isNewBoost = currentIdx === 0;
-      const withinMaxBoosts = isNewBoost ? activeBoostsCount < maxBoostsAllowed : true;
-
-      // Est-ce qu'on a l'aura et le droit d'activer ça ?
-      if (auraRemaining >= netCost && withinMaxBoosts) {
+      // Est-ce qu'on a l'aura pour activer ça ? (La limite max n'existe plus)
+      if (auraRemaining >= netCost) {
         break; // Option valide trouvée !
       }
       nextIdx++;
@@ -413,7 +402,7 @@ export default function App() {
                 <span className="text-sm text-neutral-400 font-semibold uppercase tracking-wider">Amplifications Actives</span>
               </div>
               <span className="text-sm font-bold text-yellow-500 bg-yellow-500/10 px-3 py-1 rounded-full border border-yellow-500/30">
-                {activeBoostsCount} / {maxBoostsAllowed} Max
+                {activeBoostsCount} Stat{activeBoostsCount > 1 ? 's' : ''} Boostée{activeBoostsCount > 1 ? 's' : ''}
               </span>
             </div>
           </div>
@@ -492,8 +481,8 @@ export default function App() {
               const options = getBoostOptions(key);
               const isUnboostable = options.length === 0;
               
-              // Détermine si on ne peut pas l'activer pour la toute première fois à cause de limites
-              const cannotAffordInitial = !isBoosted && (activeBoostsCount >= maxBoostsAllowed || auraRemaining < (options[0]?.cost || 999));
+              // Détermine si on ne peut pas l'activer pour la toute première fois car on n'a plus l'Aura
+              const cannotAffordInitial = !isBoosted && (auraRemaining < (options[0]?.cost || 999));
 
               return (
                 <div key={key} className={`bg-neutral-950 border rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden group transition-colors duration-300

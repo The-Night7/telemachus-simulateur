@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Shield, Zap, Swords, Brain, Heart, ChevronDown, Layers, Lock, Battery, BatteryWarning, ChevronsUp } from 'lucide-react';
 import capacitesData from './capacites.json';
 
@@ -19,24 +19,9 @@ const getTierInfo = (level) => {
   return { name: "God-Tier", slots: 4, color: "text-yellow-400" };
 };
 
-// --- LOGIQUE DE DRAIN D'AURA ---
+// --- LOGIQUE DE DRAIN D'AURA DE BASE ---
 const getAuraCost = (niveau) => {
   return parseFloat((niveau * (niveau / 1.5)).toFixed(1));
-};
-
-const BOOST_AURA_COST = 5.0; // Coût fixe en aura par statistique amplifiée
-
-// --- NOUVELLES RÈGLES DE BOOST (FORT/FAIBLE) ---
-const getBoostRules = (mastery) => {
-  if (mastery >= 10) return { weak: 1.75, strong: 1.30, maxBoosts: 4 };
-  if (mastery >= 9.5) return { weak: 1.75, strong: 1.25, maxBoosts: 3 };
-  if (mastery >= 8.5) return { weak: 1.75, strong: 1.25, maxBoosts: 2 };
-  if (mastery >= 7.5) return { weak: 1.75, strong: 1.25, maxBoosts: 1 };
-  if (mastery >= 6.0) return { weak: 1.75, strong: 1.05, maxBoosts: 1 };
-  if (mastery >= 4.0) return { weak: 1.75, strong: 1.0, maxBoosts: 1 };
-  if (mastery >= 2.5) return { weak: 1.5, strong: 1.0, maxBoosts: 1 };
-  if (mastery >= 1.6) return { weak: 1.25, strong: 1.0, maxBoosts: 1 };
-  return { weak: 1.0, strong: 1.0, maxBoosts: 0 };
 };
 
 // --- 2. COMPOSANT GRAPHIQUE RADAR SVG SUR-MESURE ---
@@ -81,7 +66,7 @@ const RadarChart = ({ stats, boosts }) => {
           const val = stats[key] || 1;
           const r = (val / maxStat) * radius;
           const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
-          const isBoosted = boosts[key];
+          const isBoosted = boosts[key] > 0;
           
           return (
             <circle 
@@ -103,7 +88,7 @@ const RadarChart = ({ stats, boosts }) => {
           const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
           const currentRadius = (val / maxStat) * radius;
           const rText = Math.max(radius, currentRadius) + 35; 
-          const isBoosted = boosts[key];
+          const isBoosted = boosts[key] > 0;
           
           return (
             <text 
@@ -129,47 +114,37 @@ const RadarChart = ({ stats, boosts }) => {
 // --- 3. APPLICATION PRINCIPALE ---
 export default function App() {
   const [potential, setPotential] = useState(9.0);
-  const [mastery, setMastery] = useState(6.4); // Potentiel 9 * Maîtrise 6.4 / 10 = Niveau 5.8
+  const [mastery, setMastery] = useState(6.4);
   const [slots, setSlots] = useState(["", "", "", ""]);
   
+  // Le niveau est désormais calculé dynamiquement
   const level = useMemo(() => parseFloat(((potential * mastery) / 10).toFixed(1)), [potential, mastery]);
 
-  // NOUVEAU : État des amplifications
-  const [boosts, setBoosts] = useState({ power: false, speed: false, trick: false, recovery: false, defense: false });
+  // État des amplifications (0 = éteint, 1 = option 1, 2 = option 2, etc.)
+  const [boostState, setBoostState] = useState({ power: 0, speed: 0, trick: 0, recovery: 0, defense: 0 });
 
   const tierInfo = useMemo(() => getTierInfo(level), [level]);
   const slotsUsed = useMemo(() => slots.filter(s => s !== "").length, [slots]);
   
-  const boostRules = useMemo(() => getBoostRules(mastery), [mastery]);
-  const activeBoostsCount = useMemo(() => Object.values(boosts).filter(Boolean).length, [boosts]);
-  const maxBoostsAllowed = boostRules.maxBoosts;
+  const maxBoostsAllowed = useMemo(() => {
+    if (mastery >= 10) return 4;
+    if (mastery >= 7.5) return 3;
+    if (mastery >= 6.5) return 2;
+    if (mastery >= 1.6) return 1;
+    return 0;
+  }, [mastery]);
 
-  // --- LOGIQUE DE RÉSERVE D'AURA ---
-  const maxAura = useMemo(() => level * 10, [level]);
-  
-  const currentAuraDrain = useMemo(() => {
-    let drain = slots.reduce((total, slotId) => {
-      if (!slotId) return total;
-      const cap = capacitesData.find(c => c.id === parseInt(slotId));
-      return total + (cap ? getAuraCost(cap.niveau) : 0);
-    }, 0);
-    
-    // Ajout du coût des boosts actifs
-    drain += activeBoostsCount * BOOST_AURA_COST;
-    return parseFloat(drain.toFixed(1));
-  }, [slots, activeBoostsCount]);
+  const activeBoostsCount = useMemo(() => Object.values(boostState).filter(v => v > 0).length, [boostState]);
 
-  const auraRemaining = parseFloat((maxAura - currentAuraDrain).toFixed(1));
-  const auraPercentage = Math.min(100, (currentAuraDrain / maxAura) * 100);
-
-  // --- MOTEUR DE FUSION TELEMACHUS ---
-  const baseStats = useMemo(() => {
+  // --- MOTEUR DE FUSION ET IDENTIFICATION DES STATS FORTES/FAIBLES ---
+  // On sauvegarde la valeur copiée MAIS AUSSI le niveau de la capacité d'origine pour les règles de Strong/Weak
+  const baseStatsInfo = useMemo(() => {
     let stats = { 
-      power: 1, 
-      speed: 1, 
-      trick: level * 2.414, 
-      recovery: 1, 
-      defense: 1 
+      power: { val: 1, sourceLevel: level }, 
+      speed: { val: 1, sourceLevel: level }, 
+      trick: { val: level * 2.414, sourceLevel: level }, // Le Trick de base vient de Telemachus
+      recovery: { val: 1, sourceLevel: level }, 
+      defense: { val: 1, sourceLevel: level } 
     };
     
     slots.forEach((slotId, index) => {
@@ -182,33 +157,80 @@ export default function App() {
 
       for (let key in cap.stats_de_base) {
         let valeurCopiee = cap.stats_de_base[key] * ratio;
-        stats[key] = Math.max(stats[key], valeurCopiee);
+        if (valeurCopiee > stats[key].val) {
+          stats[key] = { val: valeurCopiee, sourceLevel: cap.niveau };
+        }
       }
     });
 
     return stats;
   }, [level, slots, tierInfo]);
 
-  // Déterminer la statistique la plus élevée pour identifier les stats "fortes" et "faibles"
-  const maxStatValue = useMemo(() => Math.max(...Object.values(baseStats)), [baseStats]);
-
-  const statsFinales = useMemo(() => {
-    let finalStats = { ...baseStats };
+  // --- LOGIQUE DES OPTIONS D'AMPLIFICATION ---
+  const getBoostOptions = useCallback((statKey) => {
+    const sourceLevel = baseStatsInfo[statKey].sourceLevel;
     
-    // Application des amplifications manuelles
-    for (let key of Object.keys(finalStats)) {
-      if (boosts[key]) {
-        // Une stat est considérée "forte" si elle est égale à la stat maximum de base
-        const isStrong = baseStats[key] >= maxStatValue - 0.01;
-        const multiplier = isStrong ? boostRules.strong : boostRules.weak;
-        finalStats[key] = finalStats[key] * multiplier;
-      }
+    // Strong <=> Niveau inférieur ou égal à Telemachus (Il est plus fort)
+    // Weak <=> Niveau supérieur à Telemachus (Il est plus faible)
+    const isStrong = sourceLevel <= level; 
+
+    let options = [];
+    if (isStrong) {
+      // TELEMACHUS EST FORT : Coûts en aura réduits, gros multiplicateurs possibles
+      if (mastery >= 1.6) options.push({ mult: mastery >= 10 ? 1.3 : 1.25, cost: 1.5, label: mastery >= 10 ? 'x1.3 (Très Faible)' : 'x1.25 (Très Faible)' });
+      if (mastery >= 2.5) options.push({ mult: 1.5, cost: 2.5, label: 'x1.5 (Faible)' });
+      if (mastery >= 4.0) options.push({ mult: 1.75, cost: 5.0, label: 'x1.75 (Standart)' });
+    } else {
+      // TELEMACHUS EST FAIBLE : Coûts en aura élevés, petits multiplicateurs (Max 1.5 au lvl 10)
+      if (mastery >= 6.0) options.push({ mult: 1.05, cost: 1.5, label: 'x1.05 (Très Faible)' });
+      if (mastery >= 7.5) options.push({ mult: mastery >= 10 ? 1.3 : 1.25, cost: mastery >= 10 ? 5.0 : 2.5, label: mastery >= 10 ? 'x1.3 (Standart)' : 'x1.25 (Faible)' });
+      if (mastery >= 10.0) options.push({ mult: 1.5, cost: 7.5, label: 'x1.5 (Elevé)' });
     }
+    return options;
+  }, [baseStatsInfo, level, mastery]);
 
+  // --- LOGIQUE DE RÉSERVE D'AURA ---
+  const maxAura = useMemo(() => level * 10, [level]);
+  
+  const currentAuraDrain = useMemo(() => {
+    // 1. Coût des capacités équipées
+    let drain = slots.reduce((total, slotId) => {
+      if (!slotId) return total;
+      const cap = capacitesData.find(c => c.id === parseInt(slotId));
+      return total + (cap ? getAuraCost(cap.niveau) : 0);
+    }, 0);
+    
+    // 2. Coût dynamique des amplifications actives
+    Object.keys(boostState).forEach(key => {
+      const idx = boostState[key];
+      if (idx > 0) {
+        const options = getBoostOptions(key);
+        if (options[idx - 1]) drain += options[idx - 1].cost;
+      }
+    });
+
+    return parseFloat(drain.toFixed(1));
+  }, [slots, boostState, getBoostOptions]);
+
+  const auraRemaining = parseFloat((maxAura - currentAuraDrain).toFixed(1));
+  const auraPercentage = Math.min(100, (currentAuraDrain / maxAura) * 100);
+
+  // --- STATS FINALES APRÈS BOOST ---
+  const statsFinales = useMemo(() => {
+    let finalStats = {};
+    for (let key in baseStatsInfo) {
+      let val = baseStatsInfo[key].val;
+      const idx = boostState[key];
+      if (idx > 0) {
+        const options = getBoostOptions(key);
+        if (options[idx - 1]) val *= options[idx - 1].mult;
+      }
+      finalStats[key] = val;
+    }
     return finalStats;
-  }, [baseStats, boosts, boostRules, maxStatValue]);
+  }, [baseStatsInfo, boostState, getBoostOptions]);
 
-  // Gestion de la modification d'un slot
+  // --- INTERACTIONS ---
   const updateSlot = (index, value) => {
     if (!value) {
       const newSlots = [...slots];
@@ -237,25 +259,39 @@ export default function App() {
     setSlots(newSlots);
   };
 
-  // Gestion du toggle pour amplifier une stat
-  const toggleBoost = (statKey) => {
-    setBoosts(prev => {
-      const isCurrentlyBoosted = prev[statKey];
-      if (isCurrentlyBoosted) {
-        return { ...prev, [statKey]: false };
-      } else {
-        const isStrong = baseStats[statKey] >= maxStatValue - 0.01;
-        const multiplier = isStrong ? boostRules.strong : boostRules.weak;
-        
-        if (multiplier <= 1.0) return prev; // Cette stat ne peut pas être amplifiée à ce niveau
-        if (activeBoostsCount >= maxBoostsAllowed) return prev; 
-        if (auraRemaining < BOOST_AURA_COST) return prev; 
-        return { ...prev, [statKey]: true };
+  // Gestion du Cycle des amplifications (Clic sur le bouton)
+  const handleBoostClick = (key) => {
+    const options = getBoostOptions(key);
+    if (options.length === 0) return;
+
+    const currentIdx = boostState[key]; // 0 = off, 1 = option1, etc.
+    let nextIdx = currentIdx + 1;
+
+    // Trouve la prochaine option abordable en aura
+    while (nextIdx <= options.length) {
+      const opt = options[nextIdx - 1];
+      const oldCost = currentIdx > 0 ? options[currentIdx - 1].cost : 0;
+      const netCost = opt.cost - oldCost;
+
+      const isNewBoost = currentIdx === 0;
+      const withinMaxBoosts = isNewBoost ? activeBoostsCount < maxBoostsAllowed : true;
+
+      // Est-ce qu'on a l'aura et le droit d'activer ça ?
+      if (auraRemaining >= netCost && withinMaxBoosts) {
+        break; // Option valide trouvée !
       }
-    });
+      nextIdx++;
+    }
+
+    // Si on dépasse la liste d'options, on éteint l'amplification (retour à 0)
+    if (nextIdx > options.length) {
+      nextIdx = 0; 
+    }
+
+    setBoostState(prev => ({ ...prev, [key]: nextIdx }));
   };
 
-  // Réinitialisation de sécurité si le niveau baisse trop
+  // Réinitialisation de sécurité si les statistiques de base changent radicalement
   useEffect(() => {
     const currentTier = getTierInfo(level);
     if (slotsUsed > currentTier.slots) {
@@ -266,15 +302,9 @@ export default function App() {
       setSlots(newSlots);
     }
     
-    // Annuler les boosts en cas de baisse de maîtrise réduisant le nombre max
-    setBoosts(prev => {
-      const activeCount = Object.values(prev).filter(Boolean).length;
-      if (activeCount > boostRules.maxBoosts) {
-        return { power: false, speed: false, trick: false, recovery: false, defense: false };
-      }
-      return prev;
-    });
-  }, [level, slotsUsed, boostRules.maxBoosts]);
+    // Annuler les boosts de précaution pour éviter les incohérences d'Aura
+    setBoostState({ power: 0, speed: 0, trick: 0, recovery: 0, defense: 0 });
+  }, [level, slotsUsed, mastery]);
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 font-sans p-4 md:p-8 selection:bg-yellow-500/30">
@@ -365,7 +395,7 @@ export default function App() {
             <div className="mt-4 pt-4 border-t border-neutral-800 flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <ChevronsUp size={16} className="text-yellow-500" />
-                <span className="text-sm text-neutral-400 font-semibold uppercase tracking-wider">Amplifications</span>
+                <span className="text-sm text-neutral-400 font-semibold uppercase tracking-wider">Amplifications Actives</span>
               </div>
               <span className="text-sm font-bold text-yellow-500 bg-yellow-500/10 px-3 py-1 rounded-full border border-yellow-500/30">
                 {activeBoostsCount} / {maxBoostsAllowed} Max
@@ -436,17 +466,19 @@ export default function App() {
           </div>
 
           <div className="w-full mb-8 mt-6">
-            <RadarChart stats={statsFinales} boosts={boosts} />
+            <RadarChart stats={statsFinales} boosts={boostState} />
           </div>
 
           <div className="w-full grid grid-cols-2 md:grid-cols-5 gap-3">
             {statConfig.map(({ key, label, Icon, color }) => {
-              const isBoosted = boosts[key];
-              const isStrong = baseStats[key] >= maxStatValue - 0.01;
-              const currentMultiplier = isStrong ? boostRules.strong : boostRules.weak;
+              const currentIdx = boostState[key];
+              const isBoosted = currentIdx > 0;
               
-              const isUnboostable = !isBoosted && currentMultiplier <= 1.0;
-              const isDisabled = !isBoosted && (activeBoostsCount >= maxBoostsAllowed || auraRemaining < BOOST_AURA_COST || isUnboostable);
+              const options = getBoostOptions(key);
+              const isUnboostable = options.length === 0;
+              
+              // Détermine si on ne peut pas l'activer pour la toute première fois à cause de limites
+              const cannotAffordInitial = !isBoosted && (activeBoostsCount >= maxBoostsAllowed || auraRemaining < (options[0]?.cost || 999));
 
               return (
                 <div key={key} className={`bg-neutral-950 border rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden group transition-colors duration-300
@@ -458,25 +490,33 @@ export default function App() {
                     {statsFinales[key].toFixed(1)}
                   </span>
 
-                  {/* Bouton d'amplification */}
+                  {/* Bouton de Cycle d'amplification */}
                   <button 
-                    onClick={() => toggleBoost(key)}
-                    disabled={isDisabled}
-                    className={`mt-3 w-full py-1.5 px-1 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all
+                    onClick={() => handleBoostClick(key)}
+                    disabled={isUnboostable || cannotAffordInitial}
+                    className={`mt-3 w-full py-2 px-1 rounded-lg text-[9px] md:text-[10px] font-bold uppercase tracking-wider flex flex-col items-center justify-center transition-all leading-tight
                       ${isBoosted 
                         ? 'bg-yellow-500 text-neutral-950 hover:bg-yellow-400' 
-                        : isDisabled 
+                        : isUnboostable || cannotAffordInitial
                           ? 'bg-neutral-900 text-neutral-600 cursor-not-allowed border border-neutral-800' 
                           : 'bg-neutral-900 text-neutral-400 hover:text-yellow-500 border border-neutral-700 hover:border-yellow-500/50'
                       }`}
                   >
-                    <ChevronsUp size={14} />
-                    {isBoosted 
-                      ? `x${currentMultiplier}` 
-                      : isUnboostable 
-                        ? 'Max Atteint' 
-                        : `Boost x${currentMultiplier}`
-                    }
+                    <div className="flex items-center gap-1">
+                      <ChevronsUp size={12} />
+                      {isBoosted 
+                        ? options[currentIdx - 1].label.split(' ')[0] // Affiche juste "x1.5"
+                        : isUnboostable 
+                          ? 'Non Dispo' 
+                          : 'Amplifier'
+                      }
+                    </div>
+                    {/* Affiche le sous-texte de coût uniquement si activé */}
+                    {isBoosted && (
+                      <span className="opacity-80 mt-0.5 text-[8px]">
+                        {options[currentIdx - 1].label.split(' ').slice(1).join(' ')}
+                      </span>
+                    )}
                   </button>
                 </div>
               );

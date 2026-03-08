@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Shield, Zap, Swords, Brain, Heart, ChevronDown, Layers, Lock, Battery, BatteryWarning } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Shield, Zap, Swords, Brain, Heart, ChevronDown, Layers, Lock, Battery, BatteryWarning, ChevronsUp } from 'lucide-react';
 import capacitesData from './capacites.json';
 
 const statConfig = [
@@ -24,13 +24,28 @@ const getAuraCost = (niveau) => {
   return parseFloat((niveau * (niveau / 1.5)).toFixed(1));
 };
 
+const BOOST_AURA_COST = 5.0; // Coût fixe en aura par statistique amplifiée
+
+// --- NOUVELLES RÈGLES DE BOOST (FORT/FAIBLE) ---
+const getBoostRules = (level) => {
+  if (level >= 10) return { weak: 1.75, strong: 1.30, maxBoosts: 3 };
+  if (level >= 9.5) return { weak: 1.75, strong: 1.25, maxBoosts: 3 };
+  if (level >= 8.5) return { weak: 1.75, strong: 1.25, maxBoosts: 2 };
+  if (level >= 7.5) return { weak: 1.75, strong: 1.25, maxBoosts: 1 };
+  if (level >= 6.0) return { weak: 1.75, strong: 1.05, maxBoosts: 1 };
+  if (level >= 4.0) return { weak: 1.75, strong: 1.0, maxBoosts: 1 };
+  if (level >= 2.5) return { weak: 1.5, strong: 1.0, maxBoosts: 1 };
+  if (level >= 1.6) return { weak: 1.25, strong: 1.0, maxBoosts: 1 };
+  return { weak: 1.0, strong: 1.0, maxBoosts: 0 };
+};
+
 // --- 2. COMPOSANT GRAPHIQUE RADAR SVG SUR-MESURE ---
-const RadarChart = ({ stats }) => {
+const RadarChart = ({ stats, boosts }) => {
   const maxStat = 10;
   const size = 500;
   const cx = size / 2;
   const cy = size / 2;
-  const radius = 130; // Légèrement réduit pour laisser de la place aux stats divines
+  const radius = 130; 
   const keys = ['power', 'speed', 'trick', 'recovery', 'defense'];
   const labels = ['Power', 'Speed', 'Trick', 'Recovery', 'Defense'];
 
@@ -66,8 +81,19 @@ const RadarChart = ({ stats }) => {
           const val = stats[key] || 1;
           const r = (val / maxStat) * radius;
           const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
+          const isBoosted = boosts[key];
+          
           return (
-            <circle key={`pt-${key}`} cx={cx + r * Math.cos(angle)} cy={cy + r * Math.sin(angle)} r="5" fill="#121212" stroke="#ffd700" strokeWidth="2.5" className="transition-all duration-500 ease-in-out" />
+            <circle 
+              key={`pt-${key}`} 
+              cx={cx + r * Math.cos(angle)} 
+              cy={cy + r * Math.sin(angle)} 
+              r={isBoosted ? "7" : "5"} 
+              fill={isBoosted ? "#ffd700" : "#121212"} 
+              stroke="#ffd700" 
+              strokeWidth="2.5" 
+              className="transition-all duration-500 ease-in-out" 
+            />
           )
         })}
         
@@ -77,10 +103,21 @@ const RadarChart = ({ stats }) => {
           const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
           const currentRadius = (val / maxStat) * radius;
           const rText = Math.max(radius, currentRadius) + 35; 
+          const isBoosted = boosts[key];
           
           return (
-            <text key={`lbl-${key}`} x={cx + rText * Math.cos(angle)} y={cy + rText * Math.sin(angle)} fill="#ffd700" fontSize="14" fontWeight="bold" textAnchor="middle" dominantBaseline="middle" className="tracking-wider uppercase opacity-90 transition-all duration-500 ease-in-out">
-              {labels[i]}
+            <text 
+              key={`lbl-${key}`} 
+              x={cx + rText * Math.cos(angle)} 
+              y={cy + rText * Math.sin(angle)} 
+              fill={isBoosted ? "#ffffff" : "#ffd700"} 
+              fontSize="14" 
+              fontWeight="bold" 
+              textAnchor="middle" 
+              dominantBaseline="middle" 
+              className={`tracking-wider uppercase opacity-90 transition-all duration-500 ease-in-out ${isBoosted ? 'drop-shadow-[0_0_8px_rgba(255,215,0,0.8)]' : ''}`}
+            >
+              {labels[i]} {isBoosted && '↑'}
             </text>
           )
         })}
@@ -93,28 +130,37 @@ const RadarChart = ({ stats }) => {
 export default function App() {
   const [level, setLevel] = useState(5.8);
   const [slots, setSlots] = useState(["", "", "", ""]);
+  
+  // NOUVEAU : État des amplifications
+  const [boosts, setBoosts] = useState({ power: false, speed: false, trick: false, recovery: false, defense: false });
 
   const tierInfo = useMemo(() => getTierInfo(level), [level]);
-  
   const slotsUsed = useMemo(() => slots.filter(s => s !== "").length, [slots]);
+  
+  const boostRules = useMemo(() => getBoostRules(level), [level]);
+  const activeBoostsCount = useMemo(() => Object.values(boosts).filter(Boolean).length, [boosts]);
+  const maxBoostsAllowed = boostRules.maxBoosts;
 
   // --- LOGIQUE DE RÉSERVE D'AURA ---
   const maxAura = useMemo(() => level * 10, [level]);
   
   const currentAuraDrain = useMemo(() => {
-    return slots.reduce((total, slotId) => {
+    let drain = slots.reduce((total, slotId) => {
       if (!slotId) return total;
       const cap = capacitesData.find(c => c.id === parseInt(slotId));
       return total + (cap ? getAuraCost(cap.niveau) : 0);
     }, 0);
-  }, [slots]);
+    
+    // Ajout du coût des boosts actifs
+    drain += activeBoostsCount * BOOST_AURA_COST;
+    return parseFloat(drain.toFixed(1));
+  }, [slots, activeBoostsCount]);
 
   const auraRemaining = parseFloat((maxAura - currentAuraDrain).toFixed(1));
   const auraPercentage = Math.min(100, (currentAuraDrain / maxAura) * 100);
 
   // --- MOTEUR DE FUSION TELEMACHUS ---
-  const statsFinales = useMemo(() => {
-    // Stats de base : Trick = 2.414 * Niveau, les autres à 1
+  const baseStats = useMemo(() => {
     let stats = { 
       power: 1, 
       speed: 1, 
@@ -124,18 +170,15 @@ export default function App() {
     };
     
     slots.forEach((slotId, index) => {
-      // Ignorer les slots vides ou verrouillés par le tier actuel
       if (!slotId || index >= tierInfo.slots) return;
       
       const cap = capacitesData.find(c => c.id === parseInt(slotId));
       if (!cap) return;
       
-      // Formule de copie : (Stat de la capacité / Niveau de la capacité) * Niveau Telemachus
       const ratio = level / cap.niveau;
 
       for (let key in cap.stats_de_base) {
         let valeurCopiee = cap.stats_de_base[key] * ratio;
-        // Telemachus conserve la meilleure stat entre sa base et toutes ses copies
         stats[key] = Math.max(stats[key], valeurCopiee);
       }
     });
@@ -143,6 +186,26 @@ export default function App() {
     return stats;
   }, [level, slots, tierInfo]);
 
+  // Déterminer la statistique la plus élevée pour identifier les stats "fortes" et "faibles"
+  const maxStatValue = useMemo(() => Math.max(...Object.values(baseStats)), [baseStats]);
+
+  const statsFinales = useMemo(() => {
+    let finalStats = { ...baseStats };
+    
+    // Application des amplifications manuelles
+    for (let key of Object.keys(finalStats)) {
+      if (boosts[key]) {
+        // Une stat est considérée "forte" si elle est égale à la stat maximum de base
+        const isStrong = baseStats[key] >= maxStatValue - 0.01;
+        const multiplier = isStrong ? boostRules.strong : boostRules.weak;
+        finalStats[key] = finalStats[key] * multiplier;
+      }
+    }
+
+    return finalStats;
+  }, [baseStats, boosts, boostRules, maxStatValue]);
+
+  // Gestion de la modification d'un slot
   const updateSlot = (index, value) => {
     if (!value) {
       const newSlots = [...slots];
@@ -163,7 +226,7 @@ export default function App() {
     const projectedAuraDrain = currentAuraDrain - currentDrainInThisSlot + newDrain;
 
     if (projectedAuraDrain > maxAura) {
-      return; // Pas assez d'aura pour amplifier cette capacité
+      return; // Pas assez d'aura
     }
 
     const newSlots = [...slots];
@@ -171,8 +234,26 @@ export default function App() {
     setSlots(newSlots);
   };
 
-  // Ajustement automatique des slots si on descend de niveau
-  React.useEffect(() => {
+  // Gestion du toggle pour amplifier une stat
+  const toggleBoost = (statKey) => {
+    setBoosts(prev => {
+      const isCurrentlyBoosted = prev[statKey];
+      if (isCurrentlyBoosted) {
+        return { ...prev, [statKey]: false };
+      } else {
+        const isStrong = baseStats[statKey] >= maxStatValue - 0.01;
+        const multiplier = isStrong ? boostRules.strong : boostRules.weak;
+        
+        if (multiplier <= 1.0) return prev; // Cette stat ne peut pas être amplifiée à ce niveau
+        if (activeBoostsCount >= maxBoostsAllowed) return prev; 
+        if (auraRemaining < BOOST_AURA_COST) return prev; 
+        return { ...prev, [statKey]: true };
+      }
+    });
+  };
+
+  // Réinitialisation de sécurité si le niveau baisse trop
+  useEffect(() => {
     const currentTier = getTierInfo(level);
     if (slotsUsed > currentTier.slots) {
       const newSlots = [...slots];
@@ -181,6 +262,9 @@ export default function App() {
       }
       setSlots(newSlots);
     }
+    
+    // Annuler les boosts en cas de baisse de niveau réduisant le nombre max
+    setBoosts({ power: false, speed: false, trick: false, recovery: false, defense: false });
   }, [level]);
 
   return (
@@ -238,40 +322,31 @@ export default function App() {
               </div>
             </div>
             
-            {/* Barre de progression d'Aura */}
             <div className="h-4 w-full bg-neutral-950 rounded-full overflow-hidden border border-neutral-800 relative">
               <div 
                 className={`h-full transition-all duration-500 ease-out ${auraPercentage > 90 ? 'bg-red-500' : 'bg-gradient-to-r from-yellow-600 to-yellow-400'}`}
                 style={{ width: `${auraPercentage}%` }}
               ></div>
             </div>
-            {auraRemaining <= 5 && (
-              <p className="text-red-400 text-xs font-bold mt-3 flex items-center gap-1">
-                <BatteryWarning size={14} /> Attention, réserves d'aura critiques !
-              </p>
-            )}
-          </div>
 
-          {/* RESERVES DE SLOTS */}
-          <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl shadow-xl">
-            <div className="flex justify-between items-end mb-3">
-              <div>
-                <h2 className="text-neutral-200 font-bold text-lg flex items-center gap-2">
-                  <Layers size={20} className="text-yellow-500" /> 
-                  Emplacements de Copie
-                </h2>
-                <p className="text-xs text-neutral-500 mt-1">Le nombre de capacités copiables dépend du Tier.</p>
+            {/* Section Info Amplifications */}
+            <div className="mt-4 pt-4 border-t border-neutral-800 flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <ChevronsUp size={16} className="text-yellow-500" />
+                <span className="text-sm text-neutral-400 font-semibold uppercase tracking-wider">Amplifications</span>
               </div>
-              <div className="text-right flex items-baseline gap-1">
-                <span className="text-2xl font-black text-yellow-500">{slotsUsed}</span>
-                <span className="text-neutral-500 text-sm font-bold">/ {tierInfo.slots}</span>
-              </div>
+              <span className="text-sm font-bold text-yellow-500 bg-yellow-500/10 px-3 py-1 rounded-full border border-yellow-500/30">
+                {activeBoostsCount} / {maxBoostsAllowed} Max
+              </span>
             </div>
           </div>
 
           {/* Emplacements de copie */}
           <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl shadow-xl space-y-4">
-            <h2 className="text-neutral-400 font-semibold mb-4 text-sm uppercase tracking-wider">Auras Copiées</h2>
+            <h2 className="text-neutral-400 font-semibold mb-4 text-sm uppercase tracking-wider flex items-center gap-2">
+              <Layers size={18} />
+              Auras Copiées ({slotsUsed}/{tierInfo.slots})
+            </h2>
             
             {[0, 1, 2, 3].map((index) => {
               const isLocked = index >= tierInfo.slots;
@@ -304,7 +379,7 @@ export default function App() {
                   
                   {/* Indicateur de coût d'aura */}
                   {slotValue && currentCap && !isLocked && (
-                    <div className="absolute right-12 top-1/2 -translate-y-1/2 text-xs font-bold text-yellow-500/70 bg-yellow-500/10 px-2 py-1 rounded-md">
+                    <div className="absolute right-12 top-1/2 -translate-y-1/2 text-xs font-bold text-yellow-500/70 bg-yellow-500/10 px-2 py-1 rounded-md border border-yellow-500/20">
                       -{getAuraCost(currentCap.niveau)}
                     </div>
                   )}
@@ -329,21 +404,51 @@ export default function App() {
           </div>
 
           <div className="w-full mb-8 mt-6">
-            <RadarChart stats={statsFinales} />
+            <RadarChart stats={statsFinales} boosts={boosts} />
           </div>
 
           <div className="w-full grid grid-cols-2 md:grid-cols-5 gap-3">
-            {statConfig.map(({ key, label, Icon, color }) => (
-              <div key={key} className={`bg-neutral-950 border rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden group transition-colors duration-300
-                ${key === 'trick' && slotsUsed === 0 ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-neutral-800'}`}>
-                <div className={`absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity bg-current ${color}`}></div>
-                <Icon size={20} className={`mb-2 ${color} opacity-80`} />
-                <span className="text-xs text-neutral-400 uppercase tracking-wider font-semibold mb-1">{label}</span>
-                <span className="text-xl font-black text-neutral-100">
-                  {statsFinales[key].toFixed(1)}
-                </span>
-              </div>
-            ))}
+            {statConfig.map(({ key, label, Icon, color }) => {
+              const isBoosted = boosts[key];
+              const isStrong = baseStats[key] >= maxStatValue - 0.01;
+              const currentMultiplier = isStrong ? boostRules.strong : boostRules.weak;
+              
+              const isUnboostable = !isBoosted && currentMultiplier <= 1.0;
+              const isDisabled = !isBoosted && (activeBoostsCount >= maxBoostsAllowed || auraRemaining < BOOST_AURA_COST || isUnboostable);
+
+              return (
+                <div key={key} className={`bg-neutral-950 border rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden group transition-colors duration-300
+                  ${isBoosted ? 'border-yellow-500 bg-yellow-500/10' : 'border-neutral-800'}`}>
+                  
+                  <Icon size={20} className={`mb-2 ${isBoosted ? 'text-yellow-500' : color} opacity-80`} />
+                  <span className="text-xs text-neutral-400 uppercase tracking-wider font-semibold mb-1">{label}</span>
+                  <span className={`text-xl font-black ${isBoosted ? 'text-yellow-400' : 'text-neutral-100'}`}>
+                    {statsFinales[key].toFixed(1)}
+                  </span>
+
+                  {/* Bouton d'amplification */}
+                  <button 
+                    onClick={() => toggleBoost(key)}
+                    disabled={isDisabled}
+                    className={`mt-3 w-full py-1.5 px-1 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all
+                      ${isBoosted 
+                        ? 'bg-yellow-500 text-neutral-950 hover:bg-yellow-400' 
+                        : isDisabled 
+                          ? 'bg-neutral-900 text-neutral-600 cursor-not-allowed border border-neutral-800' 
+                          : 'bg-neutral-900 text-neutral-400 hover:text-yellow-500 border border-neutral-700 hover:border-yellow-500/50'
+                      }`}
+                  >
+                    <ChevronsUp size={14} />
+                    {isBoosted 
+                      ? `x${currentMultiplier}` 
+                      : isUnboostable 
+                        ? 'Max Atteint' 
+                        : `Boost x${currentMultiplier}`
+                    }
+                  </button>
+                </div>
+              );
+            })}
           </div>
 
         </div>

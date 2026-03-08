@@ -140,8 +140,8 @@ export default function App() {
   
   const maxBoostsAllowed = useMemo(() => {
     if (mastery >= 10) return 4;
-    if (mastery >= 7.5) return 3;
-    if (mastery >= 6.5) return 2;
+    if (mastery >= 9.5) return 3;
+    if (mastery >= 8.5) return 2;
     if (mastery >= 1.6) return 1;
     return 0;
   }, [mastery]);
@@ -149,7 +149,6 @@ export default function App() {
   const activeBoostsCount = useMemo(() => Object.values(boostState).filter(v => v > 0).length, [boostState]);
 
   // --- MOTEUR DE FUSION ET IDENTIFICATION DES STATS FORTES/FAIBLES ---
-  // On sauvegarde la valeur copiée MAIS AUSSI le niveau de la capacité d'origine pour les règles de Strong/Weak
   const baseStatsInfo = useMemo(() => {
     let stats: Record<string, StatInfo> = { 
       power: { val: 1, sourceLevel: level }, 
@@ -184,21 +183,23 @@ export default function App() {
   const getBoostOptions = useCallback((statKey: string): BoostOption[] => {
     const sourceLevel = baseStatsInfo[statKey].sourceLevel;
     
-    // Strong <=> Niveau inférieur ou égal à Telemachus (Il est plus fort)
-    // Weak <=> Niveau supérieur à Telemachus (Il est plus faible)
-    const isStrong = sourceLevel <= level; 
+    // Si la capacité ciblée a un niveau inférieur ou égal, Telemachus est "Strong"
+    // Si la capacité ciblée a un niveau supérieur, Telemachus est "Weak"
+    const isTelemachusStrong = sourceLevel <= level; 
 
     let options: BoostOption[] = [];
-    if (isStrong) {
-      // TELEMACHUS EST FORT : Coûts en aura réduits, gros multiplicateurs possibles
+    if (isTelemachusStrong) {
+      // TELEMACHUS EST STRONG (Cible "Faible")
+      // Coûts d'Aura réduits et gros boosts possibles (jusqu'à x1.75 Standard)
       if (mastery >= 1.6) options.push({ mult: mastery >= 10 ? 1.3 : 1.25, cost: 1.5, label: mastery >= 10 ? 'x1.3 (Très Faible)' : 'x1.25 (Très Faible)' });
       if (mastery >= 2.5) options.push({ mult: 1.5, cost: 2.5, label: 'x1.5 (Faible)' });
-      if (mastery >= 4.0) options.push({ mult: 1.75, cost: 5.0, label: 'x1.75 (Standart)' });
+      if (mastery >= 4.0) options.push({ mult: 1.75, cost: 5.0, label: 'x1.75 (Standard)' });
     } else {
-      // TELEMACHUS EST FAIBLE : Coûts en aura élevés, petits multiplicateurs (Max 1.5 au lvl 10)
-      if (mastery >= 6.0) options.push({ mult: 1.05, cost: 1.5, label: 'x1.05 (Très Faible)' });
-      if (mastery >= 7.5) options.push({ mult: mastery >= 10 ? 1.3 : 1.25, cost: mastery >= 10 ? 5.0 : 2.5, label: mastery >= 10 ? 'x1.3 (Standart)' : 'x1.25 (Faible)' });
-      if (mastery >= 10.0) options.push({ mult: 1.5, cost: 7.5, label: 'x1.5 (Elevé)' });
+      // TELEMACHUS EST WEAK (Cible "Forte")
+      // Coûts d'Aura élevés et petits boosts (jusqu'à x1.5 Élevé)
+      if (mastery >= 6.0) options.push({ mult: 1.05, cost: 2.5, label: 'x1.05 (Faible)' });
+      if (mastery >= 7.5) options.push({ mult: mastery >= 10 ? 1.3 : 1.25, cost: 5.0, label: mastery >= 10 ? 'x1.3 (Standard)' : 'x1.25 (Standard)' });
+      if (mastery >= 8.5) options.push({ mult: 1.5, cost: 7.5, label: 'x1.5 (Élevé)' });
     }
     return options;
   }, [baseStatsInfo, level, mastery]);

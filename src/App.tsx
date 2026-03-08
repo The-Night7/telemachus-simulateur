@@ -232,7 +232,12 @@ export default function App() {
         const options = getBoostOptions(key);
         if (options[idx - 1]) val *= options[idx - 1].mult;
       }
-      finalStats[key] = val;
+      
+      // OPTION 1 : Arrondi à 1 décimale (ex: 7.5, 6.2) - Recommandé
+      // finalStats[key] = Math.round(val * 10) / 10;
+      
+      // OPTION 2 : Arrondi à l'entier le plus proche (ex: 7, 6)
+      finalStats[key] = Math.round(val);
     }
     return finalStats;
   }, [baseStatsInfo, boostState, getBoostOptions]);

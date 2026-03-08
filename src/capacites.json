@@ -1824,5 +1824,269 @@
             "recovery": 1.125,
             "defense": 0.25
         }
+    },
+    {
+        "id": 84,
+        "nom_personnage": "Telemachus",
+        "nom_capacite": "Aura Deity",
+        "niveau": 6.2,
+        "tier": "God Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 1.0,
+            "speed": 1.0,
+            "trick": 15.0,
+            "recovery": 1.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 0.16129032258064516,
+            "speed": 0.16129032258064516,
+            "trick": 2.4193548387096775,
+            "recovery": 0.16129032258064516,
+            "defense": 0.16129032258064516
+        }
+    },
+    {
+        "id": 85,
+        "nom_personnage": "Mitsu",
+        "nom_capacite": "Faucheuse Fantome",
+        "niveau": 5.3,
+        "tier": "High Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 6.0,
+            "speed": 4.0,
+            "trick": 8.0,
+            "recovery": 3.0,
+            "defense": 3.0
+        },
+        "ratios_stats": {
+            "power": 1.1320754716981132,
+            "speed": 0.7547169811320755,
+            "trick": 1.509433962264151,
+            "recovery": 0.5660377358490566,
+            "defense": 0.5660377358490566
+        }
+    },
+    {
+        "id": 86,
+        "nom_personnage": "Joyce",
+        "nom_capacite": "Slow Punch",
+        "niveau": 2.6,
+        "tier": "Mid Tier",
+        "stat_principale": "speed",
+        "stats_de_base": {
+            "power": 1.0,
+            "speed": 3.0,
+            "trick": 3.0,
+            "recovery": 2.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 0.3846153846153846,
+            "speed": 1.1538461538461537,
+            "trick": 1.1538461538461537,
+            "recovery": 0.7692307692307692,
+            "defense": 0.3846153846153846
+        }
+    },
+    {
+        "id": 87,
+        "nom_personnage": "Marc",
+        "nom_capacite": "Modes (Bal)",
+        "niveau": 8.6,
+        "tier": "God Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 8.0,
+            "speed": 8.0,
+            "trick": 14.0,
+            "recovery": 8.0,
+            "defense": 8.0
+        },
+        "ratios_stats": {
+            "power": 0.9302325581395349,
+            "speed": 0.9302325581395349,
+            "trick": 1.627906976744186,
+            "recovery": 0.9302325581395349,
+            "defense": 0.9302325581395349
+        }
+    },
+    {
+        "id": 88,
+        "nom_personnage": "Marc",
+        "nom_capacite": "Modes (Atk)",
+        "niveau": 8.6,
+        "tier": "God Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 12.0,
+            "speed": 8.0,
+            "trick": 14.0,
+            "recovery": 3.0,
+            "defense": 3.0
+        },
+        "ratios_stats": {
+            "power": 1.3953488372093024,
+            "speed": 0.9302325581395349,
+            "trick": 1.627906976744186,
+            "recovery": 0.3488372093023256,
+            "defense": 0.3488372093023256
+        }
+    },
+    {
+        "id": 89,
+        "nom_personnage": "Marc",
+        "nom_capacite": "Modes (Def)",
+        "niveau": 8.6,
+        "tier": "God Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 3.0,
+            "speed": 3.0,
+            "trick": 14.0,
+            "recovery": 8.0,
+            "defense": 12.0
+        },
+        "ratios_stats": {
+            "power": 0.3488372093023256,
+            "speed": 0.3488372093023256,
+            "trick": 1.627906976744186,
+            "recovery": 0.9302325581395349,
+            "defense": 1.3953488372093024
+        }
+    },
+    {
+        "id": 90,
+        "nom_personnage": "Marc",
+        "nom_capacite": "Modes (Spd)",
+        "niveau": 8.6,
+        "tier": "God Tier",
+        "stat_principale": "speed",
+        "stats_de_base": {
+            "power": 3.0,
+            "speed": 14.0,
+            "trick": 14.0,
+            "recovery": 3.0,
+            "defense": 3.0
+        },
+        "ratios_stats": {
+            "power": 0.3488372093023256,
+            "speed": 1.627906976744186,
+            "trick": 1.627906976744186,
+            "recovery": 0.3488372093023256,
+            "defense": 0.3488372093023256
+        }
+    },
+    {
+        "id": 91,
+        "nom_personnage": "Marc",
+        "nom_capacite": "Modes (Dst)",
+        "niveau": 8.6,
+        "tier": "God Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 14.0,
+            "speed": 3.0,
+            "trick": 14.0,
+            "recovery": 3.0,
+            "defense": 3.0
+        },
+        "ratios_stats": {
+            "power": 1.627906976744186,
+            "speed": 0.3488372093023256,
+            "trick": 1.627906976744186,
+            "recovery": 0.3488372093023256,
+            "defense": 0.3488372093023256
+        }
+    },
+    {
+        "id": 92,
+        "nom_personnage": "Ice",
+        "nom_capacite": "Ice",
+        "niveau": 5.5,
+        "tier": "High Tier",
+        "stat_principale": "defense",
+        "stats_de_base": {
+            "power": 5.0,
+            "speed": 3.0,
+            "trick": 4.0,
+            "recovery": 6.0,
+            "defense": 7.0
+        },
+        "ratios_stats": {
+            "power": 0.9090909090909091,
+            "speed": 0.5454545454545454,
+            "trick": 0.7272727272727273,
+            "recovery": 1.0909090909090908,
+            "defense": 1.2727272727272727
+        }
+    },
+    {
+        "id": 93,
+        "nom_personnage": "Power",
+        "nom_capacite": "Graviton",
+        "niveau": 4.8,
+        "tier": "Elite Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 6.0,
+            "speed": 3.0,
+            "trick": 7.0,
+            "recovery": 2.0,
+            "defense": 5.0
+        },
+        "ratios_stats": {
+            "power": 1.25,
+            "speed": 0.625,
+            "trick": 1.4583333333333335,
+            "recovery": 0.4166666666666667,
+            "defense": 1.0416666666666667
+        }
+    },
+    {
+        "id": 94,
+        "nom_personnage": "Lucian",
+        "nom_capacite": "Pride",
+        "niveau": 4.6,
+        "tier": "Elite Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 6.0,
+            "speed": 1.0,
+            "trick": 7.0,
+            "recovery": 5.0,
+            "defense": 3.0
+        },
+        "ratios_stats": {
+            "power": 1.3043478260869565,
+            "speed": 0.2173913043478261,
+            "trick": 1.5217391304347827,
+            "recovery": 1.0869565217391306,
+            "defense": 0.6521739130434783
+        }
+    },
+    {
+        "id": 95,
+        "nom_personnage": "Rin",
+        "nom_capacite": "Shadow Eclipse",
+        "niveau": 4.9,
+        "tier": "Elite Tier",
+        "stat_principale": "speed",
+        "stats_de_base": {
+            "power": 4.0,
+            "speed": 5.5,
+            "trick": 5.4,
+            "recovery": 3.0,
+            "defense": 4.5
+        },
+        "ratios_stats": {
+            "power": 0.8163265306122448,
+            "speed": 1.1224489795918366,
+            "trick": 1.1020408163265305,
+            "recovery": 0.6122448979591836,
+            "defense": 0.9183673469387754
+        }
     }
 ]

@@ -126,7 +126,7 @@ const RadarChart = ({ stats, boosts }: { stats: Record<string, number>, boosts: 
 // --- 3. APPLICATION PRINCIPALE ---
 export default function App() {
   const [potential, setPotential] = useState(9.0);
-  const [mastery, setMastery] = useState(6.4);
+  const [mastery, setMastery] = useState(6.9);
   const [slots, setSlots] = useState<string[]>(["", "", "", ""]);
   
   // Le niveau est calculé dynamiquement

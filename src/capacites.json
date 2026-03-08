@@ -1,0 +1,1828 @@
+[
+    {
+        "id": 1,
+        "nom_personnage": "Uru-chan",
+        "nom_capacite": "Troll",
+        "niveau": 1.2,
+        "tier": "Low Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 1.0,
+            "speed": 1.0,
+            "trick": 2.0,
+            "recovery": 0.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 0.8333333333333334,
+            "speed": 0.8333333333333334,
+            "trick": 1.6666666666666667,
+            "recovery": 0.0,
+            "defense": 0.8333333333333334
+        }
+    },
+    {
+        "id": 2,
+        "nom_personnage": "Evie",
+        "nom_capacite": "Illumination",
+        "niveau": 1.5,
+        "tier": "Low Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 1.0,
+            "speed": 1.0,
+            "trick": 2.0,
+            "recovery": 1.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 0.6666666666666666,
+            "speed": 0.6666666666666666,
+            "trick": 1.3333333333333333,
+            "recovery": 0.6666666666666666,
+            "defense": 0.6666666666666666
+        }
+    },
+    {
+        "id": 3,
+        "nom_personnage": "Lin",
+        "nom_capacite": "Needles",
+        "niveau": 1.8,
+        "tier": "Low Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 1.0,
+            "speed": 1.0,
+            "trick": 2.0,
+            "recovery": 1.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 0.5555555555555556,
+            "speed": 0.5555555555555556,
+            "trick": 1.1111111111111112,
+            "recovery": 0.5555555555555556,
+            "defense": 0.5555555555555556
+        }
+    },
+    {
+        "id": 4,
+        "nom_personnage": "Hower",
+        "nom_capacite": "Heat Palm",
+        "niveau": 2.1,
+        "tier": "Mid Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 2.0,
+            "speed": 1.0,
+            "trick": 2.0,
+            "recovery": 1.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 0.9523809523809523,
+            "speed": 0.47619047619047616,
+            "trick": 0.9523809523809523,
+            "recovery": 0.47619047619047616,
+            "defense": 0.47619047619047616
+        }
+    },
+    {
+        "id": 5,
+        "nom_personnage": "Rouker",
+        "nom_capacite": "Missiles",
+        "niveau": 2.2,
+        "tier": "Mid Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 3.0,
+            "speed": 2.0,
+            "trick": 3.0,
+            "recovery": 1.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 1.3636363636363635,
+            "speed": 0.9090909090909091,
+            "trick": 1.3636363636363635,
+            "recovery": 0.45454545454545453,
+            "defense": 0.45454545454545453
+        }
+    },
+    {
+        "id": 6,
+        "nom_personnage": "Bimel",
+        "nom_capacite": "Rock Arm",
+        "niveau": 2.4,
+        "tier": "Mid Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 2.0,
+            "speed": 1.0,
+            "trick": 1.0,
+            "recovery": 1.0,
+            "defense": 2.0
+        },
+        "ratios_stats": {
+            "power": 0.8333333333333334,
+            "speed": 0.4166666666666667,
+            "trick": 0.4166666666666667,
+            "recovery": 0.4166666666666667,
+            "defense": 0.8333333333333334
+        }
+    },
+    {
+        "id": 7,
+        "nom_personnage": "Bryce",
+        "nom_capacite": "Quick Strike",
+        "niveau": 2.4,
+        "tier": "Mid Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 2.0,
+            "speed": 2.0,
+            "trick": 2.0,
+            "recovery": 1.0,
+            "defense": 2.0
+        },
+        "ratios_stats": {
+            "power": 0.8333333333333334,
+            "speed": 0.8333333333333334,
+            "trick": 0.8333333333333334,
+            "recovery": 0.4166666666666667,
+            "defense": 0.8333333333333334
+        }
+    },
+    {
+        "id": 8,
+        "nom_personnage": "Crail",
+        "nom_capacite": "Strong Punch",
+        "niveau": 2.4,
+        "tier": "Mid Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 4.0,
+            "speed": 1.0,
+            "trick": 1.0,
+            "recovery": 1.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 1.6666666666666667,
+            "speed": 0.4166666666666667,
+            "trick": 0.4166666666666667,
+            "recovery": 0.4166666666666667,
+            "defense": 0.4166666666666667
+        }
+    },
+    {
+        "id": 9,
+        "nom_personnage": "Skrev",
+        "nom_capacite": "Strong Kick",
+        "niveau": 2.4,
+        "tier": "Mid Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 3.0,
+            "speed": 2.0,
+            "trick": 1.0,
+            "recovery": 1.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 1.25,
+            "speed": 0.8333333333333334,
+            "trick": 0.4166666666666667,
+            "recovery": 0.4166666666666667,
+            "defense": 0.4166666666666667
+        }
+    },
+    {
+        "id": 10,
+        "nom_personnage": "Weim",
+        "nom_capacite": "Phantom Fist",
+        "niveau": 2.4,
+        "tier": "Mid Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 2.0,
+            "speed": 1.0,
+            "trick": 2.0,
+            "recovery": 1.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 0.8333333333333334,
+            "speed": 0.4166666666666667,
+            "trick": 0.8333333333333334,
+            "recovery": 0.4166666666666667,
+            "defense": 0.4166666666666667
+        }
+    },
+    {
+        "id": 11,
+        "nom_personnage": "Wenqi",
+        "nom_capacite": "Speed",
+        "niveau": 2.4,
+        "tier": "Mid Tier",
+        "stat_principale": "speed",
+        "stats_de_base": {
+            "power": 2.0,
+            "speed": 3.0,
+            "trick": 3.0,
+            "recovery": 1.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 0.8333333333333334,
+            "speed": 1.25,
+            "trick": 1.25,
+            "recovery": 0.4166666666666667,
+            "defense": 0.4166666666666667
+        }
+    },
+    {
+        "id": 12,
+        "nom_personnage": "Wyatt",
+        "nom_capacite": "Charge Shot",
+        "niveau": 2.4,
+        "tier": "Mid Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 3.0,
+            "speed": 1.0,
+            "trick": 2.0,
+            "recovery": 1.0,
+            "defense": 2.0
+        },
+        "ratios_stats": {
+            "power": 1.25,
+            "speed": 0.4166666666666667,
+            "trick": 0.8333333333333334,
+            "recovery": 0.4166666666666667,
+            "defense": 0.8333333333333334
+        }
+    },
+    {
+        "id": 13,
+        "nom_personnage": "Juni",
+        "nom_capacite": "Flash Forward",
+        "niveau": 2.5,
+        "tier": "Mid Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 1.0,
+            "speed": 1.0,
+            "trick": 3.0,
+            "recovery": 2.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 0.4,
+            "speed": 0.4,
+            "trick": 1.2,
+            "recovery": 0.8,
+            "defense": 0.4
+        }
+    },
+    {
+        "id": 14,
+        "nom_personnage": "Krolik",
+        "nom_capacite": "Lazor",
+        "niveau": 2.5,
+        "tier": "Mid Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 3.0,
+            "speed": 1.0,
+            "trick": 2.0,
+            "recovery": 1.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 1.2,
+            "speed": 0.4,
+            "trick": 0.8,
+            "recovery": 0.4,
+            "defense": 0.4
+        }
+    },
+    {
+        "id": 15,
+        "nom_personnage": "Clio",
+        "nom_capacite": "Dizzy Punch",
+        "niveau": 2.6,
+        "tier": "Mid Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 1.0,
+            "speed": 1.0,
+            "trick": 3.0,
+            "recovery": 2.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 0.3846153846153846,
+            "speed": 0.3846153846153846,
+            "trick": 1.1538461538461537,
+            "recovery": 0.7692307692307692,
+            "defense": 0.3846153846153846
+        }
+    },
+    {
+        "id": 16,
+        "nom_personnage": "Emerson",
+        "nom_capacite": "Hand Blade",
+        "niveau": 2.6,
+        "tier": "Mid Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 2.0,
+            "speed": 2.0,
+            "trick": 3.0,
+            "recovery": 1.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 0.7692307692307692,
+            "speed": 0.7692307692307692,
+            "trick": 1.1538461538461537,
+            "recovery": 0.3846153846153846,
+            "defense": 0.3846153846153846
+        }
+    },
+    {
+        "id": 17,
+        "nom_personnage": "Rex",
+        "nom_capacite": "Ground Pound",
+        "niveau": 2.6,
+        "tier": "Mid Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 3.0,
+            "speed": 2.0,
+            "trick": 2.0,
+            "recovery": 1.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 1.1538461538461537,
+            "speed": 0.7692307692307692,
+            "trick": 0.7692307692307692,
+            "recovery": 0.3846153846153846,
+            "defense": 0.3846153846153846
+        }
+    },
+    {
+        "id": 18,
+        "nom_personnage": "Keesh",
+        "nom_capacite": "Hair Growth",
+        "niveau": 2.6,
+        "tier": "Mid Tier",
+        "stat_principale": "speed",
+        "stats_de_base": {
+            "power": 1.0,
+            "speed": 2.0,
+            "trick": 2.0,
+            "recovery": 1.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 0.3846153846153846,
+            "speed": 0.7692307692307692,
+            "trick": 0.7692307692307692,
+            "recovery": 0.3846153846153846,
+            "defense": 0.3846153846153846
+        }
+    },
+    {
+        "id": 19,
+        "nom_personnage": "Alana",
+        "nom_capacite": "Fortify",
+        "niveau": 2.7,
+        "tier": "Mid Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 3.0,
+            "speed": 2.0,
+            "trick": 1.0,
+            "recovery": 1.0,
+            "defense": 2.0
+        },
+        "ratios_stats": {
+            "power": 1.111111111111111,
+            "speed": 0.7407407407407407,
+            "trick": 0.37037037037037035,
+            "recovery": 0.37037037037037035,
+            "defense": 0.7407407407407407
+        }
+    },
+    {
+        "id": 20,
+        "nom_personnage": "Heinz",
+        "nom_capacite": "Catch Up",
+        "niveau": 2.7,
+        "tier": "Mid Tier",
+        "stat_principale": "speed",
+        "stats_de_base": {
+            "power": 2.0,
+            "speed": 3.0,
+            "trick": 2.0,
+            "recovery": 1.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 0.7407407407407407,
+            "speed": 1.111111111111111,
+            "trick": 0.7407407407407407,
+            "recovery": 0.37037037037037035,
+            "defense": 0.37037037037037035
+        }
+    },
+    {
+        "id": 21,
+        "nom_personnage": "Illena",
+        "nom_capacite": "Strength",
+        "niveau": 2.7,
+        "tier": "Mid Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 4.0,
+            "speed": 2.0,
+            "trick": 2.0,
+            "recovery": 1.0,
+            "defense": 2.0
+        },
+        "ratios_stats": {
+            "power": 1.4814814814814814,
+            "speed": 0.7407407407407407,
+            "trick": 0.7407407407407407,
+            "recovery": 0.37037037037037035,
+            "defense": 0.7407407407407407
+        }
+    },
+    {
+        "id": 22,
+        "nom_personnage": "Kiara",
+        "nom_capacite": "Barrage",
+        "niveau": 2.7,
+        "tier": "Mid Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 2.0,
+            "speed": 2.0,
+            "trick": 3.0,
+            "recovery": 1.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 0.7407407407407407,
+            "speed": 0.7407407407407407,
+            "trick": 1.111111111111111,
+            "recovery": 0.37037037037037035,
+            "defense": 0.37037037037037035
+        }
+    },
+    {
+        "id": 23,
+        "nom_personnage": "Gavin",
+        "nom_capacite": "Stone Skin",
+        "niveau": 2.8,
+        "tier": "Mid Tier",
+        "stat_principale": "defense",
+        "stats_de_base": {
+            "power": 2.0,
+            "speed": 3.0,
+            "trick": 1.0,
+            "recovery": 1.0,
+            "defense": 4.0
+        },
+        "ratios_stats": {
+            "power": 0.7142857142857143,
+            "speed": 1.0714285714285714,
+            "trick": 0.35714285714285715,
+            "recovery": 0.35714285714285715,
+            "defense": 1.4285714285714286
+        }
+    },
+    {
+        "id": 24,
+        "nom_personnage": "Kalum",
+        "nom_capacite": "Phantom Push",
+        "niveau": 2.8,
+        "tier": "Mid Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 3.0,
+            "speed": 2.0,
+            "trick": 3.0,
+            "recovery": 1.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 1.0714285714285714,
+            "speed": 0.7142857142857143,
+            "trick": 1.0714285714285714,
+            "recovery": 0.35714285714285715,
+            "defense": 0.35714285714285715
+        }
+    },
+    {
+        "id": 25,
+        "nom_personnage": "Keith",
+        "nom_capacite": "Heavy-Hitter",
+        "niveau": 2.8,
+        "tier": "Mid Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 3.0,
+            "speed": 2.0,
+            "trick": 2.0,
+            "recovery": 1.0,
+            "defense": 2.0
+        },
+        "ratios_stats": {
+            "power": 1.0714285714285714,
+            "speed": 0.7142857142857143,
+            "trick": 0.7142857142857143,
+            "recovery": 0.35714285714285715,
+            "defense": 0.7142857142857143
+        }
+    },
+    {
+        "id": 26,
+        "nom_personnage": "Raddix",
+        "nom_capacite": "Archer",
+        "niveau": 2.8,
+        "tier": "Mid Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 4.0,
+            "speed": 1.5,
+            "trick": 3.0,
+            "recovery": 1.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 1.4285714285714286,
+            "speed": 0.5357142857142857,
+            "trick": 1.0714285714285714,
+            "recovery": 0.35714285714285715,
+            "defense": 0.35714285714285715
+        }
+    },
+    {
+        "id": 27,
+        "nom_personnage": "Waldo",
+        "nom_capacite": "Shockwave",
+        "niveau": 2.8,
+        "tier": "Mid Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 3.0,
+            "speed": 2.0,
+            "trick": 2.0,
+            "recovery": 1.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 1.0714285714285714,
+            "speed": 0.7142857142857143,
+            "trick": 0.7142857142857143,
+            "recovery": 0.35714285714285715,
+            "defense": 0.35714285714285715
+        }
+    },
+    {
+        "id": 28,
+        "nom_personnage": "Yuline",
+        "nom_capacite": "Clobber",
+        "niveau": 2.8,
+        "tier": "Mid Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 3.0,
+            "speed": 2.0,
+            "trick": 1.0,
+            "recovery": 1.0,
+            "defense": 2.0
+        },
+        "ratios_stats": {
+            "power": 1.0714285714285714,
+            "speed": 0.7142857142857143,
+            "trick": 0.35714285714285715,
+            "recovery": 0.35714285714285715,
+            "defense": 0.7142857142857143
+        }
+    },
+    {
+        "id": 29,
+        "nom_personnage": "Sherri",
+        "nom_capacite": "Vigor",
+        "niveau": 2.9,
+        "tier": "Mid Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 4.0,
+            "speed": 2.0,
+            "trick": 1.0,
+            "recovery": 2.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 1.3793103448275863,
+            "speed": 0.6896551724137931,
+            "trick": 0.3448275862068966,
+            "recovery": 0.6896551724137931,
+            "defense": 0.3448275862068966
+        }
+    },
+    {
+        "id": 30,
+        "nom_personnage": "Melody",
+        "nom_capacite": "Impact",
+        "niveau": 3.1,
+        "tier": "Mid Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 4.0,
+            "speed": 2.0,
+            "trick": 2.0,
+            "recovery": 2.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 1.2903225806451613,
+            "speed": 0.6451612903225806,
+            "trick": 0.6451612903225806,
+            "recovery": 0.6451612903225806,
+            "defense": 0.3225806451612903
+        }
+    },
+    {
+        "id": 31,
+        "nom_personnage": "Tanner",
+        "nom_capacite": "Regeneration",
+        "niveau": 3.1,
+        "tier": "Mid Tier",
+        "stat_principale": "recovery",
+        "stats_de_base": {
+            "power": 2.0,
+            "speed": 1.0,
+            "trick": 3.0,
+            "recovery": 5.0,
+            "defense": 3.0
+        },
+        "ratios_stats": {
+            "power": 0.6451612903225806,
+            "speed": 0.3225806451612903,
+            "trick": 0.9677419354838709,
+            "recovery": 1.6129032258064515,
+            "defense": 0.9677419354838709
+        }
+    },
+    {
+        "id": 32,
+        "nom_personnage": "Brea",
+        "nom_capacite": "Arcane Shot",
+        "niveau": 3.2,
+        "tier": "Mid Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 4.0,
+            "speed": 2.0,
+            "trick": 2.0,
+            "recovery": 1.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 1.25,
+            "speed": 0.625,
+            "trick": 0.625,
+            "recovery": 0.3125,
+            "defense": 0.3125
+        }
+    },
+    {
+        "id": 33,
+        "nom_personnage": "Lance",
+        "nom_capacite": "Tremor",
+        "niveau": 3.2,
+        "tier": "Mid Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 4.0,
+            "speed": 2.0,
+            "trick": 3.0,
+            "recovery": 2.0,
+            "defense": 2.0
+        },
+        "ratios_stats": {
+            "power": 1.25,
+            "speed": 0.625,
+            "trick": 0.9375,
+            "recovery": 0.625,
+            "defense": 0.625
+        }
+    },
+    {
+        "id": 34,
+        "nom_personnage": "Merin",
+        "nom_capacite": "Charge",
+        "niveau": 3.4,
+        "tier": "Mid Tier",
+        "stat_principale": "speed",
+        "stats_de_base": {
+            "power": 2.0,
+            "speed": 4.0,
+            "trick": 1.0,
+            "recovery": 2.0,
+            "defense": 4.0
+        },
+        "ratios_stats": {
+            "power": 0.5882352941176471,
+            "speed": 1.1764705882352942,
+            "trick": 0.29411764705882354,
+            "recovery": 0.5882352941176471,
+            "defense": 1.1764705882352942
+        }
+    },
+    {
+        "id": 35,
+        "nom_personnage": "Elaine",
+        "nom_capacite": "Healing",
+        "niveau": 3.5,
+        "tier": "Elite Tier",
+        "stat_principale": "recovery",
+        "stats_de_base": {
+            "power": 1.0,
+            "speed": 1.0,
+            "trick": 1.0,
+            "recovery": 7.0,
+            "defense": 3.0
+        },
+        "ratios_stats": {
+            "power": 0.2857142857142857,
+            "speed": 0.2857142857142857,
+            "trick": 0.2857142857142857,
+            "recovery": 2.0,
+            "defense": 0.8571428571428571
+        }
+    },
+    {
+        "id": 36,
+        "nom_personnage": "Lennon",
+        "nom_capacite": "Conjure: Disks",
+        "niveau": 3.5,
+        "tier": "Elite Tier",
+        "stat_principale": "defense",
+        "stats_de_base": {
+            "power": 3.0,
+            "speed": 2.0,
+            "trick": 4.0,
+            "recovery": 1.3,
+            "defense": 5.0
+        },
+        "ratios_stats": {
+            "power": 0.8571428571428571,
+            "speed": 0.5714285714285714,
+            "trick": 1.1428571428571428,
+            "recovery": 0.37142857142857144,
+            "defense": 1.4285714285714286
+        }
+    },
+    {
+        "id": 37,
+        "nom_personnage": "???",
+        "nom_capacite": "Sleep Touch",
+        "niveau": 3.5,
+        "tier": "Elite Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 2.0,
+            "speed": 3.0,
+            "trick": 5.0,
+            "recovery": 2.0,
+            "defense": 2.0
+        },
+        "ratios_stats": {
+            "power": 0.5714285714285714,
+            "speed": 0.8571428571428571,
+            "trick": 1.4285714285714286,
+            "recovery": 0.5714285714285714,
+            "defense": 0.5714285714285714
+        }
+    },
+    {
+        "id": 38,
+        "nom_personnage": "Abel",
+        "nom_capacite": "Explosion",
+        "niveau": 3.6,
+        "tier": "Elite Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 4.0,
+            "speed": 2.0,
+            "trick": 4.0,
+            "recovery": 2.0,
+            "defense": 3.0
+        },
+        "ratios_stats": {
+            "power": 1.1111111111111112,
+            "speed": 0.5555555555555556,
+            "trick": 1.1111111111111112,
+            "recovery": 0.5555555555555556,
+            "defense": 0.8333333333333333
+        }
+    },
+    {
+        "id": 39,
+        "nom_personnage": "Levani",
+        "nom_capacite": "Grenadier",
+        "niveau": 3.6,
+        "tier": "Elite Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 5.0,
+            "speed": 2.0,
+            "trick": 4.0,
+            "recovery": 2.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 1.3888888888888888,
+            "speed": 0.5555555555555556,
+            "trick": 1.1111111111111112,
+            "recovery": 0.5555555555555556,
+            "defense": 0.2777777777777778
+        }
+    },
+    {
+        "id": 40,
+        "nom_personnage": "Payton",
+        "nom_capacite": "Superhuman",
+        "niveau": 3.6,
+        "tier": "Elite Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 3.0,
+            "speed": 3.0,
+            "trick": 2.0,
+            "recovery": 3.0,
+            "defense": 3.0
+        },
+        "ratios_stats": {
+            "power": 0.8333333333333333,
+            "speed": 0.8333333333333333,
+            "trick": 0.5555555555555556,
+            "recovery": 0.8333333333333333,
+            "defense": 0.8333333333333333
+        }
+    },
+    {
+        "id": 41,
+        "nom_personnage": "Zirian",
+        "nom_capacite": "Crescent Slash",
+        "niveau": 3.7,
+        "tier": "Elite Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 5.0,
+            "speed": 3.0,
+            "trick": 3.0,
+            "recovery": 2.0,
+            "defense": 3.0
+        },
+        "ratios_stats": {
+            "power": 1.3513513513513513,
+            "speed": 0.8108108108108107,
+            "trick": 0.8108108108108107,
+            "recovery": 0.5405405405405405,
+            "defense": 0.8108108108108107
+        }
+    },
+    {
+        "id": 42,
+        "nom_personnage": "Ezra",
+        "nom_capacite": "Shadow Flame",
+        "niveau": 3.8,
+        "tier": "Elite Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 6.0,
+            "speed": 2.0,
+            "trick": 3.0,
+            "recovery": 2.0,
+            "defense": 2.0
+        },
+        "ratios_stats": {
+            "power": 1.5789473684210527,
+            "speed": 0.5263157894736842,
+            "trick": 0.7894736842105263,
+            "recovery": 0.5263157894736842,
+            "defense": 0.5263157894736842
+        }
+    },
+    {
+        "id": 43,
+        "nom_personnage": "Kayden",
+        "nom_capacite": "Teleportation",
+        "niveau": 3.8,
+        "tier": "Elite Tier",
+        "stat_principale": "speed",
+        "stats_de_base": {
+            "power": 1.0,
+            "speed": 7.0,
+            "trick": 3.0,
+            "recovery": 3.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 0.2631578947368421,
+            "speed": 1.842105263157895,
+            "trick": 0.7894736842105263,
+            "recovery": 0.7894736842105263,
+            "defense": 0.2631578947368421
+        }
+    },
+    {
+        "id": 44,
+        "nom_personnage": "Meili",
+        "nom_capacite": "Demon Claw",
+        "niveau": 3.8,
+        "tier": "Elite Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 5.0,
+            "speed": 3.0,
+            "trick": 3.0,
+            "recovery": 2.0,
+            "defense": 3.0
+        },
+        "ratios_stats": {
+            "power": 1.3157894736842106,
+            "speed": 0.7894736842105263,
+            "trick": 0.7894736842105263,
+            "recovery": 0.5263157894736842,
+            "defense": 0.7894736842105263
+        }
+    },
+    {
+        "id": 45,
+        "nom_personnage": "Myles",
+        "nom_capacite": "Heal Link",
+        "niveau": 3.8,
+        "tier": "Elite Tier",
+        "stat_principale": "recovery",
+        "stats_de_base": {
+            "power": 1.0,
+            "speed": 1.0,
+            "trick": 3.0,
+            "recovery": 7.0,
+            "defense": 2.0
+        },
+        "ratios_stats": {
+            "power": 0.2631578947368421,
+            "speed": 0.2631578947368421,
+            "trick": 0.7894736842105263,
+            "recovery": 1.842105263157895,
+            "defense": 0.5263157894736842
+        }
+    },
+    {
+        "id": 46,
+        "nom_personnage": "Ventus",
+        "nom_capacite": "Whirlwind",
+        "niveau": 3.8,
+        "tier": "Elite Tier",
+        "stat_principale": "speed",
+        "stats_de_base": {
+            "power": 3.0,
+            "speed": 4.0,
+            "trick": 3.0,
+            "recovery": 2.0,
+            "defense": 3.0
+        },
+        "ratios_stats": {
+            "power": 0.7894736842105263,
+            "speed": 1.0526315789473684,
+            "trick": 0.7894736842105263,
+            "recovery": 0.5263157894736842,
+            "defense": 0.7894736842105263
+        }
+    },
+    {
+        "id": 47,
+        "nom_personnage": "Jace",
+        "nom_capacite": "Iron Knuckle",
+        "niveau": 3.8,
+        "tier": "Elite Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 5.0,
+            "speed": 4.0,
+            "trick": 2.0,
+            "recovery": 2.0,
+            "defense": 2.0
+        },
+        "ratios_stats": {
+            "power": 1.3157894736842106,
+            "speed": 1.0526315789473684,
+            "trick": 0.5263157894736842,
+            "recovery": 0.5263157894736842,
+            "defense": 0.5263157894736842
+        }
+    },
+    {
+        "id": 48,
+        "nom_personnage": "Leena",
+        "nom_capacite": "Fleetstep",
+        "niveau": 3.8,
+        "tier": "Elite Tier",
+        "stat_principale": "recovery",
+        "stats_de_base": {
+            "power": 3.0,
+            "speed": 2.0,
+            "trick": 1.0,
+            "recovery": 5.0,
+            "defense": 4.0
+        },
+        "ratios_stats": {
+            "power": 0.7894736842105263,
+            "speed": 0.5263157894736842,
+            "trick": 0.2631578947368421,
+            "recovery": 1.3157894736842106,
+            "defense": 1.0526315789473684
+        }
+    },
+    {
+        "id": 49,
+        "nom_personnage": "???",
+        "nom_capacite": "Heal",
+        "niveau": 3.8,
+        "tier": "Elite Tier",
+        "stat_principale": "recovery",
+        "stats_de_base": {
+            "power": 2.0,
+            "speed": 1.0,
+            "trick": 4.0,
+            "recovery": 6.0,
+            "defense": 2.0
+        },
+        "ratios_stats": {
+            "power": 0.5263157894736842,
+            "speed": 0.2631578947368421,
+            "trick": 1.0526315789473684,
+            "recovery": 1.5789473684210527,
+            "defense": 0.5263157894736842
+        }
+    },
+    {
+        "id": 50,
+        "nom_personnage": "Gou",
+        "nom_capacite": "Super Strength",
+        "niveau": 4.0,
+        "tier": "Elite Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 6.0,
+            "speed": 3.0,
+            "trick": 1.0,
+            "recovery": 2.0,
+            "defense": 5.0
+        },
+        "ratios_stats": {
+            "power": 1.5,
+            "speed": 0.75,
+            "trick": 0.25,
+            "recovery": 0.5,
+            "defense": 1.25
+        }
+    },
+    {
+        "id": 51,
+        "nom_personnage": "Darren",
+        "nom_capacite": "Nightmare",
+        "niveau": 4.2,
+        "tier": "Elite Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 1.0,
+            "speed": 2.0,
+            "trick": 5.0,
+            "recovery": 4.0,
+            "defense": 5.0
+        },
+        "ratios_stats": {
+            "power": 0.23809523809523808,
+            "speed": 0.47619047619047616,
+            "trick": 1.1904761904761905,
+            "recovery": 0.9523809523809523,
+            "defense": 1.1904761904761905
+        }
+    },
+    {
+        "id": 52,
+        "nom_personnage": "Skylar",
+        "nom_capacite": "Demon Blade",
+        "niveau": 4.2,
+        "tier": "Elite Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 6.0,
+            "speed": 3.0,
+            "trick": 3.0,
+            "recovery": 2.0,
+            "defense": 2.0
+        },
+        "ratios_stats": {
+            "power": 1.4285714285714286,
+            "speed": 0.7142857142857143,
+            "trick": 0.7142857142857143,
+            "recovery": 0.47619047619047616,
+            "defense": 0.47619047619047616
+        }
+    },
+    {
+        "id": 53,
+        "nom_personnage": "Zeke",
+        "nom_capacite": "Phase Shift (Off)",
+        "niveau": 4.2,
+        "tier": "Elite Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 5.0,
+            "speed": 3.0,
+            "trick": 6.0,
+            "recovery": 1.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 1.1904761904761905,
+            "speed": 0.7142857142857143,
+            "trick": 1.4285714285714286,
+            "recovery": 0.23809523809523808,
+            "defense": 0.23809523809523808
+        }
+    },
+    {
+        "id": 54,
+        "nom_personnage": "Zeke",
+        "nom_capacite": "Phase Shift (Def)",
+        "niveau": 4.2,
+        "tier": "Elite Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 1.0,
+            "speed": 1.0,
+            "trick": 6.0,
+            "recovery": 3.0,
+            "defense": 5.0
+        },
+        "ratios_stats": {
+            "power": 0.23809523809523808,
+            "speed": 0.23809523809523808,
+            "trick": 1.4285714285714286,
+            "recovery": 0.7142857142857143,
+            "defense": 1.1904761904761905
+        }
+    },
+    {
+        "id": 55,
+        "nom_personnage": "Charlie",
+        "nom_capacite": "Contact Shred",
+        "niveau": 4.2,
+        "tier": "Elite Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 6.0,
+            "speed": 1.5,
+            "trick": 1.5,
+            "recovery": 4.5,
+            "defense": 3.0
+        },
+        "ratios_stats": {
+            "power": 1.4285714285714286,
+            "speed": 0.35714285714285715,
+            "trick": 0.35714285714285715,
+            "recovery": 1.0714285714285714,
+            "defense": 0.7142857142857143
+        }
+    },
+    {
+        "id": 56,
+        "nom_personnage": "Kree",
+        "nom_capacite": "Armor Suit",
+        "niveau": 4.4,
+        "tier": "Elite Tier",
+        "stat_principale": "defense",
+        "stats_de_base": {
+            "power": 4.0,
+            "speed": 3.0,
+            "trick": 4.0,
+            "recovery": 3.0,
+            "defense": 5.0
+        },
+        "ratios_stats": {
+            "power": 0.9090909090909091,
+            "speed": 0.6818181818181818,
+            "trick": 0.9090909090909091,
+            "recovery": 0.6818181818181818,
+            "defense": 1.1363636363636362
+        }
+    },
+    {
+        "id": 57,
+        "nom_personnage": "Terrence",
+        "nom_capacite": "Invisibility",
+        "niveau": 4.4,
+        "tier": "Elite Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 1.0,
+            "speed": 3.0,
+            "trick": 10.0,
+            "recovery": 2.0,
+            "defense": 2.0
+        },
+        "ratios_stats": {
+            "power": 0.22727272727272727,
+            "speed": 0.6818181818181818,
+            "trick": 2.2727272727272725,
+            "recovery": 0.45454545454545453,
+            "defense": 0.45454545454545453
+        }
+    },
+    {
+        "id": 58,
+        "nom_personnage": "\"Valorian\"",
+        "nom_capacite": "Crimson Armor",
+        "niveau": 4.7,
+        "tier": "Elite Tier",
+        "stat_principale": "defense",
+        "stats_de_base": {
+            "power": 5.0,
+            "speed": 3.0,
+            "trick": 5.0,
+            "recovery": 2.0,
+            "defense": 6.0
+        },
+        "ratios_stats": {
+            "power": 1.0638297872340425,
+            "speed": 0.6382978723404255,
+            "trick": 1.0638297872340425,
+            "recovery": 0.425531914893617,
+            "defense": 1.276595744680851
+        }
+    },
+    {
+        "id": 59,
+        "nom_personnage": "Isen",
+        "nom_capacite": "Hunter",
+        "niveau": 4.8,
+        "tier": "Elite Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 6.0,
+            "speed": 3.0,
+            "trick": 6.0,
+            "recovery": 3.0,
+            "defense": 5.0
+        },
+        "ratios_stats": {
+            "power": 1.25,
+            "speed": 0.625,
+            "trick": 1.25,
+            "recovery": 0.625,
+            "defense": 1.0416666666666667
+        }
+    },
+    {
+        "id": 60,
+        "nom_personnage": "Melvin",
+        "nom_capacite": "Spectral Claw",
+        "niveau": 5.0,
+        "tier": "High Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 8.0,
+            "speed": 5.0,
+            "trick": 6.0,
+            "recovery": 2.0,
+            "defense": 3.0
+        },
+        "ratios_stats": {
+            "power": 1.6,
+            "speed": 1.0,
+            "trick": 1.2,
+            "recovery": 0.4,
+            "defense": 0.6
+        }
+    },
+    {
+        "id": 61,
+        "nom_personnage": "Rein",
+        "nom_capacite": "Arachnid",
+        "niveau": 5.1,
+        "tier": "High Tier",
+        "stat_principale": "defense",
+        "stats_de_base": {
+            "power": 4.0,
+            "speed": 4.0,
+            "trick": 4.0,
+            "recovery": 2.0,
+            "defense": 6.0
+        },
+        "ratios_stats": {
+            "power": 0.7843137254901962,
+            "speed": 0.7843137254901962,
+            "trick": 0.7843137254901962,
+            "recovery": 0.3921568627450981,
+            "defense": 1.1764705882352942
+        }
+    },
+    {
+        "id": 62,
+        "nom_personnage": "Blyke",
+        "nom_capacite": "Energy Discharge",
+        "niveau": 5.1,
+        "tier": "High Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 8.0,
+            "speed": 4.0,
+            "trick": 5.0,
+            "recovery": 5.0,
+            "defense": 4.0
+        },
+        "ratios_stats": {
+            "power": 1.5686274509803924,
+            "speed": 0.7843137254901962,
+            "trick": 0.9803921568627452,
+            "recovery": 0.9803921568627452,
+            "defense": 0.7843137254901962
+        }
+    },
+    {
+        "id": 63,
+        "nom_personnage": "Cecile",
+        "nom_capacite": "Conjure: Vines",
+        "niveau": 5.3,
+        "tier": "High Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 5.0,
+            "speed": 3.0,
+            "trick": 7.0,
+            "recovery": 4.0,
+            "defense": 5.0
+        },
+        "ratios_stats": {
+            "power": 0.9433962264150944,
+            "speed": 0.5660377358490566,
+            "trick": 1.3207547169811322,
+            "recovery": 0.7547169811320755,
+            "defense": 0.9433962264150944
+        }
+    },
+    {
+        "id": 64,
+        "nom_personnage": "Isen",
+        "nom_capacite": "Predator",
+        "niveau": 5.3,
+        "tier": "High Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 7.0,
+            "speed": 4.0,
+            "trick": 6.0,
+            "recovery": 3.0,
+            "defense": 5.0
+        },
+        "ratios_stats": {
+            "power": 1.3207547169811322,
+            "speed": 0.7547169811320755,
+            "trick": 1.1320754716981132,
+            "recovery": 0.5660377358490566,
+            "defense": 0.9433962264150944
+        }
+    },
+    {
+        "id": 65,
+        "nom_personnage": "Candice",
+        "nom_capacite": "Duplication",
+        "niveau": 5.6,
+        "tier": "High Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 5.0,
+            "speed": 3.0,
+            "trick": 8.0,
+            "recovery": 3.0,
+            "defense": 5.0
+        },
+        "ratios_stats": {
+            "power": 0.8928571428571429,
+            "speed": 0.5357142857142857,
+            "trick": 1.4285714285714286,
+            "recovery": 0.5357142857142857,
+            "defense": 0.8928571428571429
+        }
+    },
+    {
+        "id": 66,
+        "nom_personnage": "Colt",
+        "nom_capacite": "Imprison",
+        "niveau": 5.6,
+        "tier": "High Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 7.0,
+            "speed": 2.0,
+            "trick": 6.0,
+            "recovery": 4.0,
+            "defense": 7.0
+        },
+        "ratios_stats": {
+            "power": 1.25,
+            "speed": 0.35714285714285715,
+            "trick": 1.0714285714285714,
+            "recovery": 0.7142857142857143,
+            "defense": 1.25
+        }
+    },
+    {
+        "id": 67,
+        "nom_personnage": "Remi",
+        "nom_capacite": "Lightning",
+        "niveau": 5.8,
+        "tier": "High Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 7.0,
+            "speed": 6.0,
+            "trick": 5.0,
+            "recovery": 4.0,
+            "defense": 4.0
+        },
+        "ratios_stats": {
+            "power": 1.206896551724138,
+            "speed": 1.0344827586206897,
+            "trick": 0.8620689655172414,
+            "recovery": 0.6896551724137931,
+            "defense": 0.6896551724137931
+        }
+    },
+    {
+        "id": 68,
+        "nom_personnage": "Rei",
+        "nom_capacite": "Lightining",
+        "niveau": 5.8,
+        "tier": "High Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 8.0,
+            "speed": 6.0,
+            "trick": 4.0,
+            "recovery": 3.0,
+            "defense": 4.0
+        },
+        "ratios_stats": {
+            "power": 1.3793103448275863,
+            "speed": 1.0344827586206897,
+            "trick": 0.6896551724137931,
+            "recovery": 0.5172413793103449,
+            "defense": 0.6896551724137931
+        }
+    },
+    {
+        "id": 69,
+        "nom_personnage": "Verte",
+        "nom_capacite": "Demolition",
+        "niveau": 5.8,
+        "tier": "High Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 8.0,
+            "speed": 4.0,
+            "trick": 5.0,
+            "recovery": 4.0,
+            "defense": 6.0
+        },
+        "ratios_stats": {
+            "power": 1.3793103448275863,
+            "speed": 0.6896551724137931,
+            "trick": 0.8620689655172414,
+            "recovery": 0.6896551724137931,
+            "defense": 1.0344827586206897
+        }
+    },
+    {
+        "id": 70,
+        "nom_personnage": "Byron",
+        "nom_capacite": "Botanist",
+        "niveau": 6.0,
+        "tier": "God Tier",
+        "stat_principale": "defense",
+        "stats_de_base": {
+            "power": 5.0,
+            "speed": 2.0,
+            "trick": 6.0,
+            "recovery": 5.0,
+            "defense": 7.0
+        },
+        "ratios_stats": {
+            "power": 0.8333333333333334,
+            "speed": 0.3333333333333333,
+            "trick": 1.0,
+            "recovery": 0.8333333333333334,
+            "defense": 1.1666666666666667
+        }
+    },
+    {
+        "id": 71,
+        "nom_personnage": "Liam",
+        "nom_capacite": "Hydrofreeze",
+        "niveau": 6.2,
+        "tier": "God Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 5.0,
+            "speed": 3.0,
+            "trick": 8.0,
+            "recovery": 4.0,
+            "defense": 6.0
+        },
+        "ratios_stats": {
+            "power": 0.8064516129032258,
+            "speed": 0.48387096774193544,
+            "trick": 1.2903225806451613,
+            "recovery": 0.6451612903225806,
+            "defense": 0.9677419354838709
+        }
+    },
+    {
+        "id": 72,
+        "nom_personnage": "Tarik",
+        "nom_capacite": "Paralysis",
+        "niveau": 6.2,
+        "tier": "God Tier",
+        "stat_principale": "recovery",
+        "stats_de_base": {
+            "power": 3.0,
+            "speed": 3.0,
+            "trick": 3.0,
+            "recovery": 10.0,
+            "defense": 4.0
+        },
+        "ratios_stats": {
+            "power": 0.48387096774193544,
+            "speed": 0.48387096774193544,
+            "trick": 0.48387096774193544,
+            "recovery": 1.6129032258064515,
+            "defense": 0.6451612903225806
+        }
+    },
+    {
+        "id": 73,
+        "nom_personnage": "Kuyo",
+        "nom_capacite": "Blademaster",
+        "niveau": 6.3,
+        "tier": "God Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 9.0,
+            "speed": 5.0,
+            "trick": 5.0,
+            "recovery": 3.0,
+            "defense": 4.0
+        },
+        "ratios_stats": {
+            "power": 1.4285714285714286,
+            "speed": 0.7936507936507937,
+            "trick": 0.7936507936507937,
+            "recovery": 0.4761904761904762,
+            "defense": 0.6349206349206349
+        }
+    },
+    {
+        "id": 74,
+        "nom_personnage": "Arlo",
+        "nom_capacite": "Barrier",
+        "niveau": 6.5,
+        "tier": "God Tier",
+        "stat_principale": "defense",
+        "stats_de_base": {
+            "power": 7.0,
+            "speed": 2.0,
+            "trick": 6.0,
+            "recovery": 3.0,
+            "defense": 9.0
+        },
+        "ratios_stats": {
+            "power": 1.0769230769230769,
+            "speed": 0.3076923076923077,
+            "trick": 0.9230769230769231,
+            "recovery": 0.46153846153846156,
+            "defense": 1.3846153846153846
+        }
+    },
+    {
+        "id": 75,
+        "nom_personnage": "Leilah",
+        "nom_capacite": "Time Manipulation",
+        "niveau": 6.6,
+        "tier": "God Tier",
+        "stat_principale": "speed",
+        "stats_de_base": {
+            "power": 7.0,
+            "speed": 9.0,
+            "trick": 7.0,
+            "recovery": 5.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 1.0606060606060606,
+            "speed": 1.3636363636363638,
+            "trick": 1.0606060606060606,
+            "recovery": 0.7575757575757576,
+            "defense": 0.15151515151515152
+        }
+    },
+    {
+        "id": 76,
+        "nom_personnage": "Kassandra",
+        "nom_capacite": "Particles",
+        "niveau": 6.8,
+        "tier": "God Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 8.0,
+            "speed": 3.0,
+            "trick": 12.0,
+            "recovery": 4.0,
+            "defense": 5.0
+        },
+        "ratios_stats": {
+            "power": 1.1764705882352942,
+            "speed": 0.4411764705882353,
+            "trick": 1.7647058823529411,
+            "recovery": 0.5882352941176471,
+            "defense": 0.7352941176470589
+        }
+    },
+    {
+        "id": 77,
+        "nom_personnage": "Keene",
+        "nom_capacite": "Minefield",
+        "niveau": 6.8,
+        "tier": "God Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 8.0,
+            "speed": 4.0,
+            "trick": 12.0,
+            "recovery": 3.0,
+            "defense": 5.0
+        },
+        "ratios_stats": {
+            "power": 1.1764705882352942,
+            "speed": 0.5882352941176471,
+            "trick": 1.7647058823529411,
+            "recovery": 0.4411764705882353,
+            "defense": 0.7352941176470589
+        }
+    },
+    {
+        "id": 78,
+        "nom_personnage": "Sylvia",
+        "nom_capacite": "Sensory Control",
+        "niveau": 7.3,
+        "tier": "God Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 5.0,
+            "speed": 3.0,
+            "trick": 14.0,
+            "recovery": 3.0,
+            "defense": 5.0
+        },
+        "ratios_stats": {
+            "power": 0.684931506849315,
+            "speed": 0.4109589041095891,
+            "trick": 1.9178082191780823,
+            "recovery": 0.4109589041095891,
+            "defense": 0.684931506849315
+        }
+    },
+    {
+        "id": 79,
+        "nom_personnage": "Narisa",
+        "nom_capacite": "Time Manipulation",
+        "niveau": 7.4,
+        "tier": "God Tier",
+        "stat_principale": "speed",
+        "stats_de_base": {
+            "power": 9.0,
+            "speed": 12.0,
+            "trick": 10.0,
+            "recovery": 5.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 1.2162162162162162,
+            "speed": 1.6216216216216215,
+            "trick": 1.3513513513513513,
+            "recovery": 0.6756756756756757,
+            "defense": 0.13513513513513511
+        }
+    },
+    {
+        "id": 80,
+        "nom_personnage": "Valerie",
+        "nom_capacite": "Barrier",
+        "niveau": 7.5,
+        "tier": "God Tier",
+        "stat_principale": "defense",
+        "stats_de_base": {
+            "power": 8.0,
+            "speed": 2.0,
+            "trick": 7.0,
+            "recovery": 6.0,
+            "defense": 12.0
+        },
+        "ratios_stats": {
+            "power": 1.0666666666666667,
+            "speed": 0.26666666666666666,
+            "trick": 0.9333333333333333,
+            "recovery": 0.8,
+            "defense": 1.6
+        }
+    },
+    {
+        "id": 81,
+        "nom_personnage": "John",
+        "nom_capacite": "Aura Manipulation",
+        "niveau": 7.6,
+        "tier": "God Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 4.0,
+            "speed": 1.0,
+            "trick": 16.0,
+            "recovery": 1.0,
+            "defense": 1.0
+        },
+        "ratios_stats": {
+            "power": 0.5263157894736842,
+            "speed": 0.13157894736842105,
+            "trick": 2.1052631578947367,
+            "recovery": 0.13157894736842105,
+            "defense": 0.13157894736842105
+        }
+    },
+    {
+        "id": 82,
+        "nom_personnage": "Vaughn",
+        "nom_capacite": "Telekinesis",
+        "niveau": 7.8,
+        "tier": "God Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 14.0,
+            "speed": 3.0,
+            "trick": 12.0,
+            "recovery": 6.0,
+            "defense": 8.0
+        },
+        "ratios_stats": {
+            "power": 1.794871794871795,
+            "speed": 0.38461538461538464,
+            "trick": 1.5384615384615385,
+            "recovery": 0.7692307692307693,
+            "defense": 1.0256410256410258
+        }
+    },
+    {
+        "id": 83,
+        "nom_personnage": "Seraphina",
+        "nom_capacite": "Time Manipulation",
+        "niveau": 8.0,
+        "tier": "God Tier",
+        "stat_principale": "speed",
+        "stats_de_base": {
+            "power": 12.0,
+            "speed": 14.0,
+            "trick": 10.0,
+            "recovery": 9.0,
+            "defense": 2.0
+        },
+        "ratios_stats": {
+            "power": 1.5,
+            "speed": 1.75,
+            "trick": 1.25,
+            "recovery": 1.125,
+            "defense": 0.25
+        }
+    }
+]

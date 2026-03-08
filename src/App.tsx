@@ -10,8 +10,20 @@ const statConfig = [
   { key: 'defense', label: 'Defense', Icon: Shield, color: 'text-yellow-600' }
 ];
 
+// --- TYPESCRIPT INTERFACES ---
+type BoostOption = {
+  mult: number;
+  cost: number;
+  label: string;
+};
+
+type StatInfo = {
+  val: number;
+  sourceLevel: number;
+};
+
 // --- LOGIQUE DE TIER ET DE SLOTS DE TELEMACHUS ---
-const getTierInfo = (level) => {
+const getTierInfo = (level: number) => {
   if (level < 2.0) return { name: "Low-Tier", slots: 1, color: "text-neutral-400" };
   if (level < 4.0) return { name: "Mid-Tier", slots: 2, color: "text-green-400" };
   if (level < 5.0) return { name: "Elite-Tier", slots: 2, color: "text-blue-400" };
@@ -20,12 +32,12 @@ const getTierInfo = (level) => {
 };
 
 // --- LOGIQUE DE DRAIN D'AURA DE BASE ---
-const getAuraCost = (niveau) => {
+const getAuraCost = (niveau: number) => {
   return parseFloat((niveau * (niveau / 1.5)).toFixed(1));
 };
 
 // --- 2. COMPOSANT GRAPHIQUE RADAR SVG SUR-MESURE ---
-const RadarChart = ({ stats, boosts }) => {
+const RadarChart = ({ stats, boosts }: { stats: Record<string, number>, boosts: Record<string, number> }) => {
   const maxStat = 10;
   const size = 500;
   const cx = size / 2;
@@ -34,7 +46,7 @@ const RadarChart = ({ stats, boosts }) => {
   const keys = ['power', 'speed', 'trick', 'recovery', 'defense'];
   const labels = ['Power', 'Speed', 'Trick', 'Recovery', 'Defense'];
 
-  const getPoints = (statObj, clamp = false) => {
+  const getPoints = (statObj: Record<string, number>, clamp = false) => {
     return keys.map((key, i) => {
       const val = clamp ? Math.min(statObj[key] || 1, maxStat) : (statObj[key] || 1);
       const r = (val / maxStat) * radius;
@@ -115,13 +127,13 @@ const RadarChart = ({ stats, boosts }) => {
 export default function App() {
   const [potential, setPotential] = useState(9.0);
   const [mastery, setMastery] = useState(6.4);
-  const [slots, setSlots] = useState(["", "", "", ""]);
+  const [slots, setSlots] = useState<string[]>(["", "", "", ""]);
   
   // Le niveau est désormais calculé dynamiquement
   const level = useMemo(() => parseFloat(((potential * mastery) / 10).toFixed(1)), [potential, mastery]);
 
   // État des amplifications (0 = éteint, 1 = option 1, 2 = option 2, etc.)
-  const [boostState, setBoostState] = useState({ power: 0, speed: 0, trick: 0, recovery: 0, defense: 0 });
+  const [boostState, setBoostState] = useState<Record<string, number>>({ power: 0, speed: 0, trick: 0, recovery: 0, defense: 0 });
 
   const tierInfo = useMemo(() => getTierInfo(level), [level]);
   const slotsUsed = useMemo(() => slots.filter(s => s !== "").length, [slots]);
@@ -139,7 +151,7 @@ export default function App() {
   // --- MOTEUR DE FUSION ET IDENTIFICATION DES STATS FORTES/FAIBLES ---
   // On sauvegarde la valeur copiée MAIS AUSSI le niveau de la capacité d'origine pour les règles de Strong/Weak
   const baseStatsInfo = useMemo(() => {
-    let stats = { 
+    let stats: Record<string, StatInfo> = { 
       power: { val: 1, sourceLevel: level }, 
       speed: { val: 1, sourceLevel: level }, 
       trick: { val: level * 2.414, sourceLevel: level }, // Le Trick de base vient de Telemachus
@@ -156,9 +168,11 @@ export default function App() {
       const ratio = level / cap.niveau;
 
       for (let key in cap.stats_de_base) {
-        let valeurCopiee = cap.stats_de_base[key] * ratio;
-        if (valeurCopiee > stats[key].val) {
-          stats[key] = { val: valeurCopiee, sourceLevel: cap.niveau };
+        // @ts-ignore : On s'assure d'itérer sur les bonnes clés
+        const baseKey = key as keyof typeof cap.stats_de_base;
+        let valeurCopiee = cap.stats_de_base[baseKey] * ratio;
+        if (valeurCopiee > stats[baseKey].val) {
+          stats[baseKey] = { val: valeurCopiee, sourceLevel: cap.niveau };
         }
       }
     });
@@ -167,14 +181,14 @@ export default function App() {
   }, [level, slots, tierInfo]);
 
   // --- LOGIQUE DES OPTIONS D'AMPLIFICATION ---
-  const getBoostOptions = useCallback((statKey) => {
+  const getBoostOptions = useCallback((statKey: string): BoostOption[] => {
     const sourceLevel = baseStatsInfo[statKey].sourceLevel;
     
     // Strong <=> Niveau inférieur ou égal à Telemachus (Il est plus fort)
     // Weak <=> Niveau supérieur à Telemachus (Il est plus faible)
     const isStrong = sourceLevel <= level; 
 
-    let options = [];
+    let options: BoostOption[] = [];
     if (isStrong) {
       // TELEMACHUS EST FORT : Coûts en aura réduits, gros multiplicateurs possibles
       if (mastery >= 1.6) options.push({ mult: mastery >= 10 ? 1.3 : 1.25, cost: 1.5, label: mastery >= 10 ? 'x1.3 (Très Faible)' : 'x1.25 (Très Faible)' });
@@ -217,7 +231,7 @@ export default function App() {
 
   // --- STATS FINALES APRÈS BOOST ---
   const statsFinales = useMemo(() => {
-    let finalStats = {};
+    let finalStats: Record<string, number> = {};
     for (let key in baseStatsInfo) {
       let val = baseStatsInfo[key].val;
       const idx = boostState[key];
@@ -231,7 +245,7 @@ export default function App() {
   }, [baseStatsInfo, boostState, getBoostOptions]);
 
   // --- INTERACTIONS ---
-  const updateSlot = (index, value) => {
+  const updateSlot = (index: number, value: string) => {
     if (!value) {
       const newSlots = [...slots];
       newSlots[index] = "";
@@ -260,7 +274,7 @@ export default function App() {
   };
 
   // Gestion du Cycle des amplifications (Clic sur le bouton)
-  const handleBoostClick = (key) => {
+  const handleBoostClick = (key: string) => {
     const options = getBoostOptions(key);
     if (options.length === 0) return;
 

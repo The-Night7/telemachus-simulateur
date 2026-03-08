@@ -27,15 +27,15 @@ const getAuraCost = (niveau) => {
 const BOOST_AURA_COST = 5.0; // Coût fixe en aura par statistique amplifiée
 
 // --- NOUVELLES RÈGLES DE BOOST (FORT/FAIBLE) ---
-const getBoostRules = (level) => {
-  if (level >= 10) return { weak: 1.75, strong: 1.30, maxBoosts: 3 };
-  if (level >= 9.5) return { weak: 1.75, strong: 1.25, maxBoosts: 3 };
-  if (level >= 8.5) return { weak: 1.75, strong: 1.25, maxBoosts: 2 };
-  if (level >= 7.5) return { weak: 1.75, strong: 1.25, maxBoosts: 1 };
-  if (level >= 6.0) return { weak: 1.75, strong: 1.05, maxBoosts: 1 };
-  if (level >= 4.0) return { weak: 1.75, strong: 1.0, maxBoosts: 1 };
-  if (level >= 2.5) return { weak: 1.5, strong: 1.0, maxBoosts: 1 };
-  if (level >= 1.6) return { weak: 1.25, strong: 1.0, maxBoosts: 1 };
+const getBoostRules = (mastery) => {
+  if (mastery >= 10) return { weak: 1.75, strong: 1.30, maxBoosts: 4 };
+  if (mastery >= 9.5) return { weak: 1.75, strong: 1.25, maxBoosts: 3 };
+  if (mastery >= 8.5) return { weak: 1.75, strong: 1.25, maxBoosts: 2 };
+  if (mastery >= 7.5) return { weak: 1.75, strong: 1.25, maxBoosts: 1 };
+  if (mastery >= 6.0) return { weak: 1.75, strong: 1.05, maxBoosts: 1 };
+  if (mastery >= 4.0) return { weak: 1.75, strong: 1.0, maxBoosts: 1 };
+  if (mastery >= 2.5) return { weak: 1.5, strong: 1.0, maxBoosts: 1 };
+  if (mastery >= 1.6) return { weak: 1.25, strong: 1.0, maxBoosts: 1 };
   return { weak: 1.0, strong: 1.0, maxBoosts: 0 };
 };
 
@@ -128,16 +128,19 @@ const RadarChart = ({ stats, boosts }) => {
 
 // --- 3. APPLICATION PRINCIPALE ---
 export default function App() {
-  const [level, setLevel] = useState(5.8);
+  const [potential, setPotential] = useState(9.0);
+  const [mastery, setMastery] = useState(6.4); // Potentiel 9 * Maîtrise 6.4 / 10 = Niveau 5.8
   const [slots, setSlots] = useState(["", "", "", ""]);
   
+  const level = useMemo(() => parseFloat(((potential * mastery) / 10).toFixed(1)), [potential, mastery]);
+
   // NOUVEAU : État des amplifications
   const [boosts, setBoosts] = useState({ power: false, speed: false, trick: false, recovery: false, defense: false });
 
   const tierInfo = useMemo(() => getTierInfo(level), [level]);
   const slotsUsed = useMemo(() => slots.filter(s => s !== "").length, [slots]);
   
-  const boostRules = useMemo(() => getBoostRules(level), [level]);
+  const boostRules = useMemo(() => getBoostRules(mastery), [mastery]);
   const activeBoostsCount = useMemo(() => Object.values(boosts).filter(Boolean).length, [boosts]);
   const maxBoostsAllowed = boostRules.maxBoosts;
 
@@ -263,9 +266,15 @@ export default function App() {
       setSlots(newSlots);
     }
     
-    // Annuler les boosts en cas de baisse de niveau réduisant le nombre max
-    setBoosts({ power: false, speed: false, trick: false, recovery: false, defense: false });
-  }, [level]);
+    // Annuler les boosts en cas de baisse de maîtrise réduisant le nombre max
+    setBoosts(prev => {
+      const activeCount = Object.values(prev).filter(Boolean).length;
+      if (activeCount > boostRules.maxBoosts) {
+        return { power: false, speed: false, trick: false, recovery: false, defense: false };
+      }
+      return prev;
+    });
+  }, [level, slotsUsed, boostRules.maxBoosts]);
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 font-sans p-4 md:p-8 selection:bg-yellow-500/30">
@@ -285,25 +294,48 @@ export default function App() {
         {/* PANNEAU GAUCHE : CONTRÔLES */}
         <div className="lg:col-span-5 space-y-6">
           
-          {/* Niveau de Telemachus */}
-          <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl shadow-xl flex items-center justify-between border-l-4 border-l-yellow-500">
-            <div>
-              <label className="text-lg font-bold text-neutral-200 block">
-                Niveau Actuel
-              </label>
-              <span className={`text-sm font-bold uppercase tracking-wider ${tierInfo.color}`}>
-                {tierInfo.name}
-              </span>
+          {/* Statistiques Principales (Potentiel, Maîtrise, Niveau) */}
+          <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl shadow-xl flex flex-col gap-4 border-l-4 border-l-yellow-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="text-lg font-bold text-neutral-200 block">
+                  Niveau Actuel
+                </label>
+                <span className={`text-sm font-bold uppercase tracking-wider ${tierInfo.color}`}>
+                  {tierInfo.name}
+                </span>
+              </div>
+              <div className="text-3xl font-black text-yellow-500">
+                {level.toFixed(1)}
+              </div>
             </div>
-            <input 
-              type="number" 
-              value={level}
-              onChange={(e) => setLevel(parseFloat(e.target.value) || 1)}
-              step="0.1" 
-              min="1.0" 
-              max="10.0"
-              className="w-24 bg-neutral-950 text-yellow-500 text-xl font-black text-center py-2 px-3 rounded-lg border border-neutral-700 focus:outline-none focus:border-yellow-500 transition-colors"
-            />
+            
+            <div className="grid grid-cols-2 gap-4 mt-2 pt-4 border-t border-neutral-800">
+              <div>
+                <label className="text-xs text-neutral-400 uppercase tracking-wider font-semibold mb-1 block">Potentiel</label>
+                <input 
+                  type="number" 
+                  value={potential}
+                  onChange={(e) => setPotential(parseFloat(e.target.value) || 1)}
+                  step="0.1" 
+                  min="1.0" 
+                  max="10.0"
+                  className="w-full bg-neutral-950 text-neutral-200 text-lg font-bold py-2 px-3 rounded-lg border border-neutral-700 focus:outline-none focus:border-yellow-500 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-neutral-400 uppercase tracking-wider font-semibold mb-1 block">Maîtrise</label>
+                <input 
+                  type="number" 
+                  value={mastery}
+                  onChange={(e) => setMastery(parseFloat(e.target.value) || 1)}
+                  step="0.1" 
+                  min="1.0" 
+                  max="10.0"
+                  className="w-full bg-neutral-950 text-neutral-200 text-lg font-bold py-2 px-3 rounded-lg border border-neutral-700 focus:outline-none focus:border-yellow-500 transition-colors"
+                />
+              </div>
+            </div>
           </div>
 
           {/* RESERVES D'AURA */}

@@ -1,7 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { Shield, Zap, Swords, Brain, Heart, ChevronDown, Layers, Lock, Battery, BatteryWarning } from 'lucide-react';
-
-// --- 1. DONNÉES DES CAPACITÉS (Issues du HTML de Telemachus) ---
 import capacitesData from './capacites.json';
 
 const statConfig = [

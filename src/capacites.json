@@ -1256,8 +1256,8 @@
     {
         "id": 58,
         "nom_personnage": "\"Valorian\"",
-        "nom_capacite": "Crimson Armor",
-        "niveau": 4.7,
+        "nom_capacite": "Royal Guard",
+        "niveau": 4.6,
         "tier": "Elite Tier",
         "stat_principale": "defense",
         "stats_de_base": {
@@ -1268,11 +1268,11 @@
             "defense": 6.0
         },
         "ratios_stats": {
-            "power": 1.0638297872340425,
-            "speed": 0.6382978723404255,
-            "trick": 1.0638297872340425,
-            "recovery": 0.425531914893617,
-            "defense": 1.276595744680851
+            "power": 1.0869565217391306,
+            "speed": 0.6521739130434783,
+            "trick": 1.0869565217391306,
+            "recovery": 0.4347826086956522,
+            "defense": 1.3043478260869565
         }
     },
     {
@@ -1453,6 +1453,50 @@
     },
     {
         "id": 67,
+        "nom_personnage": "\"Scorch\"",
+        "nom_capacite": "Psy-Blast+",
+        "niveau": 5.7,
+        "tier": "High Tier",
+        "stat_principale": "power",
+        "stats_de_base": {
+            "power": 9.0,
+            "speed": 4.0,
+            "trick": 6.0,
+            "recovery": 2.0,
+            "defense": 3.0
+        },
+        "ratios_stats": {
+            "power": 1.5789473684210527,
+            "speed": 0.7017543859649122,
+            "trick": 1.0526315789473684,
+            "recovery": 0.3508771929824561,
+            "defense": 0.5263157894736842
+        }
+    },
+    {
+        "id": 68,
+        "nom_personnage": "\"Cinder\"",
+        "nom_capacite": "Azure Storm+",
+        "niveau": 5.8,
+        "tier": "High Tier",
+        "stat_principale": "trick",
+        "stats_de_base": {
+            "power": 4.0,
+            "speed": 5.0,
+            "trick": 8.0,
+            "recovery": 4.0,
+            "defense": 5.0
+        },
+        "ratios_stats": {
+            "power": 0.6896551724137931,
+            "speed": 0.8620689655172414,
+            "trick": 1.3793103448275863,
+            "recovery": 0.6896551724137931,
+            "defense": 0.8620689655172414
+        }
+    },
+    {
+        "id": 69,
         "nom_personnage": "Rei",
         "nom_capacite": "Lightining",
         "niveau": 5.8,
@@ -1474,7 +1518,7 @@
         }
     },
     {
-        "id": 68,
+        "id": 70,
         "nom_personnage": "Remi",
         "nom_capacite": "Lightning",
         "niveau": 5.8,
@@ -1496,7 +1540,7 @@
         }
     },
     {
-        "id": 69,
+        "id": 71,
         "nom_personnage": "Verte",
         "nom_capacite": "Demolition",
         "niveau": 5.8,
@@ -1518,7 +1562,7 @@
         }
     },
     {
-        "id": 70,
+        "id": 72,
         "nom_personnage": "Byron",
         "nom_capacite": "Botanist",
         "niveau": 6.0,
@@ -1540,7 +1584,7 @@
         }
     },
     {
-        "id": 71,
+        "id": 73,
         "nom_personnage": "Tarik",
         "nom_capacite": "Paralysis",
         "niveau": 6.2,
@@ -1562,7 +1606,7 @@
         }
     },
     {
-        "id": 72,
+        "id": 74,
         "nom_personnage": "Liam",
         "nom_capacite": "Hydrofreeze",
         "niveau": 6.2,
@@ -1584,7 +1628,7 @@
         }
     },
     {
-        "id": 73,
+        "id": 75,
         "nom_personnage": "Kuyo",
         "nom_capacite": "Blademaster",
         "niveau": 6.3,
@@ -1606,7 +1650,7 @@
         }
     },
     {
-        "id": 74,
+        "id": 76,
         "nom_personnage": "Arlo",
         "nom_capacite": "Barrier",
         "niveau": 6.5,
@@ -1628,7 +1672,7 @@
         }
     },
     {
-        "id": 75,
+        "id": 77,
         "nom_personnage": "Leilah",
         "nom_capacite": "Time Manipulation",
         "niveau": 6.6,
@@ -1650,7 +1694,7 @@
         }
     },
     {
-        "id": 76,
+        "id": 78,
         "nom_personnage": "Keene",
         "nom_capacite": "Minefield",
         "niveau": 6.8,
@@ -1672,7 +1716,7 @@
         }
     },
     {
-        "id": 77,
+        "id": 79,
         "nom_personnage": "Kassandra",
         "nom_capacite": "Particles",
         "niveau": 6.8,
@@ -1694,7 +1738,7 @@
         }
     },
     {
-        "id": 78,
+        "id": 80,
         "nom_personnage": "Sylvia",
         "nom_capacite": "Sensory Control",
         "niveau": 7.3,
@@ -1716,7 +1760,7 @@
         }
     },
     {
-        "id": 79,
+        "id": 81,
         "nom_personnage": "Narisa",
         "nom_capacite": "Time Manipulation",
         "niveau": 7.4,
@@ -1738,7 +1782,7 @@
         }
     },
     {
-        "id": 80,
+        "id": 82,
         "nom_personnage": "Valerie",
         "nom_capacite": "Barrier",
         "niveau": 7.5,
@@ -1760,7 +1804,7 @@
         }
     },
     {
-        "id": 81,
+        "id": 83,
         "nom_personnage": "John",
         "nom_capacite": "Aura Manipulation",
         "niveau": 7.6,
@@ -1782,7 +1826,7 @@
         }
     },
     {
-        "id": 82,
+        "id": 84,
         "nom_personnage": "Vaughn",
         "nom_capacite": "Telekinesis",
         "niveau": 7.8,
@@ -1804,7 +1848,7 @@
         }
     },
     {
-        "id": 83,
+        "id": 85,
         "nom_personnage": "Seraphina",
         "nom_capacite": "Time Manipulation",
         "niveau": 8.0,
@@ -1826,7 +1870,7 @@
         }
     },
     {
-        "id": 84,
+        "id": 86,
         "nom_personnage": "Telemachus",
         "nom_capacite": "Aura Deity",
         "niveau": 6.2,
@@ -1848,7 +1892,7 @@
         }
     },
     {
-        "id": 85,
+        "id": 87,
         "nom_personnage": "Mitsu",
         "nom_capacite": "Faucheuse Fantome",
         "niveau": 5.3,
@@ -1870,7 +1914,7 @@
         }
     },
     {
-        "id": 86,
+        "id": 88,
         "nom_personnage": "Joyce",
         "nom_capacite": "Slow Punch",
         "niveau": 2.6,
@@ -1892,7 +1936,7 @@
         }
     },
     {
-        "id": 87,
+        "id": 89,
         "nom_personnage": "Marc",
         "nom_capacite": "Modes (Bal)",
         "niveau": 8.6,
@@ -1914,7 +1958,7 @@
         }
     },
     {
-        "id": 88,
+        "id": 90,
         "nom_personnage": "Marc",
         "nom_capacite": "Modes (Atk)",
         "niveau": 8.6,
@@ -1936,7 +1980,7 @@
         }
     },
     {
-        "id": 89,
+        "id": 91,
         "nom_personnage": "Marc",
         "nom_capacite": "Modes (Def)",
         "niveau": 8.6,
@@ -1958,7 +2002,7 @@
         }
     },
     {
-        "id": 90,
+        "id": 92,
         "nom_personnage": "Marc",
         "nom_capacite": "Modes (Spd)",
         "niveau": 8.6,
@@ -1980,7 +2024,7 @@
         }
     },
     {
-        "id": 91,
+        "id": 93,
         "nom_personnage": "Marc",
         "nom_capacite": "Modes (Dst)",
         "niveau": 8.6,
@@ -2002,7 +2046,7 @@
         }
     },
     {
-        "id": 92,
+        "id": 94,
         "nom_personnage": "Ice",
         "nom_capacite": "Ice",
         "niveau": 5.5,
@@ -2024,7 +2068,7 @@
         }
     },
     {
-        "id": 93,
+        "id": 95,
         "nom_personnage": "Power",
         "nom_capacite": "Graviton",
         "niveau": 4.8,
@@ -2046,7 +2090,7 @@
         }
     },
     {
-        "id": 94,
+        "id": 96,
         "nom_personnage": "Lucian",
         "nom_capacite": "Pride",
         "niveau": 4.6,
@@ -2068,7 +2112,7 @@
         }
     },
     {
-        "id": 95,
+        "id": 97,
         "nom_personnage": "Rin",
         "nom_capacite": "Shadow Eclipse",
         "niveau": 4.9,

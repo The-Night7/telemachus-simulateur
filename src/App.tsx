@@ -282,9 +282,9 @@ export default function App() {
     const CRIPPLE_PERCENTAGE = 1.0;
     const LOW_PERCENTAGE = 0.7222;
     const MID_PERCENTAGE = 0.6631;
-    const ELITE_PERCENTAGE = 0.6117;
-    const HIGH_PERCENTAGE = 0.5323;
-    const GOD_PERCENTAGE = 0.4527;
+    const ELITE_PERCENTAGE = 0.6017;
+    const HIGH_PERCENTAGE = 0.5023;
+    const GOD_PERCENTAGE = 0.4027;
 
     let tierPercentage;
     let tierDividend;

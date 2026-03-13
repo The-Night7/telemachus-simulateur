@@ -162,7 +162,7 @@ export default function App() {
       const cap = capacitesData.find(c => c.id === parseInt(slotId));
       if (!cap) return;
       
-      const isSignificantlyWeaker = (level - cap.niveau) > 1.0;
+      const isSignificantlyWeaker = (level - cap.niveau) > 2.0;
       const isSignificantlyStronger = (level - cap.niveau) < -1.0;
 
       const ratio = (activeTab === 'alternative' && isSignificantlyWeaker) ? 1.0 : (level / cap.niveau);

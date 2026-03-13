@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Shield, Zap, Swords, Brain, Heart, ChevronDown, Layers, Lock, Battery, BatteryWarning, ChevronsUp } from 'lucide-react';
-import capacitesData from './capacites.json';
+import { Shield, Zap, Swords, Brain, Heart, ChevronDown, Layers, Lock, Battery, ChevronsUp, Sparkles } from 'lucide-react';
+
+// IMPORTANT: Décommentez cette ligne dans votre projet pour utiliser votre propre JSON.
+import capacitesData from './capacites.json'; 
 
 const statConfig = [
   { key: 'power', label: 'Power', Icon: Swords, color: 'text-red-500' },
@@ -10,20 +12,8 @@ const statConfig = [
   { key: 'defense', label: 'Defense', Icon: Shield, color: 'text-yellow-600' }
 ];
 
-// --- TYPESCRIPT INTERFACES ---
-type BoostOption = {
-  mult: number;
-  cost: number;
-  label: string;
-};
-
-type StatInfo = {
-  val: number;
-  sourceLevel: number;
-};
-
 // --- LOGIQUE DE TIER ET DE SLOTS DE TELEMACHUS ---
-const getTierInfo = (level: number) => {
+const getTierInfo = (level) => {
   if (level < 2.0) return { name: "Low-Tier", slots: 1, color: "text-neutral-400" };
   if (level < 4.0) return { name: "Mid-Tier", slots: 2, color: "text-green-400" };
   if (level < 5.0) return { name: "Elite-Tier", slots: 2, color: "text-blue-400" };
@@ -32,12 +22,12 @@ const getTierInfo = (level: number) => {
 };
 
 // --- LOGIQUE DE DRAIN D'AURA DE BASE ---
-const getAuraCost = (niveau: number) => {
+const getAuraCost = (niveau) => {
   return parseFloat((niveau * (niveau / 1.5)).toFixed(1));
 };
 
-// --- 2. COMPOSANT GRAPHIQUE RADAR SVG SUR-MESURE ---
-const RadarChart = ({ stats, boosts }: { stats: Record<string, number>, boosts: Record<string, number> }) => {
+// --- COMPOSANT GRAPHIQUE RADAR SVG ---
+const RadarChart = ({ stats, boosts }) => {
   const maxStat = 10;
   const size = 500;
   const cx = size / 2;
@@ -46,7 +36,7 @@ const RadarChart = ({ stats, boosts }: { stats: Record<string, number>, boosts: 
   const keys = ['power', 'speed', 'trick', 'recovery', 'defense'];
   const labels = ['Power', 'Speed', 'Trick', 'Recovery', 'Defense'];
 
-  const getPoints = (statObj: Record<string, number>, clamp = false) => {
+  const getPoints = (statObj, clamp = false) => {
     return keys.map((key, i) => {
       const val = clamp ? Math.min(statObj[key] || 1, maxStat) : (statObj[key] || 1);
       const r = (val / maxStat) * radius;
@@ -123,17 +113,15 @@ const RadarChart = ({ stats, boosts }: { stats: Record<string, number>, boosts: 
   );
 };
 
-// --- 3. APPLICATION PRINCIPALE ---
+// --- APPLICATION PRINCIPALE ---
 export default function App() {
+  const [activeTab, setActiveTab] = useState('classic'); // 'classic' ou 'alternative'
   const [potential, setPotential] = useState(9.0);
   const [mastery, setMastery] = useState(6.9);
-  const [slots, setSlots] = useState<string[]>(["", "", "", ""]);
+  const [slots, setSlots] = useState(["", "", "", ""]);
   
-  // Le niveau est calculé dynamiquement
   const level = useMemo(() => parseFloat(((potential * mastery) / 10).toFixed(1)), [potential, mastery]);
-
-  // État des amplifications (0 = éteint, 1 = option 1, 2 = option 2, etc.)
-  const [boostState, setBoostState] = useState<Record<string, number>>({ power: 0, speed: 0, trick: 0, recovery: 0, defense: 0 });
+  const [boostState, setBoostState] = useState({ power: 0, speed: 0, trick: 0, recovery: 0, defense: 0 });
 
   const tierInfo = useMemo(() => getTierInfo(level), [level]);
   const slotsUsed = useMemo(() => slots.filter(s => s !== "").length, [slots]);
@@ -142,12 +130,12 @@ export default function App() {
 
   // --- MOTEUR DE FUSION ET IDENTIFICATION DES STATS FORTES/FAIBLES ---
   const baseStatsInfo = useMemo(() => {
-    let stats: Record<string, StatInfo> = { 
-      power: { val: 1, sourceLevel: level }, 
-      speed: { val: 1, sourceLevel: level }, 
-      trick: { val: level * 2.414, sourceLevel: level }, // Le Trick de base vient de Telemachus
-      recovery: { val: 1, sourceLevel: level }, 
-      defense: { val: 1, sourceLevel: level } 
+    let stats = { 
+      power: { val: 1, sourceLevel: level, isAutoBoosted: false }, 
+      speed: { val: 1, sourceLevel: level, isAutoBoosted: false }, 
+      trick: { val: level * 2.414, sourceLevel: level, isAutoBoosted: false }, 
+      recovery: { val: 1, sourceLevel: level, isAutoBoosted: false }, 
+      defense: { val: 1, sourceLevel: level, isAutoBoosted: false } 
     };
     
     slots.forEach((slotId, index) => {
@@ -158,37 +146,51 @@ export default function App() {
       
       const ratio = level / cap.niveau;
 
+      // Logique pour le Système Alternatif : Trouver la stat la plus forte de la capacité
+      let maxStatVal = -1;
+      let keysWithMax = [];
+      
+      if (activeTab === 'alternative') {
+        for (let key in cap.stats_de_base) {
+          if (cap.stats_de_base[key] > maxStatVal) {
+            maxStatVal = cap.stats_de_base[key];
+            keysWithMax = [key];
+          } else if (cap.stats_de_base[key] === maxStatVal) {
+            keysWithMax.push(key); // En cas d'égalité sur la meilleure stat
+          }
+        }
+      }
+
       for (let key in cap.stats_de_base) {
-        // @ts-ignore : On s'assure d'itérer sur les bonnes clés
-        const baseKey = key as keyof typeof cap.stats_de_base;
-        let valeurCopiee = cap.stats_de_base[baseKey] * ratio;
+        const baseKey = key;
+        let valeurCopiee = cap.stats_de_base[baseKey] * ratio; // Adaptage de la stat
+
+        // Application du boost alternatif (x1.75) sur la stat la plus forte adaptée
+        const isBoostedInAlternative = activeTab === 'alternative' && keysWithMax.includes(baseKey);
+        if (isBoostedInAlternative) {
+          valeurCopiee *= 1.75;
+        }
+
         if (valeurCopiee > stats[baseKey].val) {
-          stats[baseKey] = { val: valeurCopiee, sourceLevel: cap.niveau };
+          stats[baseKey] = { val: valeurCopiee, sourceLevel: cap.niveau, isAutoBoosted: isBoostedInAlternative };
         }
       }
     });
 
     return stats;
-  }, [level, slots, tierInfo]);
+  }, [level, slots, tierInfo, activeTab]);
 
   // --- LOGIQUE DES OPTIONS D'AMPLIFICATION ---
-  const getBoostOptions = useCallback((statKey: string): BoostOption[] => {
+  const getBoostOptions = useCallback((statKey) => {
     const sourceLevel = baseStatsInfo[statKey].sourceLevel;
-    
-    // Si la capacité ciblée a un niveau inférieur ou égal, Telemachus est "Strong"
-    // Si la capacité ciblée a un niveau supérieur, Telemachus est "Weak"
     const isTelemachusStrong = sourceLevel <= level; 
 
-    let options: BoostOption[] = [];
+    let options = [];
     if (isTelemachusStrong) {
-      // TELEMACHUS EST STRONG (Cible "Faible")
-      // Coûts d'Aura réduits et gros boosts possibles (jusqu'à x1.75 Standard)
       if (mastery >= 1.6) options.push({ mult: mastery >= 10 ? 1.3 : 1.25, cost: 1.5, label: mastery >= 10 ? 'x1.3 (Très Faible)' : 'x1.25 (Très Faible)' });
       if (mastery >= 2.5) options.push({ mult: 1.5, cost: 2.5, label: 'x1.5 (Faible)' });
       if (mastery >= 4.0) options.push({ mult: 1.75, cost: 5.0, label: 'x1.75 (Standard)' });
     } else {
-      // TELEMACHUS EST WEAK (Cible "Forte")
-      // Coûts d'Aura élevés et petits boosts (jusqu'à x1.5 Élevé)
       if (mastery >= 6.0) options.push({ mult: 1.05, cost: 2.5, label: 'x1.05 (Faible)' });
       if (mastery >= 7.5) options.push({ mult: mastery >= 10 ? 1.3 : 1.25, cost: 5.0, label: mastery >= 10 ? 'x1.3 (Standard)' : 'x1.25 (Standard)' });
       if (mastery >= 8.5) options.push({ mult: 1.5, cost: 7.5, label: 'x1.5 (Élevé)' });
@@ -200,14 +202,12 @@ export default function App() {
   const maxAura = useMemo(() => level * 10, [level]);
   
   const currentAuraDrain = useMemo(() => {
-    // 1. Coût des capacités équipées
     let drain = slots.reduce((total, slotId) => {
       if (!slotId) return total;
       const cap = capacitesData.find(c => c.id === parseInt(slotId));
       return total + (cap ? getAuraCost(cap.niveau) : 0);
     }, 0);
     
-    // 2. Coût dynamique des amplifications actives
     Object.keys(boostState).forEach(key => {
       const idx = boostState[key];
       if (idx > 0) {
@@ -224,7 +224,7 @@ export default function App() {
 
   // --- STATS FINALES APRÈS BOOST ---
   const statsFinales = useMemo(() => {
-    let finalStats: Record<string, number> = {};
+    let finalStats = {};
     for (let key in baseStatsInfo) {
       let val = baseStatsInfo[key].val;
       const idx = boostState[key];
@@ -232,18 +232,13 @@ export default function App() {
         const options = getBoostOptions(key);
         if (options[idx - 1]) val *= options[idx - 1].mult;
       }
-      
-      // OPTION 1 : Arrondi à 1 décimale (ex: 7.5, 6.2) - Recommandé
-      // finalStats[key] = Math.round(val * 10) / 10;
-      
-      // OPTION 2 : Arrondi à l'entier le plus proche (ex: 7, 6)
       finalStats[key] = Math.round(val);
     }
     return finalStats;
   }, [baseStatsInfo, boostState, getBoostOptions]);
 
   // --- INTERACTIONS ---
-  const updateSlot = (index: number, value: string) => {
+  const updateSlot = (index, value) => {
     if (!value) {
       const newSlots = [...slots];
       newSlots[index] = "";
@@ -262,37 +257,31 @@ export default function App() {
     
     const projectedAuraDrain = currentAuraDrain - currentDrainInThisSlot + newDrain;
 
-    if (projectedAuraDrain > maxAura) {
-      return; // Pas assez d'aura
-    }
+    if (projectedAuraDrain > maxAura) return;
 
     const newSlots = [...slots];
     newSlots[index] = value;
     setSlots(newSlots);
   };
 
-  // Gestion du Cycle des amplifications (Clic sur le bouton)
-  const handleBoostClick = (key: string) => {
+  const handleBoostClick = (key) => {
     const options = getBoostOptions(key);
     if (options.length === 0) return;
 
-    const currentIdx = boostState[key]; // 0 = off, 1 = option1, etc.
+    const currentIdx = boostState[key];
     let nextIdx = currentIdx + 1;
 
-    // Trouve la prochaine option abordable en aura
     while (nextIdx <= options.length) {
       const opt = options[nextIdx - 1];
       const oldCost = currentIdx > 0 ? options[currentIdx - 1].cost : 0;
       const netCost = opt.cost - oldCost;
 
-      // Est-ce qu'on a l'aura pour activer ça ? (La limite max n'existe plus)
       if (auraRemaining >= netCost) {
-        break; // Option valide trouvée !
+        break;
       }
       nextIdx++;
     }
 
-    // Si on dépasse la liste d'options, on éteint l'amplification (retour à 0)
     if (nextIdx > options.length) {
       nextIdx = 0; 
     }
@@ -300,7 +289,6 @@ export default function App() {
     setBoostState(prev => ({ ...prev, [key]: nextIdx }));
   };
 
-  // Réinitialisation de sécurité si les statistiques de base changent radicalement
   useEffect(() => {
     const currentTier = getTierInfo(level);
     if (slotsUsed > currentTier.slots) {
@@ -310,22 +298,36 @@ export default function App() {
       }
       setSlots(newSlots);
     }
-    
-    // Annuler les boosts de précaution pour éviter les incohérences d'Aura
     setBoostState({ power: 0, speed: 0, trick: 0, recovery: 0, defense: 0 });
-  }, [level, slotsUsed, mastery]);
+  }, [level, slotsUsed, mastery, activeTab]);
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 font-sans p-4 md:p-8 selection:bg-yellow-500/30">
+    <div className="min-h-screen bg-neutral-950 text-neutral-100 font-sans p-4 md:p-8 selection:bg-yellow-500/30 pb-20">
       
       {/* En-tête */}
-      <div className="max-w-6xl mx-auto mb-10 text-center">
+      <div className="max-w-6xl mx-auto mb-6 text-center">
         <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 tracking-tight mb-2">
           TELEMACHUS PAWN
         </h1>
-        <p className="text-neutral-400 font-medium uppercase tracking-widest text-sm md:text-base">
+        <p className="text-neutral-400 font-medium uppercase tracking-widest text-sm md:text-base mb-6">
           Aura Deity - Simulateur de Capacité
         </p>
+        
+        {/* ONGLETS (Système Classique vs Système Alternatif) */}
+        <div className="inline-flex bg-neutral-900 border border-neutral-800 p-1 rounded-full shadow-lg">
+          <button
+            onClick={() => setActiveTab('classic')}
+            className={`px-6 py-2 rounded-full font-bold text-sm uppercase tracking-wide transition-all ${activeTab === 'classic' ? 'bg-yellow-500 text-neutral-950 shadow-md' : 'text-neutral-500 hover:text-neutral-300'}`}
+          >
+            Système Classique
+          </button>
+          <button
+            onClick={() => setActiveTab('alternative')}
+            className={`px-6 py-2 rounded-full font-bold text-sm uppercase tracking-wide transition-all ${activeTab === 'alternative' ? 'bg-yellow-500 text-neutral-950 shadow-md' : 'text-neutral-500 hover:text-neutral-300'}`}
+          >
+            Système Alternatif
+          </button>
+        </div>
       </div>
 
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -333,7 +335,6 @@ export default function App() {
         {/* PANNEAU GAUCHE : CONTRÔLES */}
         <div className="lg:col-span-5 space-y-6">
           
-          {/* Statistiques Principales (Potentiel, Maîtrise, Niveau) */}
           <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl shadow-xl flex flex-col gap-4 border-l-4 border-l-yellow-500">
             <div className="flex items-center justify-between">
               <div>
@@ -377,7 +378,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* RESERVES D'AURA */}
           <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl shadow-xl">
             <div className="flex justify-between items-end mb-3">
               <div>
@@ -400,7 +400,6 @@ export default function App() {
               ></div>
             </div>
 
-            {/* Section Info Amplifications */}
             <div className="mt-4 pt-4 border-t border-neutral-800 flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <ChevronsUp size={16} className="text-yellow-500" />
@@ -412,7 +411,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Emplacements de copie */}
           <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl shadow-xl space-y-4">
             <h2 className="text-neutral-400 font-semibold mb-4 text-sm uppercase tracking-wider flex items-center gap-2">
               <Layers size={18} />
@@ -448,7 +446,6 @@ export default function App() {
                     })}
                   </select>
                   
-                  {/* Indicateur de coût d'aura */}
                   {slotValue && currentCap && !isLocked && (
                     <div className="absolute right-12 top-1/2 -translate-y-1/2 text-xs font-bold text-yellow-500/70 bg-yellow-500/10 px-2 py-1 rounded-md border border-yellow-500/20">
                       -{getAuraCost(currentCap.niveau)}
@@ -469,12 +466,21 @@ export default function App() {
         {/* PANNEAU DROIT : VISUALISATION */}
         <div className="lg:col-span-7 flex flex-col items-center justify-center bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl relative">
           
-          <div className="absolute top-6 left-6 flex items-center gap-2 px-3 py-1 bg-neutral-950 border border-neutral-800 rounded-lg shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
-            <span className="text-xs font-bold text-neutral-400 uppercase tracking-wide">Aura Jaune</span>
+          <div className="absolute top-6 left-6 flex flex-col gap-2">
+            <div className="flex items-center gap-2 px-3 py-1 bg-neutral-950 border border-neutral-800 rounded-lg shadow-sm w-fit">
+              <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+              <span className="text-xs font-bold text-neutral-400 uppercase tracking-wide">Aura Jaune</span>
+            </div>
+            
+            {activeTab === 'alternative' && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-yellow-500/10 border border-yellow-500/30 rounded-lg shadow-sm w-fit">
+                <Sparkles size={14} className="text-yellow-400" />
+                <span className="text-xs font-bold text-yellow-400 uppercase tracking-wide">Boost Passif Actif</span>
+              </div>
+            )}
           </div>
 
-          <div className="w-full mb-8 mt-6">
+          <div className="w-full mb-8 mt-12 md:mt-6">
             <RadarChart stats={statsFinales} boosts={boostState} />
           </div>
 
@@ -482,24 +488,30 @@ export default function App() {
             {statConfig.map(({ key, label, Icon, color }) => {
               const currentIdx = boostState[key];
               const isBoosted = currentIdx > 0;
+              const isAutoBoosted = baseStatsInfo[key].isAutoBoosted;
               
               const options = getBoostOptions(key);
               const isUnboostable = options.length === 0;
-              
-              // Détermine si on ne peut pas l'activer pour la toute première fois car on n'a plus l'Aura
               const cannotAffordInitial = !isBoosted && (auraRemaining < (options[0]?.cost || 999));
 
               return (
                 <div key={key} className={`bg-neutral-950 border rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden group transition-colors duration-300
                   ${isBoosted ? 'border-yellow-500 bg-yellow-500/10' : 'border-neutral-800'}`}>
                   
+                  {/* Indicateur visuel du Boost Passif (Système Alternatif) */}
+                  {isAutoBoosted && (
+                    <div className="absolute top-1 right-1 text-yellow-400/80" title="Boost passif x1.75 sur la stat forte">
+                      <Sparkles size={14} />
+                    </div>
+                  )}
+                  
                   <Icon size={20} className={`mb-2 ${isBoosted ? 'text-yellow-500' : color} opacity-80`} />
                   <span className="text-xs text-neutral-400 uppercase tracking-wider font-semibold mb-1">{label}</span>
-                  <span className={`text-xl font-black ${isBoosted ? 'text-yellow-400' : 'text-neutral-100'}`}>
+                  <span className={`text-xl font-black ${isBoosted || isAutoBoosted ? 'text-yellow-400' : 'text-neutral-100'}`}>
                     {statsFinales[key].toFixed(1)}
                   </span>
 
-                  {/* Bouton de Cycle d'amplification */}
+                  {/* Bouton de Cycle d'amplification (Manuel) */}
                   <button 
                     onClick={() => handleBoostClick(key)}
                     disabled={isUnboostable || cannotAffordInitial}
@@ -514,13 +526,12 @@ export default function App() {
                     <div className="flex items-center gap-1">
                       <ChevronsUp size={12} />
                       {isBoosted 
-                        ? options[currentIdx - 1].label.split(' ')[0] // Affiche juste "x1.5"
+                        ? options[currentIdx - 1].label.split(' ')[0] 
                         : isUnboostable 
                           ? 'Non Dispo' 
                           : 'Amplifier'
                       }
                     </div>
-                    {/* Affiche le sous-texte de coût uniquement si activé */}
                     {isBoosted && (
                       <span className="opacity-80 mt-0.5 text-[8px]">
                         {options[currentIdx - 1].label.split(' ').slice(1).join(' ')}

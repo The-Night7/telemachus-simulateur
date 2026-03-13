@@ -151,6 +151,8 @@ export default function App() {
       defense: { val: 1, sourceLevel: level, isAutoBoosted: false } 
     };
     
+    const alreadyAutoBoostedStats = new Set<string>();
+    
     slots.forEach((slotId, index) => {
       if (!slotId || index >= tierInfo.slots) return;
       
@@ -159,19 +161,26 @@ export default function App() {
       
       const ratio = level / cap.niveau;
 
-      // Logique pour le Système Alternatif : Trouver la stat la plus forte de la capacité
-      let maxStatVal = -1;
-      let keysWithMax: string[] = [];
+      // Logique pour le Système Alternatif : Trouver la stat la plus forte (hors trick) non encore boostée
+      let keyToBoost: string | null = null;
       
       if (activeTab === 'alternative') {
-        for (let key in cap.stats_de_base) {
-          const statKey = key as keyof typeof cap.stats_de_base;
-          if (cap.stats_de_base[statKey] > maxStatVal) {
-            maxStatVal = cap.stats_de_base[statKey];
-            keysWithMax = [statKey];
-          } else if (cap.stats_de_base[statKey] === maxStatVal) {
-            keysWithMax.push(statKey); // En cas d'égalité sur la meilleure stat
-          }
+        // 1. Extraire et trier les stats (en ignorant 'trick')
+        const sortedStats = Object.entries(cap.stats_de_base)
+          .filter(([key]) => key !== 'trick')
+          .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])); // Tri décroissant, puis alphabétique
+
+        // 2. Chercher la meilleure stat NON BOOSTÉE globalement
+        const bestUnboosted = sortedStats.find(([key]) => !alreadyAutoBoostedStats.has(key));
+
+        if (bestUnboosted) {
+          keyToBoost = bestUnboosted[0];
+        } else if (sortedStats.length > 0) {
+          keyToBoost = sortedStats[0][0]; // Fallback si toutes sont déjà boostées
+        }
+
+        if (keyToBoost) {
+          alreadyAutoBoostedStats.add(keyToBoost);
         }
       }
 
@@ -179,8 +188,8 @@ export default function App() {
         const baseKey = key as keyof typeof cap.stats_de_base;
         let valeurCopiee = cap.stats_de_base[baseKey] * ratio; // Adaptage de la stat
 
-        // Application du boost alternatif (x1.75) sur la stat la plus forte adaptée
-        const isBoostedInAlternative = activeTab === 'alternative' && keysWithMax.includes(baseKey);
+        // Application du boost alternatif (x1.75) sur la stat choisie
+        const isBoostedInAlternative = activeTab === 'alternative' && baseKey === keyToBoost;
         if (isBoostedInAlternative) {
           valeurCopiee *= 1.75;
         }

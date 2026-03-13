@@ -1,6 +1,19 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Shield, Zap, Swords, Brain, Heart, ChevronDown, Layers, Lock, Battery, ChevronsUp, Sparkles } from 'lucide-react';
 
+// --- TYPESCRIPT INTERFACES ---
+type BoostOption = {
+  mult: number;
+  cost: number;
+  label: string;
+};
+
+type StatInfo = {
+  val: number;
+  sourceLevel: number;
+  isAutoBoosted: boolean;
+};
+
 // IMPORTANT: Décommentez cette ligne dans votre projet pour utiliser votre propre JSON.
 import capacitesData from './capacites.json'; 
 
@@ -13,7 +26,7 @@ const statConfig = [
 ];
 
 // --- LOGIQUE DE TIER ET DE SLOTS DE TELEMACHUS ---
-const getTierInfo = (level) => {
+const getTierInfo = (level: number) => {
   if (level < 2.0) return { name: "Low-Tier", slots: 1, color: "text-neutral-400" };
   if (level < 4.0) return { name: "Mid-Tier", slots: 2, color: "text-green-400" };
   if (level < 5.0) return { name: "Elite-Tier", slots: 2, color: "text-blue-400" };
@@ -22,12 +35,12 @@ const getTierInfo = (level) => {
 };
 
 // --- LOGIQUE DE DRAIN D'AURA DE BASE ---
-const getAuraCost = (niveau) => {
+const getAuraCost = (niveau: number) => {
   return parseFloat((niveau * (niveau / 1.5)).toFixed(1));
 };
 
 // --- COMPOSANT GRAPHIQUE RADAR SVG ---
-const RadarChart = ({ stats, boosts }) => {
+const RadarChart = ({ stats, boosts }: { stats: Record<string, number>, boosts: Record<string, number> }) => {
   const maxStat = 10;
   const size = 500;
   const cx = size / 2;
@@ -118,10 +131,10 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('classic'); // 'classic' ou 'alternative'
   const [potential, setPotential] = useState(9.0);
   const [mastery, setMastery] = useState(6.9);
-  const [slots, setSlots] = useState(["", "", "", ""]);
+  const [slots, setSlots] = useState<string[]>(["", "", "", ""]);
   
   const level = useMemo(() => parseFloat(((potential * mastery) / 10).toFixed(1)), [potential, mastery]);
-  const [boostState, setBoostState] = useState({ power: 0, speed: 0, trick: 0, recovery: 0, defense: 0 });
+  const [boostState, setBoostState] = useState<Record<string, number>>({ power: 0, speed: 0, trick: 0, recovery: 0, defense: 0 });
 
   const tierInfo = useMemo(() => getTierInfo(level), [level]);
   const slotsUsed = useMemo(() => slots.filter(s => s !== "").length, [slots]);
@@ -130,7 +143,7 @@ export default function App() {
 
   // --- MOTEUR DE FUSION ET IDENTIFICATION DES STATS FORTES/FAIBLES ---
   const baseStatsInfo = useMemo(() => {
-    let stats = { 
+    let stats: Record<string, StatInfo> = { 
       power: { val: 1, sourceLevel: level, isAutoBoosted: false }, 
       speed: { val: 1, sourceLevel: level, isAutoBoosted: false }, 
       trick: { val: level * 2.414, sourceLevel: level, isAutoBoosted: false }, 
@@ -148,21 +161,22 @@ export default function App() {
 
       // Logique pour le Système Alternatif : Trouver la stat la plus forte de la capacité
       let maxStatVal = -1;
-      let keysWithMax = [];
+      let keysWithMax: string[] = [];
       
       if (activeTab === 'alternative') {
         for (let key in cap.stats_de_base) {
-          if (cap.stats_de_base[key] > maxStatVal) {
-            maxStatVal = cap.stats_de_base[key];
-            keysWithMax = [key];
-          } else if (cap.stats_de_base[key] === maxStatVal) {
-            keysWithMax.push(key); // En cas d'égalité sur la meilleure stat
+          const statKey = key as keyof typeof cap.stats_de_base;
+          if (cap.stats_de_base[statKey] > maxStatVal) {
+            maxStatVal = cap.stats_de_base[statKey];
+            keysWithMax = [statKey];
+          } else if (cap.stats_de_base[statKey] === maxStatVal) {
+            keysWithMax.push(statKey); // En cas d'égalité sur la meilleure stat
           }
         }
       }
 
       for (let key in cap.stats_de_base) {
-        const baseKey = key;
+        const baseKey = key as keyof typeof cap.stats_de_base;
         let valeurCopiee = cap.stats_de_base[baseKey] * ratio; // Adaptage de la stat
 
         // Application du boost alternatif (x1.75) sur la stat la plus forte adaptée
@@ -181,11 +195,11 @@ export default function App() {
   }, [level, slots, tierInfo, activeTab]);
 
   // --- LOGIQUE DES OPTIONS D'AMPLIFICATION ---
-  const getBoostOptions = useCallback((statKey) => {
+  const getBoostOptions = useCallback((statKey: string): BoostOption[] => {
     const sourceLevel = baseStatsInfo[statKey].sourceLevel;
     const isTelemachusStrong = sourceLevel <= level; 
 
-    let options = [];
+    let options: BoostOption[] = [];
     if (isTelemachusStrong) {
       if (mastery >= 1.6) options.push({ mult: mastery >= 10 ? 1.3 : 1.25, cost: 1.5, label: mastery >= 10 ? 'x1.3 (Très Faible)' : 'x1.25 (Très Faible)' });
       if (mastery >= 2.5) options.push({ mult: 1.5, cost: 2.5, label: 'x1.5 (Faible)' });
@@ -238,7 +252,7 @@ export default function App() {
   }, [baseStatsInfo, boostState, getBoostOptions]);
 
   // --- INTERACTIONS ---
-  const updateSlot = (index, value) => {
+  const updateSlot = (index: number, value: string) => {
     if (!value) {
       const newSlots = [...slots];
       newSlots[index] = "";
@@ -264,7 +278,7 @@ export default function App() {
     setSlots(newSlots);
   };
 
-  const handleBoostClick = (key) => {
+  const handleBoostClick = (key: string) => {
     const options = getBoostOptions(key);
     if (options.length === 0) return;
 

@@ -162,11 +162,14 @@ export default function App() {
       if (!cap) return;
       
       // Vérifie si la capacité a plus de 2 niveaux de retard
-      const isSignificantlyWeaker = (level - cap.niveau) > 2.0;
+      const isSignificantlyWeaker = (level - cap.niveau) >= 2.0;
+
+      // Vérifie si la capacité a plus de 2 niveaux d'avance
+      const isSignificantlyStronger = (level - cap.niveau) <= -2.0
 
       // Le ratio d'adaptation est de 1.0 (tel quel) UNIQUEMENT si la capacité a > 2 niveaux de retard
       const ratio = (activeTab === 'alternative' && isSignificantlyWeaker) ? 1.0 : (level / cap.niveau);
-      const currentAutoBoostMult = isSignificantlyWeaker ? 1.75 : 1.5;
+      const currentAutoBoostMult = isSignificantlyStronger ? 1.25 : isSignificantlyWeaker ? 1.75 : 1.5;
 
       // Logique pour le Système Alternatif : Trouver la stat la plus forte (hors trick) non encore boostée
       let keyToBoost: string | null = null;
@@ -361,7 +364,7 @@ export default function App() {
             onClick={() => setActiveTab('alternative')}
             className={`px-6 py-2 rounded-full font-bold text-sm uppercase tracking-wide transition-all ${activeTab === 'alternative' ? 'bg-yellow-500 text-neutral-950 shadow-md' : 'text-neutral-500 hover:text-neutral-300'}`}
           >
-            Système Alternatif
+            Système Shine-City
           </button>
         </div>
       </div>

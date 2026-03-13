@@ -1,7 +1,9 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Shield, Zap, Swords, Brain, Heart, ChevronDown, Layers, Lock, Battery, ChevronsUp, Sparkles } from 'lucide-react';
+import { Shield, Zap, Swords, Brain, Heart, ChevronDown, Layers, Lock, Battery, ChevronsUp, Sparkles, Target } from 'lucide-react';
 
 // --- TYPESCRIPT INTERFACES ---
+type StatKey = 'power' | 'speed' | 'trick' | 'recovery' | 'defense';
+
 type BoostOption = {
   mult: number;
   cost: number;
@@ -18,7 +20,7 @@ type StatInfo = {
 // IMPORTANT: Décommentez cette ligne dans votre projet pour utiliser votre propre JSON.
 import capacitesData from './capacites.json'; 
 
-const statConfig = [
+const statConfig: { key: StatKey, label: string, Icon: React.ElementType, color: string }[] = [
   { key: 'power', label: 'Power', Icon: Swords, color: 'text-red-500' },
   { key: 'speed', label: 'Speed', Icon: Zap, color: 'text-blue-400' },
   { key: 'trick', label: 'Trick', Icon: Brain, color: 'text-purple-500' },
@@ -41,16 +43,15 @@ const getAuraCost = (niveau: number) => {
 };
 
 // --- COMPOSANT GRAPHIQUE RADAR SVG ---
-const RadarChart = ({ stats, boosts }: { stats: Record<string, number>, boosts: Record<string, number> }) => {
+const RadarChart = ({ stats, boosts }: { stats: Record<StatKey, number>, boosts: Record<string, number> }) => {
   const maxStat = 10;
   const size = 500;
   const cx = size / 2;
   const cy = size / 2;
   const radius = 130; 
-  const keys = ['power', 'speed', 'trick', 'recovery', 'defense'];
+  const keys: StatKey[] = ['power', 'speed', 'trick', 'recovery', 'defense'];
   const labels = ['Power', 'Speed', 'Trick', 'Recovery', 'Defense'];
 
-  // CORRECTION 1 : Ajout des types stricts pour statObj et clamp
   const getPoints = (statObj: Record<string, number>, clamp: boolean = false) => {
     return keys.map((key, i) => {
       const val = clamp ? Math.min(statObj[key] || 1, maxStat) : (statObj[key] || 1);
@@ -130,7 +131,7 @@ const RadarChart = ({ stats, boosts }: { stats: Record<string, number>, boosts: 
 
 // --- APPLICATION PRINCIPALE ---
 export default function App() {
-  const [activeTab, setActiveTab] = useState('classic'); // 'classic' ou 'alternative'
+  const [activeTab, setActiveTab] = useState('classic');
   const [potential, setPotential] = useState(9.0);
   const [mastery, setMastery] = useState(6.9);
   const [slots, setSlots] = useState<string[]>(["", "", "", ""]);
@@ -145,7 +146,7 @@ export default function App() {
 
   // --- MOTEUR DE FUSION ET IDENTIFICATION DES STATS FORTES/FAIBLES ---
   const baseStatsInfo = useMemo(() => {
-    let stats: Record<string, StatInfo> = { 
+    let stats: Record<StatKey, StatInfo> = { 
       power: { val: 1, sourceLevel: level, isAutoBoosted: false }, 
       speed: { val: 1, sourceLevel: level, isAutoBoosted: false }, 
       trick: { val: level * 2.414, sourceLevel: level, isAutoBoosted: false }, 
@@ -161,32 +162,25 @@ export default function App() {
       const cap = capacitesData.find(c => c.id === parseInt(slotId));
       if (!cap) return;
       
-      // Vérifie si la capacité a plus de 2 niveaux de retard
       const isSignificantlyWeaker = (level - cap.niveau) >= 2.0;
+      const isSignificantlyStronger = (level - cap.niveau) <= -2.0;
 
-      // Vérifie si la capacité a plus de 2 niveaux d'avance
-      const isSignificantlyStronger = (level - cap.niveau) <= -2.0
-
-      // Le ratio d'adaptation est de 1.0 (tel quel) UNIQUEMENT si la capacité a > 2 niveaux de retard
       const ratio = (activeTab === 'alternative' && isSignificantlyWeaker) ? 1.0 : (level / cap.niveau);
       const currentAutoBoostMult = isSignificantlyStronger ? 1.25 : isSignificantlyWeaker ? 1.75 : 1.5;
 
-      // Logique pour le Système Alternatif : Trouver la stat la plus forte (hors trick) non encore boostée
       let keyToBoost: string | null = null;
       
       if (activeTab === 'alternative') {
-        // 1. Extraire et trier les stats (en ignorant 'trick')
         const sortedStats = Object.entries(cap.stats_de_base)
           .filter(([key]) => key !== 'trick')
-          .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])); // Tri décroissant, puis alphabétique
+          .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 
-        // 2. Chercher la meilleure stat NON BOOSTÉE globalement
         const bestUnboosted = sortedStats.find(([key]) => !alreadyAutoBoostedStats.has(key));
 
         if (bestUnboosted) {
           keyToBoost = bestUnboosted[0];
         } else if (sortedStats.length > 0) {
-          keyToBoost = sortedStats[0][0]; // Fallback si toutes sont déjà boostées
+          keyToBoost = sortedStats[0][0]; 
         }
 
         if (keyToBoost) {
@@ -195,10 +189,9 @@ export default function App() {
       }
 
       for (let key in cap.stats_de_base) {
-        const baseKey = key as keyof typeof cap.stats_de_base;
-        let valeurCopiee = cap.stats_de_base[baseKey] * ratio; // Adaptage de la stat
+        const baseKey = key as StatKey;
+        let valeurCopiee = (cap.stats_de_base as any)[baseKey] * ratio; 
 
-        // Application du boost alternatif (x1.5 ou x1.75) sur la stat choisie
         const isBoostedInAlternative = activeTab === 'alternative' && baseKey === keyToBoost;
         if (isBoostedInAlternative) {
           valeurCopiee *= currentAutoBoostMult;
@@ -219,7 +212,7 @@ export default function App() {
   }, [level, slots, tierInfo, activeTab]);
 
   // --- LOGIQUE DES OPTIONS D'AMPLIFICATION ---
-  const getBoostOptions = useCallback((statKey: string): BoostOption[] => {
+  const getBoostOptions = useCallback((statKey: StatKey): BoostOption[] => {
     const sourceLevel = baseStatsInfo[statKey].sourceLevel;
     const isTelemachusStrong = sourceLevel <= level; 
 
@@ -249,7 +242,7 @@ export default function App() {
     Object.keys(boostState).forEach(key => {
       const idx = boostState[key];
       if (idx > 0) {
-        const options = getBoostOptions(key);
+        const options = getBoostOptions(key as StatKey);
         if (options[idx - 1]) drain += options[idx - 1].cost;
       }
     });
@@ -262,19 +255,76 @@ export default function App() {
 
   // --- STATS FINALES APRÈS BOOST ---
   const statsFinales = useMemo(() => {
-    // CORRECTION 3 : Typage explicite de l'objet finalStats
-    let finalStats: Record<string, number> = {};
+    let finalStats: Record<StatKey, number> = { power: 1, speed: 1, trick: 1, recovery: 1, defense: 1 };
+    
     for (let key in baseStatsInfo) {
-      let val = baseStatsInfo[key].val;
-      const idx = boostState[key];
+      const typedKey = key as StatKey;
+      let val = baseStatsInfo[typedKey].val;
+      const idx = boostState[typedKey];
       if (idx > 0) {
-        const options = getBoostOptions(key);
+        const options = getBoostOptions(typedKey);
         if (options[idx - 1]) val *= options[idx - 1].mult;
       }
-      finalStats[key] = val; // Plus d'arrondi ici, on garde la valeur exacte
+      finalStats[typedKey] = val; 
     }
     return finalStats;
   }, [baseStatsInfo, boostState, getBoostOptions]);
+
+  // --- ALGORITHME DU NIVEAU EFFECTIF ESTIMÉ ---
+  const estimatedEffectiveLevel = useMemo(() => {
+    // 1. Somme de toutes les stats SAUF le Trick
+    const sumStatsWithoutTrick = statsFinales.power + statsFinales.speed + statsFinales.recovery + statsFinales.defense;
+    
+    // 2. Première moyenne (divisée par 4) pour pouvoir déduire le Tier actuel
+    const firstAvg = sumStatsWithoutTrick / 10;
+
+    // Pourcentages fixes
+    const CRIPPLE_PERCENTAGE = 1.0;
+    const LOW_PERCENTAGE = 0.7222;
+    const MID_PERCENTAGE = 0.6631;
+    const ELITE_PERCENTAGE = 0.6117;
+    const HIGH_PERCENTAGE = 0.5323;
+    const GOD_PERCENTAGE = 0.4527;
+
+    let tierPercentage;
+    let tierDividend;
+
+    // 3. Déduction du Tier basée sur la première moyenne (les seuils correspondent aux moyennes pour atteindre chaque tier)
+    if (firstAvg >= 5.34) {
+      // God Tier
+      tierPercentage = GOD_PERCENTAGE;
+      tierDividend = 3.07;
+    } else if (firstAvg >= 4.51) {
+      // High Tier
+      tierPercentage = HIGH_PERCENTAGE;
+      tierDividend = 3.45;
+    } else if (firstAvg >= 2.84) {
+      // Elite Tier
+      tierPercentage = ELITE_PERCENTAGE;
+      tierDividend = 3.09;
+    } else if (firstAvg >= 1.40) {
+      // Mid Tier
+      tierPercentage = MID_PERCENTAGE;
+      tierDividend = 2.73;
+    } else if (firstAvg >= 0.90) {
+      // Low Tier
+      tierPercentage = LOW_PERCENTAGE;
+      tierDividend = 2.46;
+    } else {
+      // Cripple
+      tierPercentage = CRIPPLE_PERCENTAGE;
+      tierDividend = 4.0;
+    }
+
+    // 4. Calcul de la vraie moyenne finale en utilisant le dividende spécifique au Tier
+    const finalStatAverage = sumStatsWithoutTrick / tierDividend;
+
+    // 5. Calcul final : Moyenne Finale / Pourcentage de Prestige
+    const calculatedLevel = finalStatAverage * tierPercentage;
+
+    return Math.min(10, calculatedLevel).toFixed(1);
+  }, [statsFinales]);
+
 
   // --- INTERACTIONS ---
   const updateSlot = (index: number, value: string) => {
@@ -304,10 +354,11 @@ export default function App() {
   };
 
   const handleBoostClick = (key: string) => {
-    const options = getBoostOptions(key);
+    const typedKey = key as StatKey;
+    const options = getBoostOptions(typedKey);
     if (options.length === 0) return;
 
-    const currentIdx = boostState[key];
+    const currentIdx = boostState[typedKey];
     let nextIdx = currentIdx + 1;
 
     while (nextIdx <= options.length) {
@@ -325,9 +376,10 @@ export default function App() {
       nextIdx = 0; 
     }
 
-    setBoostState(prev => ({ ...prev, [key]: nextIdx }));
+    setBoostState(prev => ({ ...prev, [typedKey]: nextIdx }));
   };
 
+  // Réinitialisation lors du changement de niveau/slots
   useEffect(() => {
     const currentTier = getTierInfo(level);
     if (slotsUsed > currentTier.slots) {
@@ -337,8 +389,7 @@ export default function App() {
       }
       setSlots(newSlots);
     }
-    setBoostState({ power: 0, speed: 0, trick: 0, recovery: 0, defense: 0 });
-  }, [level, slotsUsed, mastery, activeTab]);
+  }, [level, slotsUsed, activeTab]);
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 font-sans p-4 md:p-8 selection:bg-yellow-500/30 pb-20">
@@ -352,7 +403,7 @@ export default function App() {
           Aura Deity - Simulateur de Capacité
         </p>
         
-        {/* ONGLETS (Système Classique vs Système Alternatif) */}
+        {/* ONGLETS */}
         <div className="inline-flex bg-neutral-900 border border-neutral-800 p-1 rounded-full shadow-lg">
           <button
             onClick={() => setActiveTab('classic')}
@@ -515,7 +566,7 @@ export default function App() {
         {/* PANNEAU DROIT : VISUALISATION */}
         <div className="lg:col-span-7 flex flex-col items-center justify-center bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl relative">
           
-          <div className="absolute top-6 left-6 flex flex-col gap-2">
+          <div className="absolute top-6 left-6 flex flex-col gap-2 z-10">
             <div className="flex items-center gap-2 px-3 py-1 bg-neutral-950 border border-neutral-800 rounded-lg shadow-sm w-fit">
               <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
               <span className="text-xs font-bold text-neutral-400 uppercase tracking-wide">Aura Jaune</span>
@@ -529,8 +580,17 @@ export default function App() {
             )}
           </div>
 
-          <div className="w-full mb-8 mt-12 md:mt-6">
+          <div className="w-full mb-2 mt-12 md:mt-6">
             <RadarChart stats={statsFinales} boosts={boostState} />
+          </div>
+
+          {/* AJOUT : LIGNE DU NIVEAU EFFECTIF ESTIMÉ */}
+          <div className="w-full flex justify-end mb-3 pr-2">
+            <div className="flex items-center gap-2 text-[13px] text-neutral-400 font-medium">
+              <Target size={14} className="opacity-70" />
+              <span>Estimated Effective Level :</span>
+              <span className="font-black text-yellow-500 ml-1">{estimatedEffectiveLevel}</span>
+            </div>
           </div>
 
           <div className="w-full grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -548,7 +608,6 @@ export default function App() {
                 <div key={key} className={`bg-neutral-950 border rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden group transition-colors duration-300
                   ${isBoosted ? 'border-yellow-500 bg-yellow-500/10' : 'border-neutral-800'}`}>
                   
-                  {/* Indicateur visuel du Boost Passif (Système Alternatif) */}
                   {isAutoBoosted && (
                     <div className="absolute top-1 right-1 flex items-center gap-1 text-yellow-400/80 bg-yellow-500/10 px-1.5 py-0.5 rounded-bl-lg" title={`Boost passif x${autoBoostMult} sur la stat forte`}>
                       <span className="text-[10px] font-bold">x{autoBoostMult}</span>
@@ -562,7 +621,6 @@ export default function App() {
                     {statsFinales[key].toFixed(1)}
                   </span>
 
-                  {/* Bouton de Cycle d'amplification (Manuel) */}
                   <button 
                     onClick={() => handleBoostClick(key)}
                     disabled={isUnboostable || cannotAffordInitial}

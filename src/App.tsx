@@ -12,6 +12,7 @@ type StatInfo = {
   val: number;
   sourceLevel: number;
   isAutoBoosted: boolean;
+  autoBoostMult?: number;
 };
 
 // IMPORTANT: Décommentez cette ligne dans votre projet pour utiliser votre propre JSON.
@@ -159,7 +160,12 @@ export default function App() {
       const cap = capacitesData.find(c => c.id === parseInt(slotId));
       if (!cap) return;
       
-      const ratio = level / cap.niveau;
+      // Vérifie si la capacité a plus de 2 niveaux de retard
+      const isSignificantlyWeaker = (level - cap.niveau) > 2.0;
+
+      // Le ratio d'adaptation est de 1.0 (tel quel) si la capacité a > 2 niveaux de retard dans le système alternatif
+      const ratio = (activeTab === 'alternative' && isSignificantlyWeaker) ? 1.0 : (level / cap.niveau);
+      const currentAutoBoostMult = isSignificantlyWeaker ? 1.75 : 1.5;
 
       // Logique pour le Système Alternatif : Trouver la stat la plus forte (hors trick) non encore boostée
       let keyToBoost: string | null = null;
@@ -188,14 +194,19 @@ export default function App() {
         const baseKey = key as keyof typeof cap.stats_de_base;
         let valeurCopiee = cap.stats_de_base[baseKey] * ratio; // Adaptage de la stat
 
-        // Application du boost alternatif (x1.75) sur la stat choisie
+        // Application du boost alternatif (x1.5 ou x1.75) sur la stat choisie
         const isBoostedInAlternative = activeTab === 'alternative' && baseKey === keyToBoost;
         if (isBoostedInAlternative) {
-          valeurCopiee *= 1.75;
+          valeurCopiee *= currentAutoBoostMult;
         }
 
         if (valeurCopiee > stats[baseKey].val) {
-          stats[baseKey] = { val: valeurCopiee, sourceLevel: cap.niveau, isAutoBoosted: isBoostedInAlternative };
+          stats[baseKey] = { 
+            val: valeurCopiee, 
+            sourceLevel: cap.niveau, 
+            isAutoBoosted: isBoostedInAlternative,
+            autoBoostMult: isBoostedInAlternative ? currentAutoBoostMult : undefined
+          };
         }
       }
     });
@@ -512,6 +523,7 @@ export default function App() {
               const currentIdx = boostState[key];
               const isBoosted = currentIdx > 0;
               const isAutoBoosted = baseStatsInfo[key].isAutoBoosted;
+              const autoBoostMult = baseStatsInfo[key].autoBoostMult;
               
               const options = getBoostOptions(key);
               const isUnboostable = options.length === 0;
@@ -523,12 +535,13 @@ export default function App() {
                   
                   {/* Indicateur visuel du Boost Passif (Système Alternatif) */}
                   {isAutoBoosted && (
-                    <div className="absolute top-1 right-1 text-yellow-400/80" title="Boost passif x1.75 sur la stat forte">
-                      <Sparkles size={14} />
+                    <div className="absolute top-1 right-1 flex items-center gap-1 text-yellow-400/80 bg-yellow-500/10 px-1.5 py-0.5 rounded-bl-lg" title={`Boost passif x${autoBoostMult} sur la stat forte`}>
+                      <span className="text-[10px] font-bold">x{autoBoostMult}</span>
+                      <Sparkles size={12} />
                     </div>
                   )}
                   
-                  <Icon size={20} className={`mb-2 ${isBoosted ? 'text-yellow-500' : color} opacity-80`} />
+                  <Icon size={20} className={`mb-2 mt-1 ${isBoosted ? 'text-yellow-500' : color} opacity-80`} />
                   <span className="text-xs text-neutral-400 uppercase tracking-wider font-semibold mb-1">{label}</span>
                   <span className={`text-xl font-black ${isBoosted || isAutoBoosted ? 'text-yellow-400' : 'text-neutral-100'}`}>
                     {statsFinales[key].toFixed(1)}

@@ -268,7 +268,7 @@ export default function App() {
         const options = getBoostOptions(key);
         if (options[idx - 1]) val *= options[idx - 1].mult;
       }
-      finalStats[key] = Math.round(val);
+      finalStats[key] = val; // Plus d'arrondi ici, on garde la valeur exacte
     }
     return finalStats;
   }, [baseStatsInfo, boostState, getBoostOptions]);

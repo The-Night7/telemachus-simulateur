@@ -16,7 +16,17 @@ type StatInfo = {
 };
 
 // IMPORTANT: Décommentez cette ligne dans votre projet pour utiliser votre propre JSON.
-import capacitesData from './capacites.json'; 
+// import capacitesData from './capacites.json'; 
+
+// --- DONNÉES DE SECOURS (Mock) POUR L'APERÇU ---
+// Supprimez ce bloc dans votre projet une fois l'import ci-dessus décommenté.
+const capacitesData = [
+  { id: 1, nom_capacite: "Energy Beam", niveau: 4.5, stats_de_base: { power: 6, speed: 3, trick: 3, recovery: 2, defense: 2 } },
+  { id: 2, nom_capacite: "Hunter", niveau: 5.2, stats_de_base: { power: 5, speed: 6, trick: 4, recovery: 2, defense: 3 } },
+  { id: 3, nom_capacite: "Barrier", niveau: 4.0, stats_de_base: { power: 1, speed: 1, trick: 2, recovery: 1, defense: 6 } },
+  { id: 4, nom_capacite: "Regeneration", niveau: 3.5, stats_de_base: { power: 2, speed: 2, trick: 2, recovery: 5, defense: 2 } },
+  { id: 5, nom_capacite: "Time Manipulation", niveau: 8.0, stats_de_base: { power: 6, speed: 10, trick: 10, recovery: 4, defense: 5 } }
+];
 
 const statConfig = [
   { key: 'power', label: 'Power', Icon: Swords, color: 'text-red-500' },
@@ -50,7 +60,8 @@ const RadarChart = ({ stats, boosts }: { stats: Record<string, number>, boosts: 
   const keys = ['power', 'speed', 'trick', 'recovery', 'defense'];
   const labels = ['Power', 'Speed', 'Trick', 'Recovery', 'Defense'];
 
-  const getPoints = (statObj, clamp = false) => {
+  // CORRECTION 1 : Ajout des types stricts pour statObj et clamp
+  const getPoints = (statObj: Record<string, number>, clamp: boolean = false) => {
     return keys.map((key, i) => {
       const val = clamp ? Math.min(statObj[key] || 1, maxStat) : (statObj[key] || 1);
       const r = (val / maxStat) * radius;
@@ -166,7 +177,7 @@ export default function App() {
       // Vérifie si la capacité a plus de 2 niveaux d'avance
       const isSignificantlyStronger = (cap.niveau - level) > 2.0;
 
-      // Le ratio d'adaptation est de 1.0 (tel quel) si la capacité a > 2 niveaux de retard ou d'avance dans le système alternatif
+      // Le ratio d'adaptation est de 1.0 (tel quel) si la capacité a > 2 niveaux de retard dans le système alternatif
       const ratio = (activeTab === 'alternative' && isSignificantlyWeaker) ? 1.0 : (level / cap.niveau);
       const currentAutoBoostMult = ( isSignificantlyWeaker || isSignificantlyStronger ) ? 1.75 : 1.5;
 
@@ -261,7 +272,8 @@ export default function App() {
 
   // --- STATS FINALES APRÈS BOOST ---
   const statsFinales = useMemo(() => {
-    let finalStats = {};
+    // CORRECTION 3 : Typage explicite de l'objet finalStats
+    let finalStats: Record<string, number> = {};
     for (let key in baseStatsInfo) {
       let val = baseStatsInfo[key].val;
       const idx = boostState[key];

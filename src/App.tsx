@@ -167,8 +167,8 @@ export default function App() {
       // Vérifie si la capacité a plus de 2 niveaux d'avance
       const isSignificantlyStronger = (cap.niveau - level) > 2.0;
 
-      // Le ratio d'adaptation est de 1.0 (tel quel) si la capacité a > 2 niveaux de retard dans le système alternatif
-      const ratio = (activeTab === 'alternative' && isSignificantlyWeaker) ? 1.0 : (level / cap.niveau);
+      // CORRECTION 2 : Ajout de isSignificantlyStronger dans la condition du ratio
+      const ratio = (activeTab === 'alternative' && (isSignificantlyWeaker || isSignificantlyStronger)) ? 1.0 : (level / cap.niveau);
       const currentAutoBoostMult = ( isSignificantlyWeaker || isSignificantlyStronger ) ? 1.75 : 1.5;
 
       // Logique pour le Système Alternatif : Trouver la stat la plus forte (hors trick) non encore boostée
@@ -461,6 +461,7 @@ export default function App() {
               const slotValue = slots[index];
               const currentCap = slotValue ? capacitesData.find(c => c.id === parseInt(slotValue)) : null;
               const currentSlotDrain = currentCap ? getAuraCost(currentCap.niveau) : 0;
+              const levelDiff = currentCap ? (level - currentCap.niveau) : 0;
 
               return (
                 <div key={index} className="relative group">
@@ -468,7 +469,7 @@ export default function App() {
                     value={slotValue}
                     onChange={(e) => updateSlot(index, e.target.value)}
                     disabled={isLocked}
-                    className={`w-full appearance-none bg-neutral-950 border py-3 pl-4 pr-12 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500/50 transition-all font-medium
+                    className={`w-full appearance-none bg-neutral-950 border py-3 pl-4 pr-32 md:pr-40 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500/50 transition-all font-medium
                       ${isLocked 
                         ? 'border-neutral-800 text-neutral-600 cursor-not-allowed bg-neutral-950/50' 
                         : 'border-neutral-700 text-neutral-200 cursor-pointer focus:border-yellow-500 hover:border-neutral-600'}`}
@@ -486,8 +487,17 @@ export default function App() {
                   </select>
                   
                   {slotValue && currentCap && !isLocked && (
-                    <div className="absolute right-12 top-1/2 -translate-y-1/2 text-xs font-bold text-yellow-500/70 bg-yellow-500/10 px-2 py-1 rounded-md border border-yellow-500/20">
-                      -{getAuraCost(currentCap.niveau)}
+                    <div className="absolute right-10 top-1/2 -translate-y-1/2 flex items-center gap-1.5 md:gap-2">
+                      <div className={`text-[10px] md:text-xs font-bold px-1.5 md:px-2 py-1 rounded-md border ${
+                        levelDiff >= 0 
+                          ? 'text-green-400 bg-green-400/10 border-green-400/20' 
+                          : 'text-red-400 bg-red-400/10 border-red-400/20'
+                      }`} title="Différence de niveau (Telemachus vs Capacité)">
+                        {levelDiff > 0 ? '+' : ''}{levelDiff.toFixed(1)} Niv
+                      </div>
+                      <div className="text-[10px] md:text-xs font-bold text-yellow-500/70 bg-yellow-500/10 px-1.5 md:px-2 py-1 rounded-md border border-yellow-500/20" title="Coût en Aura">
+                        -{getAuraCost(currentCap.niveau)}
+                      </div>
                     </div>
                   )}
                   

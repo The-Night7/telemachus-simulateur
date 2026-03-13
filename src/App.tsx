@@ -16,17 +16,7 @@ type StatInfo = {
 };
 
 // IMPORTANT: Décommentez cette ligne dans votre projet pour utiliser votre propre JSON.
-// import capacitesData from './capacites.json'; 
-
-// --- DONNÉES DE SECOURS (Mock) POUR L'APERÇU ---
-// Supprimez ce bloc dans votre projet une fois l'import ci-dessus décommenté.
-const capacitesData = [
-  { id: 1, nom_capacite: "Energy Beam", niveau: 4.5, stats_de_base: { power: 6, speed: 3, trick: 3, recovery: 2, defense: 2 } },
-  { id: 2, nom_capacite: "Hunter", niveau: 5.2, stats_de_base: { power: 5, speed: 6, trick: 4, recovery: 2, defense: 3 } },
-  { id: 3, nom_capacite: "Barrier", niveau: 4.0, stats_de_base: { power: 1, speed: 1, trick: 2, recovery: 1, defense: 6 } },
-  { id: 4, nom_capacite: "Regeneration", niveau: 3.5, stats_de_base: { power: 2, speed: 2, trick: 2, recovery: 5, defense: 2 } },
-  { id: 5, nom_capacite: "Time Manipulation", niveau: 8.0, stats_de_base: { power: 6, speed: 10, trick: 10, recovery: 4, defense: 5 } }
-];
+import capacitesData from './capacites.json'; 
 
 const statConfig = [
   { key: 'power', label: 'Power', Icon: Swords, color: 'text-red-500' },

@@ -164,12 +164,9 @@ export default function App() {
       // Vérifie si la capacité a plus de 2 niveaux de retard
       const isSignificantlyWeaker = (level - cap.niveau) > 2.0;
 
-      // Vérifie si la capacité a plus de 2 niveaux d'avance
-      const isSignificantlyStronger = (cap.niveau - level) > 2.0;
-
-      // CORRECTION 2 : Ajout de isSignificantlyStronger dans la condition du ratio
-      const ratio = (activeTab === 'alternative' && (isSignificantlyWeaker || isSignificantlyStronger)) ? 1.0 : (level / cap.niveau);
-      const currentAutoBoostMult = ( isSignificantlyWeaker || isSignificantlyStronger ) ? 1.75 : 1.5;
+      // Le ratio d'adaptation est de 1.0 (tel quel) UNIQUEMENT si la capacité a > 2 niveaux de retard
+      const ratio = (activeTab === 'alternative' && isSignificantlyWeaker) ? 1.0 : (level / cap.niveau);
+      const currentAutoBoostMult = isSignificantlyWeaker ? 1.75 : 1.5;
 
       // Logique pour le Système Alternatif : Trouver la stat la plus forte (hors trick) non encore boostée
       let keyToBoost: string | null = null;

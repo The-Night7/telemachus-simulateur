@@ -18,7 +18,96 @@ type StatInfo = {
 };
 
 // IMPORTANT: Décommentez cette ligne dans votre projet pour utiliser votre propre JSON.
-import capacitesData from './capacites.json'; 
+// import capacitesData from './capacites.json'; 
+
+// --- 0. DONNÉES DES CAPACITÉS (Intégrées pour autonomie) ---
+const capacitesData = [
+    { "id": 1, "nom_personnage": "Uru-chan", "nom_capacite": "Troll", "niveau": 1.2, "type": "Manipulation", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 1.0, "speed": 1.0, "trick": 2.0, "recovery": 0.0, "defense": 1.0 }, "ratios_stats": { "power": 0.833, "speed": 0.833, "trick": 1.666, "recovery": 0.0, "defense": 0.833 } },
+    { "id": 2, "nom_personnage": "Evie", "nom_capacite": "Illumination", "niveau": 1.5, "type": "Quantum", "copiable": true, "stat_principale": "recovery", "stats_de_base": { "power": 1.0, "speed": 1.0, "trick": 2.0, "recovery": 1.0, "defense": 1.0 }, "ratios_stats": { "power": 0.666, "speed": 0.666, "trick": 1.333, "recovery": 0.666, "defense": 0.666 } },
+    { "id": 3, "nom_personnage": "Lin", "nom_capacite": "Needles", "niveau": 1.8, "type": "Emission", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 1.0, "speed": 1.0, "trick": 2.0, "recovery": 1.0, "defense": 1.0 }, "ratios_stats": { "power": 0.555, "speed": 0.555, "trick": 1.111, "recovery": 0.555, "defense": 0.555 } },
+    { "id": 4, "nom_personnage": "Hower", "nom_capacite": "Heat Palm", "niveau": 2.1, "type": "Quantum", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 2.0, "speed": 1.0, "trick": 2.0, "recovery": 1.0, "defense": 1.0 }, "ratios_stats": { "power": 0.952, "speed": 0.476, "trick": 0.952, "recovery": 0.476, "defense": 0.476 } },
+    { "id": 5, "nom_personnage": "Rouker", "nom_capacite": "Missiles", "niveau": 2.2, "type": "Emission", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 3.0, "speed": 2.0, "trick": 3.0, "recovery": 1.0, "defense": 1.0 }, "ratios_stats": { "power": 1.363, "speed": 0.909, "trick": 1.363, "recovery": 0.454, "defense": 0.454 } },
+    { "id": 6, "nom_personnage": "Weim", "nom_capacite": "Phantom Fist", "niveau": 2.4, "type": "Emission", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 2.0, "speed": 1.0, "trick": 2.0, "recovery": 1.0, "defense": 1.0 }, "ratios_stats": { "power": 0.833, "speed": 0.416, "trick": 0.833, "recovery": 0.416, "defense": 0.416 } },
+    { "id": 7, "nom_personnage": "Bimel", "nom_capacite": "Rock Arm", "niveau": 2.4, "type": "Enhancement", "copiable": true, "stat_principale": "defense", "stats_de_base": { "power": 2.0, "speed": 1.0, "trick": 1.0, "recovery": 1.0, "defense": 2.0 }, "ratios_stats": { "power": 0.833, "speed": 0.416, "trick": 0.416, "recovery": 0.416, "defense": 0.833 } },
+    { "id": 8, "nom_personnage": "Skrev", "nom_capacite": "Strong Kick", "niveau": 2.4, "type": "Enhancement", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 3.0, "speed": 2.0, "trick": 1.0, "recovery": 1.0, "defense": 1.0 }, "ratios_stats": { "power": 1.25, "speed": 0.833, "trick": 0.416, "recovery": 0.416, "defense": 0.416 } },
+    { "id": 9, "nom_personnage": "Crail", "nom_capacite": "Strong Punch", "niveau": 2.4, "type": "Enhancement", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 4.0, "speed": 1.0, "trick": 1.0, "recovery": 1.0, "defense": 1.0 }, "ratios_stats": { "power": 1.666, "speed": 0.416, "trick": 0.416, "recovery": 0.416, "defense": 0.416 } },
+    { "id": 10, "nom_personnage": "Wyatt", "nom_capacite": "Charge Shot", "niveau": 2.4, "type": "Emission", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 3.0, "speed": 1.0, "trick": 2.0, "recovery": 1.0, "defense": 2.0 }, "ratios_stats": { "power": 1.25, "speed": 0.416, "trick": 0.833, "recovery": 0.416, "defense": 0.833 } },
+    { "id": 11, "nom_personnage": "Bryce", "nom_capacite": "Quick Strike", "niveau": 2.4, "type": "Enhancement", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 2.0, "speed": 2.0, "trick": 2.0, "recovery": 1.0, "defense": 2.0 }, "ratios_stats": { "power": 0.833, "speed": 0.833, "trick": 0.833, "recovery": 0.416, "defense": 0.833 } },
+    { "id": 12, "nom_personnage": "Wenqi", "nom_capacite": "Speed", "niveau": 2.4, "type": "Enhancement", "copiable": true, "stat_principale": "speed", "stats_de_base": { "power": 2.0, "speed": 3.0, "trick": 3.0, "recovery": 1.0, "defense": 1.0 }, "ratios_stats": { "power": 0.833, "speed": 1.25, "trick": 1.25, "recovery": 0.416, "defense": 0.416 } },
+    { "id": 13, "nom_personnage": "Juni", "nom_capacite": "Flash Forward", "niveau": 2.5, "type": "Mental", "copiable": false, "stat_principale": "recovery", "stats_de_base": { "power": 1.0, "speed": 1.0, "trick": 3.0, "recovery": 2.0, "defense": 1.0 }, "ratios_stats": { "power": 0.4, "speed": 0.4, "trick": 1.2, "recovery": 0.8, "defense": 0.4 } },
+    { "id": 14, "nom_personnage": "Krolik", "nom_capacite": "Lazor", "niveau": 2.5, "type": "Emission", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 3.0, "speed": 1.0, "trick": 2.0, "recovery": 1.0, "defense": 1.0 }, "ratios_stats": { "power": 1.2, "speed": 0.4, "trick": 0.8, "recovery": 0.4, "defense": 0.4 } },
+    { "id": 15, "nom_personnage": "Keesh", "nom_capacite": "Hair Growth", "niveau": 2.6, "type": "Enhancement", "copiable": true, "stat_principale": "speed", "stats_de_base": { "power": 1.0, "speed": 2.0, "trick": 2.0, "recovery": 1.0, "defense": 1.0 }, "ratios_stats": { "power": 0.384, "speed": 0.769, "trick": 0.769, "recovery": 0.384, "defense": 0.384 } },
+    { "id": 16, "nom_personnage": "Clio", "nom_capacite": "Dizzy Punch", "niveau": 2.6, "type": "Status", "copiable": true, "stat_principale": "recovery", "stats_de_base": { "power": 1.0, "speed": 1.0, "trick": 3.0, "recovery": 2.0, "defense": 1.0 }, "ratios_stats": { "power": 0.384, "speed": 0.384, "trick": 1.153, "recovery": 0.769, "defense": 0.384 } },
+    { "id": 17, "nom_personnage": "Rex", "nom_capacite": "Ground Pound", "niveau": 2.6, "type": "Enhancement", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 3.0, "speed": 2.0, "trick": 2.0, "recovery": 1.0, "defense": 1.0 }, "ratios_stats": { "power": 1.153, "speed": 0.769, "trick": 0.769, "recovery": 0.384, "defense": 0.384 } },
+    { "id": 18, "nom_personnage": "Emerson", "nom_capacite": "Hand Blade", "niveau": 2.6, "type": "Enhancement", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 2.0, "speed": 2.0, "trick": 3.0, "recovery": 1.0, "defense": 1.0 }, "ratios_stats": { "power": 0.769, "speed": 0.769, "trick": 1.153, "recovery": 0.384, "defense": 0.384 } },
+    { "id": 19, "nom_personnage": "Kiara", "nom_capacite": "Barrage", "niveau": 2.7, "type": "Enhancement", "copiable": true, "stat_principale": "speed", "stats_de_base": { "power": 2.0, "speed": 2.0, "trick": 3.0, "recovery": 1.0, "defense": 1.0 }, "ratios_stats": { "power": 0.74, "speed": 0.74, "trick": 1.111, "recovery": 0.37, "defense": 0.37 } },
+    { "id": 20, "nom_personnage": "Heinz", "nom_capacite": "Catch Up", "niveau": 2.7, "type": "Enhancement", "copiable": true, "stat_principale": "speed", "stats_de_base": { "power": 2.0, "speed": 3.0, "trick": 2.0, "recovery": 1.0, "defense": 1.0 }, "ratios_stats": { "power": 0.74, "speed": 1.111, "trick": 0.74, "recovery": 0.37, "defense": 0.37 } },
+    { "id": 21, "nom_personnage": "Alana", "nom_capacite": "Fortify", "niveau": 2.7, "type": "Enhancement", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 3.0, "speed": 2.0, "trick": 1.0, "recovery": 1.0, "defense": 2.0 }, "ratios_stats": { "power": 1.111, "speed": 0.74, "trick": 0.37, "recovery": 0.37, "defense": 0.74 } },
+    { "id": 22, "nom_personnage": "Illena", "nom_capacite": "Strength", "niveau": 2.7, "type": "Enhancement", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 4.0, "speed": 2.0, "trick": 2.0, "recovery": 1.0, "defense": 2.0 }, "ratios_stats": { "power": 1.481, "speed": 0.74, "trick": 0.74, "recovery": 0.37, "defense": 0.74 } },
+    { "id": 23, "nom_personnage": "Yuline", "nom_capacite": "Clobber", "niveau": 2.8, "type": "Enhancement", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 3.0, "speed": 2.0, "trick": 1.0, "recovery": 1.0, "defense": 2.0 }, "ratios_stats": { "power": 1.071, "speed": 0.714, "trick": 0.357, "recovery": 0.357, "defense": 0.714 } },
+    { "id": 24, "nom_personnage": "Waldo", "nom_capacite": "Shockwave", "niveau": 2.8, "type": "Quantum", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 3.0, "speed": 2.0, "trick": 2.0, "recovery": 1.0, "defense": 1.0 }, "ratios_stats": { "power": 1.071, "speed": 0.714, "trick": 0.714, "recovery": 0.357, "defense": 0.357 } },
+    { "id": 25, "nom_personnage": "Keith", "nom_capacite": "Heavy-Hitter", "niveau": 2.8, "type": "Enhancement", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 3.0, "speed": 2.0, "trick": 2.0, "recovery": 1.0, "defense": 2.0 }, "ratios_stats": { "power": 1.071, "speed": 0.714, "trick": 0.714, "recovery": 0.357, "defense": 0.714 } },
+    { "id": 26, "nom_personnage": "Kalum", "nom_capacite": "Phantom Push", "niveau": 2.8, "type": "Emission", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 3.0, "speed": 2.0, "trick": 3.0, "recovery": 1.0, "defense": 1.0 }, "ratios_stats": { "power": 1.071, "speed": 0.714, "trick": 1.071, "recovery": 0.357, "defense": 0.357 } },
+    { "id": 27, "nom_personnage": "Raddix", "nom_capacite": "Archer", "niveau": 2.8, "type": "Emission", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 4.0, "speed": 1.5, "trick": 3.0, "recovery": 1.0, "defense": 1.0 }, "ratios_stats": { "power": 1.428, "speed": 0.535, "trick": 1.071, "recovery": 0.357, "defense": 0.357 } },
+    { "id": 28, "nom_personnage": "Gavin", "nom_capacite": "Stone Skin", "niveau": 2.8, "type": "Transformation", "copiable": true, "stat_principale": "defense", "stats_de_base": { "power": 2.0, "speed": 3.0, "trick": 1.0, "recovery": 1.0, "defense": 4.0 }, "ratios_stats": { "power": 0.714, "speed": 1.071, "trick": 0.357, "recovery": 0.357, "defense": 1.428 } },
+    { "id": 29, "nom_personnage": "Sherri", "nom_capacite": "Vigor", "niveau": 2.9, "type": "Enhancement", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 4.0, "speed": 2.0, "trick": 1.0, "recovery": 2.0, "defense": 1.0 }, "ratios_stats": { "power": 1.379, "speed": 0.689, "trick": 0.344, "recovery": 0.689, "defense": 0.344 } },
+    { "id": 30, "nom_personnage": "Melody", "nom_capacite": "Impact", "niveau": 3.1, "type": "Enhancement", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 4.0, "speed": 2.0, "trick": 2.0, "recovery": 2.0, "defense": 1.0 }, "ratios_stats": { "power": 1.29, "speed": 0.645, "trick": 0.645, "recovery": 0.645, "defense": 0.322 } },
+    { "id": 31, "nom_personnage": "Tanner", "nom_capacite": "Regeneration", "niveau": 3.1, "type": "Curative", "copiable": true, "stat_principale": "recovery", "stats_de_base": { "power": 2.0, "speed": 1.0, "trick": 3.0, "recovery": 5.0, "defense": 3.0 }, "ratios_stats": { "power": 0.645, "speed": 0.322, "trick": 0.967, "recovery": 1.612, "defense": 0.967 } },
+    { "id": 32, "nom_personnage": "Brea", "nom_capacite": "Arcane Shot", "niveau": 3.2, "type": "Emission", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 4.0, "speed": 2.0, "trick": 2.0, "recovery": 1.0, "defense": 1.0 }, "ratios_stats": { "power": 1.25, "speed": 0.625, "trick": 0.625, "recovery": 0.312, "defense": 0.312 } },
+    { "id": 33, "nom_personnage": "Lance", "nom_capacite": "Tremor", "niveau": 3.2, "type": "Quantum", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 4.0, "speed": 2.0, "trick": 3.0, "recovery": 2.0, "defense": 2.0 }, "ratios_stats": { "power": 1.25, "speed": 0.625, "trick": 0.937, "recovery": 0.625, "defense": 0.625 } },
+    { "id": 34, "nom_personnage": "Merin", "nom_capacite": "Charge", "niveau": 3.4, "type": "Enhancement", "copiable": true, "stat_principale": "speed", "stats_de_base": { "power": 2.0, "speed": 4.0, "trick": 1.0, "recovery": 2.0, "defense": 4.0 }, "ratios_stats": { "power": 0.588, "speed": 1.176, "trick": 0.294, "recovery": 0.588, "defense": 1.176 } },
+    { "id": 35, "nom_personnage": "Elaine", "nom_capacite": "Healing", "niveau": 3.5, "type": "Curative", "copiable": true, "stat_principale": "recovery", "stats_de_base": { "power": 1.0, "speed": 1.0, "trick": 1.0, "recovery": 7.0, "defense": 3.0 }, "ratios_stats": { "power": 0.285, "speed": 0.285, "trick": 0.285, "recovery": 2.0, "defense": 0.857 } },
+    { "id": 36, "nom_personnage": "???", "nom_capacite": "Sleep Touch", "niveau": 3.5, "type": "Alteration", "copiable": true, "stat_principale": "speed", "stats_de_base": { "power": 2.0, "speed": 3.0, "trick": 5.0, "recovery": 2.0, "defense": 2.0 }, "ratios_stats": { "power": 0.571, "speed": 0.857, "trick": 1.428, "recovery": 0.571, "defense": 0.571 } },
+    { "id": 37, "nom_personnage": "Lennon", "nom_capacite": "Conjure: Disks", "niveau": 3.5, "type": "Creation", "copiable": true, "stat_principale": "defense", "stats_de_base": { "power": 3.0, "speed": 2.0, "trick": 4.0, "recovery": 1.3, "defense": 5.0 }, "ratios_stats": { "power": 0.857, "speed": 0.571, "trick": 1.142, "recovery": 0.371, "defense": 1.428 } },
+    { "id": 38, "nom_personnage": "Levani", "nom_capacite": "Grenadier", "niveau": 3.6, "type": "Emission", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 5.0, "speed": 2.0, "trick": 4.0, "recovery": 2.0, "defense": 1.0 }, "ratios_stats": { "power": 1.388, "speed": 0.555, "trick": 1.111, "recovery": 0.555, "defense": 0.277 } },
+    { "id": 39, "nom_personnage": "Payton", "nom_capacite": "Superhuman", "niveau": 3.6, "type": "Enhancement", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 3.0, "speed": 3.0, "trick": 2.0, "recovery": 3.0, "defense": 3.0 }, "ratios_stats": { "power": 0.833, "speed": 0.833, "trick": 0.555, "recovery": 0.833, "defense": 0.833 } },
+    { "id": 40, "nom_personnage": "Abel", "nom_capacite": "Explosion", "niveau": 3.6, "type": "Quantum", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 4.0, "speed": 2.0, "trick": 4.0, "recovery": 2.0, "defense": 3.0 }, "ratios_stats": { "power": 1.111, "speed": 0.555, "trick": 1.111, "recovery": 0.555, "defense": 0.833 } },
+    { "id": 41, "nom_personnage": "Zirian", "nom_capacite": "Crescent Slash", "niveau": 3.7, "type": "Emission", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 5.0, "speed": 3.0, "trick": 3.0, "recovery": 2.0, "defense": 3.0 }, "ratios_stats": { "power": 1.351, "speed": 0.81, "trick": 0.81, "recovery": 0.54, "defense": 0.81 } },
+    { "id": 42, "nom_personnage": "Myles", "nom_capacite": "Heal Link", "niveau": 3.8, "type": "Curative", "copiable": true, "stat_principale": "recovery", "stats_de_base": { "power": 1.0, "speed": 1.0, "trick": 3.0, "recovery": 7.0, "defense": 2.0 }, "ratios_stats": { "power": 0.263, "speed": 0.263, "trick": 0.789, "recovery": 1.842, "defense": 0.526 } },
+    { "id": 43, "nom_personnage": "Leena", "nom_capacite": "Fleetstep", "niveau": 3.8, "type": "Enhancement", "copiable": true, "stat_principale": "speed", "stats_de_base": { "power": 3.0, "speed": 4.0, "trick": 5.0, "recovery": 1.0, "defense": 2.0 }, "ratios_stats": { "power": 0.789, "speed": 1.052, "trick": 1.315, "recovery": 0.263, "defense": 0.526 } },
+    { "id": 44, "nom_personnage": "Jace", "nom_capacite": "Iron Knuckle", "niveau": 3.8, "type": "Enhancement", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 5.0, "speed": 2.0, "trick": 2.0, "recovery": 2.0, "defense": 4.0 }, "ratios_stats": { "power": 1.315, "speed": 0.526, "trick": 0.526, "recovery": 0.526, "defense": 1.052 } },
+    { "id": 45, "nom_personnage": "Ezra", "nom_capacite": "Shadow Flame", "niveau": 3.8, "type": "Emission", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 6.0, "speed": 2.0, "trick": 3.0, "recovery": 2.0, "defense": 2.0 }, "ratios_stats": { "power": 1.578, "speed": 0.526, "trick": 0.789, "recovery": 0.526, "defense": 0.526 } },
+    { "id": 46, "nom_personnage": "Kayden", "nom_capacite": "Teleportation", "niveau": 3.8, "type": "Quantum", "copiable": true, "stat_principale": "speed", "stats_de_base": { "power": 1.0, "speed": 7.0, "trick": 3.0, "recovery": 3.0, "defense": 1.0 }, "ratios_stats": { "power": 0.263, "speed": 1.842, "trick": 0.789, "recovery": 0.789, "defense": 0.263 } },
+    { "id": 47, "nom_personnage": "Ventus", "nom_capacite": "Whirlwind", "niveau": 3.8, "type": "Quantum", "copiable": true, "stat_principale": "speed", "stats_de_base": { "power": 3.0, "speed": 4.0, "trick": 3.0, "recovery": 2.0, "defense": 3.0 }, "ratios_stats": { "power": 0.789, "speed": 1.052, "trick": 0.789, "recovery": 0.526, "defense": 0.789 } },
+    { "id": 48, "nom_personnage": "Meili", "nom_capacite": "Demon Claw", "niveau": 3.8, "type": "Enhancement", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 5.0, "speed": 3.0, "trick": 3.0, "recovery": 2.0, "defense": 3.0 }, "ratios_stats": { "power": 1.315, "speed": 0.789, "trick": 0.789, "recovery": 0.526, "defense": 0.789 } },
+    { "id": 49, "nom_personnage": "???", "nom_capacite": "Heal", "niveau": 3.8, "type": "Curative", "copiable": true, "stat_principale": "recovery", "stats_de_base": { "power": 2.0, "speed": 1.0, "trick": 4.0, "recovery": 6.0, "defense": 2.0 }, "ratios_stats": { "power": 0.526, "speed": 0.263, "trick": 1.052, "recovery": 1.578, "defense": 0.526 } },
+    { "id": 50, "nom_personnage": "Gou", "nom_capacite": "Super Strength", "niveau": 4.0, "type": "Enhancement", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 6.0, "speed": 3.0, "trick": 1.0, "recovery": 2.0, "defense": 5.0 }, "ratios_stats": { "power": 1.5, "speed": 0.75, "trick": 0.25, "recovery": 0.5, "defense": 1.25 } },
+    { "id": 51, "nom_personnage": "Skylar", "nom_capacite": "Demon Blade", "niveau": 4.2, "type": "Enhancement", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 6.0, "speed": 3.0, "trick": 3.0, "recovery": 2.0, "defense": 2.0 }, "ratios_stats": { "power": 1.428, "speed": 0.714, "trick": 0.714, "recovery": 0.476, "defense": 0.476 } },
+    { "id": 52, "nom_personnage": "Zeke", "nom_capacite": "Phase Shift (Def)", "niveau": 4.2, "type": "Enhancement", "copiable": true, "stat_principale": "defense", "stats_de_base": { "power": 1.0, "speed": 1.0, "trick": 6.0, "recovery": 3.0, "defense": 5.0 }, "ratios_stats": { "power": 0.238, "speed": 0.238, "trick": 1.428, "recovery": 0.714, "defense": 1.19 } },
+    { "id": 53, "nom_personnage": "Zeke", "nom_capacite": "Phase Shift (Off)", "niveau": 4.2, "type": "Enhancement", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 5.0, "speed": 3.0, "trick": 6.0, "recovery": 1.0, "defense": 1.0 }, "ratios_stats": { "power": 1.19, "speed": 0.714, "trick": 1.428, "recovery": 0.238, "defense": 0.238 } },
+    { "id": 54, "nom_personnage": "Charlie", "nom_capacite": "Contact Shred", "niveau": 4.2, "type": "Non spécifiée", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 6.0, "speed": 1.5, "trick": 1.5, "recovery": 4.5, "defense": 3.0 }, "ratios_stats": { "power": 1.428, "speed": 0.357, "trick": 0.357, "recovery": 1.071, "defense": 0.714 } },
+    { "id": 55, "nom_personnage": "Darren", "nom_capacite": "Nightmare", "niveau": 4.2, "type": "Mental", "copiable": false, "stat_principale": "defense", "stats_de_base": { "power": 1.0, "speed": 2.0, "trick": 5.0, "recovery": 4.0, "defense": 5.0 }, "ratios_stats": { "power": 0.238, "speed": 0.476, "trick": 1.19, "recovery": 0.952, "defense": 1.19 } },
+    { "id": 56, "nom_personnage": "Terrence", "nom_capacite": "Invisibility", "niveau": 4.4, "type": "Enhancement", "copiable": true, "stat_principale": "speed", "stats_de_base": { "power": 1.0, "speed": 3.0, "trick": 10.0, "recovery": 2.0, "defense": 2.0 }, "ratios_stats": { "power": 0.227, "speed": 0.681, "trick": 2.272, "recovery": 0.454, "defense": 0.454 } },
+    { "id": 57, "nom_personnage": "Kree", "nom_capacite": "Armor Suit", "niveau": 4.4, "type": "Enhancement", "copiable": true, "stat_principale": "defense", "stats_de_base": { "power": 4.0, "speed": 3.0, "trick": 4.0, "recovery": 3.0, "defense": 5.0 }, "ratios_stats": { "power": 0.909, "speed": 0.681, "trick": 0.909, "recovery": 0.681, "defense": 1.136 } },
+    { "id": 58, "nom_personnage": "\"Valorian\"", "nom_capacite": "Royal Guard", "niveau": 4.6, "type": "Creation", "copiable": true, "stat_principale": "defense", "stats_de_base": { "power": 5.0, "speed": 3.0, "trick": 5.0, "recovery": 2.0, "defense": 6.0 }, "ratios_stats": { "power": 1.086, "speed": 0.652, "trick": 1.086, "recovery": 0.434, "defense": 1.304 } },
+    { "id": 59, "nom_personnage": "Isen", "nom_capacite": "Hunter", "niveau": 4.8, "type": "Enhancement", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 6.0, "speed": 3.0, "trick": 6.0, "recovery": 3.0, "defense": 5.0 }, "ratios_stats": { "power": 1.25, "speed": 0.625, "trick": 1.25, "recovery": 0.625, "defense": 1.041 } },
+    { "id": 60, "nom_personnage": "Melvin", "nom_capacite": "Spectral Claw", "niveau": 5.0, "type": "Enhancement", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 8.0, "speed": 5.0, "trick": 6.0, "recovery": 2.0, "defense": 3.0 }, "ratios_stats": { "power": 1.6, "speed": 1.0, "trick": 1.2, "recovery": 0.4, "defense": 0.6 } },
+    { "id": 61, "nom_personnage": "Rein", "nom_capacite": "Arachnid", "niveau": 5.1, "type": "Creation", "copiable": true, "stat_principale": "defense", "stats_de_base": { "power": 4.0, "speed": 4.0, "trick": 4.0, "recovery": 2.0, "defense": 6.0 }, "ratios_stats": { "power": 0.784, "speed": 0.784, "trick": 0.784, "recovery": 0.392, "defense": 1.176 } },
+    { "id": 62, "nom_personnage": "Blyke", "nom_capacite": "Energy Discharge", "niveau": 5.1, "type": "Emission", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 8.0, "speed": 4.0, "trick": 5.0, "recovery": 5.0, "defense": 4.0 }, "ratios_stats": { "power": 1.568, "speed": 0.784, "trick": 0.98, "recovery": 0.98, "defense": 0.784 } },
+    { "id": 63, "nom_personnage": "Cecile", "nom_capacite": "Conjure: Vines", "niveau": 5.3, "type": "Creation", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 5.0, "speed": 3.0, "trick": 7.0, "recovery": 4.0, "defense": 5.0 }, "ratios_stats": { "power": 0.943, "speed": 0.566, "trick": 1.32, "recovery": 0.754, "defense": 0.943 } },
+    { "id": 64, "nom_personnage": "Isen", "nom_capacite": "Predator", "niveau": 5.3, "type": "Predator", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 7.0, "speed": 4.0, "trick": 6.0, "recovery": 3.0, "defense": 5.0 }, "ratios_stats": { "power": 1.32, "speed": 0.754, "trick": 1.132, "recovery": 0.566, "defense": 0.943 } },
+    { "id": 65, "nom_personnage": "Candice", "nom_capacite": "Duplication", "niveau": 5.6, "type": "Quantum", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 5.0, "speed": 3.0, "trick": 8.0, "recovery": 3.0, "defense": 5.0 }, "ratios_stats": { "power": 0.892, "speed": 0.535, "trick": 1.428, "recovery": 0.535, "defense": 0.892 } },
+    { "id": 66, "nom_personnage": "Colt", "nom_capacite": "Imprison", "niveau": 5.6, "type": "Creation", "copiable": true, "stat_principale": "defense", "stats_de_base": { "power": 7.0, "speed": 2.0, "trick": 6.0, "recovery": 4.0, "defense": 7.0 }, "ratios_stats": { "power": 1.25, "speed": 0.357, "trick": 1.071, "recovery": 0.714, "defense": 1.25 } },
+    { "id": 67, "nom_personnage": "\"Scorch\"", "nom_capacite": "Psy-Blast+", "niveau": 5.7, "type": "Mental", "copiable": false, "stat_principale": "power", "stats_de_base": { "power": 9.0, "speed": 4.0, "trick": 6.0, "recovery": 2.0, "defense": 3.0 }, "ratios_stats": { "power": 1.578, "speed": 0.701, "trick": 1.052, "recovery": 0.35, "defense": 0.526 } },
+    { "id": 68, "nom_personnage": "\"Cinder\"", "nom_capacite": "Azure Storm+", "niveau": 5.8, "type": "Quantique", "copiable": true, "stat_principale": "speed", "stats_de_base": { "power": 4.0, "speed": 5.0, "trick": 8.0, "recovery": 4.0, "defense": 5.0 }, "ratios_stats": { "power": 0.689, "speed": 0.862, "trick": 1.379, "recovery": 0.689, "defense": 0.862 } },
+    { "id": 69, "nom_personnage": "Rei", "nom_capacite": "Lightining", "niveau": 5.8, "type": "Quantum", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 8.0, "speed": 6.0, "trick": 4.0, "recovery": 3.0, "defense": 4.0 }, "ratios_stats": { "power": 1.379, "speed": 1.034, "trick": 0.689, "recovery": 0.517, "defense": 0.689 } },
+    { "id": 70, "nom_personnage": "Remi", "nom_capacite": "Lightning", "niveau": 5.8, "type": "Quantum", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 7.0, "speed": 6.0, "trick": 5.0, "recovery": 4.0, "defense": 4.0 }, "ratios_stats": { "power": 1.206, "speed": 1.034, "trick": 0.862, "recovery": 0.689, "defense": 0.689 } },
+    { "id": 71, "nom_personnage": "Verte", "nom_capacite": "Demolition", "niveau": 5.8, "type": "Quantum", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 8.0, "speed": 4.0, "trick": 5.0, "recovery": 4.0, "defense": 6.0 }, "ratios_stats": { "power": 1.379, "speed": 0.689, "trick": 0.862, "recovery": 0.689, "defense": 1.034 } },
+    { "id": 72, "nom_personnage": "Byron", "nom_capacite": "Botanist", "niveau": 6.0, "type": "Quantum", "copiable": true, "stat_principale": "defense", "stats_de_base": { "power": 5.0, "speed": 2.0, "trick": 6.0, "recovery": 5.0, "defense": 7.0 }, "ratios_stats": { "power": 0.833, "speed": 0.333, "trick": 1.0, "recovery": 0.833, "defense": 1.166 } },
+    { "id": 73, "nom_personnage": "Tarik", "nom_capacite": "Paralysis", "niveau": 6.2, "type": "Quantum", "copiable": true, "stat_principale": "speed", "stats_de_base": { "power": 3.0, "speed": 4.0, "trick": 10.0, "recovery": 3.0, "defense": 3.0 }, "ratios_stats": { "power": 0.483, "speed": 0.645, "trick": 1.612, "recovery": 0.483, "defense": 0.483 } },
+    { "id": 74, "nom_personnage": "Liam", "nom_capacite": "Hydrofreeze", "niveau": 6.2, "type": "Quantum", "copiable": true, "stat_principale": "defense", "stats_de_base": { "power": 5.0, "speed": 3.0, "trick": 8.0, "recovery": 4.0, "defense": 6.0 }, "ratios_stats": { "power": 0.806, "speed": 0.483, "trick": 1.29, "recovery": 0.645, "defense": 0.967 } },
+    { "id": 75, "nom_personnage": "Kuyo", "nom_capacite": "Blademaster", "niveau": 6.3, "type": "Creation", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 9.0, "speed": 5.0, "trick": 5.0, "recovery": 3.0, "defense": 4.0 }, "ratios_stats": { "power": 1.428, "speed": 0.793, "trick": 0.793, "recovery": 0.476, "defense": 0.634 } },
+    { "id": 76, "nom_personnage": "Arlo", "nom_capacite": "Barrier", "niveau": 6.5, "type": "Creation", "copiable": true, "stat_principale": "defense", "stats_de_base": { "power": 7.0, "speed": 2.0, "trick": 6.0, "recovery": 3.0, "defense": 9.0 }, "ratios_stats": { "power": 1.076, "speed": 0.307, "trick": 0.923, "recovery": 0.461, "defense": 1.384 } },
+    { "id": 77, "nom_personnage": "Leilah", "nom_capacite": "Time Manipulation", "niveau": 6.6, "type": "Quantum", "copiable": true, "stat_principale": "speed", "stats_de_base": { "power": 7.0, "speed": 9.0, "trick": 7.0, "recovery": 5.0, "defense": 1.0 }, "ratios_stats": { "power": 1.06, "speed": 1.363, "trick": 1.06, "recovery": 0.757, "defense": 0.151 } },
+    { "id": 78, "nom_personnage": "Keene", "nom_capacite": "Minefield", "niveau": 6.8, "type": "Quantum", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 8.0, "speed": 4.0, "trick": 12.0, "recovery": 3.0, "defense": 5.0 }, "ratios_stats": { "power": 1.176, "speed": 0.588, "trick": 1.764, "recovery": 0.441, "defense": 0.735 } },
+    { "id": 79, "nom_personnage": "Kassandra", "nom_capacite": "Particles", "niveau": 6.8, "type": "Creation", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 8.0, "speed": 3.0, "trick": 12.0, "recovery": 4.0, "defense": 5.0 }, "ratios_stats": { "power": 1.176, "speed": 0.441, "trick": 1.764, "recovery": 0.588, "defense": 0.735 } },
+    { "id": 80, "nom_personnage": "Sylvia", "nom_capacite": "Sensory Control", "niveau": 7.3, "type": "Status", "copiable": true, "stat_principale": "defense", "stats_de_base": { "power": 5.0, "speed": 3.0, "trick": 14.0, "recovery": 3.0, "defense": 5.0 }, "ratios_stats": { "power": 0.684, "speed": 0.41, "trick": 1.917, "recovery": 0.41, "defense": 0.684 } },
+    { "id": 81, "nom_personnage": "Narisa", "nom_capacite": "Time Manipulation", "niveau": 7.4, "type": "Quantum", "copiable": true, "stat_principale": "speed", "stats_de_base": { "power": 9.0, "speed": 12.0, "trick": 10.0, "recovery": 5.0, "defense": 1.0 }, "ratios_stats": { "power": 1.216, "speed": 1.621, "trick": 1.351, "recovery": 0.675, "defense": 0.135 } },
+    { "id": 82, "nom_personnage": "Valerie", "nom_capacite": "Barrier", "niveau": 7.5, "type": "Creation", "copiable": true, "stat_principale": "defense", "stats_de_base": { "power": 8.0, "speed": 2.0, "trick": 7.0, "recovery": 6.0, "defense": 12.0 }, "ratios_stats": { "power": 1.066, "speed": 0.266, "trick": 0.933, "recovery": 0.8, "defense": 1.6 } },
+    { "id": 83, "nom_personnage": "John", "nom_capacite": "Aura Manipulation", "niveau": 7.6, "type": "Detection", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 4.0, "speed": 1.0, "trick": 16.0, "recovery": 1.0, "defense": 1.0 }, "ratios_stats": { "power": 0.526, "speed": 0.131, "trick": 2.105, "recovery": 0.131, "defense": 0.131 } },
+    { "id": 84, "nom_personnage": "Vaughn", "nom_capacite": "Telekinesis", "niveau": 7.8, "type": "Quantum", "copiable": true, "stat_principale": "power", "stats_de_base": { "power": 14.0, "speed": 3.0, "trick": 12.0, "recovery": 6.0, "defense": 8.0 }, "ratios_stats": { "power": 1.794, "speed": 0.384, "trick": 1.538, "recovery": 0.769, "defense": 1.025 } },
+    { "id": 85, "nom_personnage": "Seraphina", "nom_capacite": "Time Manipulation", "niveau": 8.0, "type": "Quantum", "copiable": true, "stat_principale": "speed", "stats_de_base": { "power": 12.0, "speed": 14.0, "trick": 10.0, "recovery": 9.0, "defense": 2.0 }, "ratios_stats": { "power": 1.5, "speed": 1.75, "trick": 1.25, "recovery": 1.125, "defense": 0.25 } }
+];
 
 const statConfig: { key: StatKey, label: string, Icon: React.ElementType, color: string }[] = [
   { key: 'power', label: 'Power', Icon: Swords, color: 'text-red-500' },
@@ -84,7 +173,6 @@ const RadarChart = ({ stats, boosts, baseStatsInfo }: { stats: Record<StatKey, n
           const val = stats[key] || 1;
           const r = (val / maxStat) * radius;
           const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
-          // Un nœud est boosté s'il a un boost manuel OU un boost auto/passif (y compris le x1.5 classique)
           const isBoosted = boosts[key] > 0 || baseStatsInfo[key].isAutoBoosted;
           
           return (
@@ -145,7 +233,7 @@ export default function App() {
   
   const activeBoostsCount = useMemo(() => Object.values(boostState).filter(v => v > 0).length, [boostState]);
 
-  // --- MOTEUR DE FUSION ET IDENTIFICATION DES STATS FORTES/FAIBLES ---
+  // --- MOTEUR DE FUSION ET IDENTIFICATION DES STATS FORTES/FAIBLES (AVEC POOL DE REPARTITION) ---
   const baseStatsInfo = useMemo(() => {
     let stats: Record<StatKey, StatInfo> = { 
       power: { val: 1, sourceLevel: level, isAutoBoosted: false }, 
@@ -155,47 +243,87 @@ export default function App() {
       defense: { val: 1, sourceLevel: level, isAutoBoosted: false } 
     };
     
-    const alreadyAutoBoostedStats = new Set<string>();
-    
-    slots.forEach((slotId, index) => {
-      if (!slotId || index >= tierInfo.slots) return;
-      
-      const cap = capacitesData.find(c => c.id === parseInt(slotId));
-      if (!cap) return;
+    // 1. Récupérer toutes les capacités actuellement équipées
+    const equippedCaps = slots
+      .map((id, index) => (index < tierInfo.slots && id) ? capacitesData.find(c => c.id === parseInt(id)) : null)
+      .filter(c => c !== null && c !== undefined) as typeof capacitesData;
 
-      const isWeaker = level < cap.niveau; // Telemachus est d'un niveau inférieur à la capacité
-      
-      // RÉADAPTATION : Si la capacité est trop élevée, on applique la pénalité "un niveau de moins"
-      const effectiveLevelForCopy = isWeaker ? Math.max(1.0, level - 1.0) : level;
+    // 2. CALCUL DES MULTIPLICATEURS (Shine-City)
+    const multMap = new Map<number, number>();
+    if (activeTab === 'alternative') {
+      // Capacités plus faibles ou égales
+      const weakerCaps = equippedCaps.filter(cap => cap.niveau <= level).sort((a, b) => a.niveau - b.niveau);
+      weakerCaps.forEach((cap, idx) => {
+        const diff = level - cap.niveau;
+        // Si la capacité est bien plus faible (>= 2 niveaux d'écart) ET c'est la plus faible -> 1.75
+        if (idx === 0 && diff >= 2.0) {
+          multMap.set(cap.id, 1.75);
+        } else if (idx === 0 && diff <= -1.0) {
+          multMap.set(cap.id, 1.25);
+        } else {
+          multMap.set(cap.id, 1.5);
+        }
+      });
 
-      const diff = level - cap.niveau;
-      const isSignificantlyWeaker = diff > 2.0; 
-      const isSignificantlyStronger = diff < -1.0; 
+      // Capacités trop complexes (plus fortes que lui)
+      const strongerCaps = equippedCaps.filter(cap => cap.niveau > level);
+      strongerCaps.forEach(cap => {
+        const diff = cap.niveau - level;
+        // Si la capacité est bien trop puissante (>= 1 niveau d'écart) -> 1.25
+        if (diff >= 1.0) {
+          multMap.set(cap.id, 1.25);
+        } else {
+          multMap.set(cap.id, 1.5);
+        }
+      });
+    }
+
+    // 3. RÉPARTITION GLOBALE DES STATS À BOOSTER (Shine-City)
+    const abilityBoostMap = new Map<number, string>();
+    if (activeTab === 'alternative') {
+      const pool: { id: number, stat: string, val: number }[] = [];
+      equippedCaps.forEach(cap => {
+        ['power', 'speed', 'recovery', 'defense'].forEach(stat => {
+          pool.push({ id: cap.id, stat, val: (cap.stats_de_base as any)[stat] });
+        });
+      });
+
+      pool.sort((a, b) => {
+        if (b.val !== a.val) return b.val - a.val;
+        const capA = equippedCaps.find(c => c.id === a.id);
+        const capB = equippedCaps.find(c => c.id === b.id);
+        return (capB?.niveau || 0) - (capA?.niveau || 0);
+      });
+
+      const assignedStats = new Set<string>();
+
+      for (const item of pool) {
+        if (!abilityBoostMap.has(item.id) && !assignedStats.has(item.stat)) {
+          abilityBoostMap.set(item.id, item.stat);
+          assignedStats.add(item.stat);
+        }
+      }
+    }
+
+    // 4. FUSION DES STATS FINALES
+    equippedCaps.forEach(cap => {
+      const isTelemachusWeaker = level < cap.niveau;
+      
+      // RÉADAPTATION (Malus si la capacité est plus forte)
+      const effectiveLevelForCopy = Math.max(1.0, level - 1.0);
 
       let currentAutoBoostMult = 1.5;
       let keyToBoost: string | null = null;
       
       if (activeTab === 'alternative') {
-        // CORRECTION: S'il est plus faible = 1.5 ou 1.75 / S'il est plus fort = 1.5 ou 1.25
-        currentAutoBoostMult = isSignificantlyStronger ? 1.25 : isSignificantlyWeaker ? 1.75 : 1.5;
-        
-        const sortedStats = Object.entries(cap.stats_de_base)
-          .filter(([key]) => key !== 'trick')
-          .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-
-        const bestUnboosted = sortedStats.find(([key]) => !alreadyAutoBoostedStats.has(key));
-
-        if (bestUnboosted) {
-          keyToBoost = bestUnboosted[0];
-        } else if (sortedStats.length > 0) {
-          keyToBoost = sortedStats[0][0]; 
-        }
+        currentAutoBoostMult = multMap.get(cap.id) || 1.5;
+        keyToBoost = abilityBoostMap.get(cap.id) || null;
       } else {
-        // En mode classique, on amplifie TOUJOURS la stat principale (comme l'Aura Manipulation de base)
         currentAutoBoostMult = 1.5;
         keyToBoost = cap.stat_principale;
       }
 
+      const alreadyAutoBoostedStats = new Set<string>();
       if (keyToBoost) {
         alreadyAutoBoostedStats.add(keyToBoost);
       }
@@ -203,17 +331,22 @@ export default function App() {
       for (let key in cap.stats_de_base) {
         const baseKey = key as StatKey;
         
-        // Calcul de la stat copiée de base. 
-        // Si capacité > Telemachus, on utilise ratios * (niveau - 1). 
-        // Si capacité <= Telemachus, on utilise ratios * niveau (ce qui revient à adapter la stat).
-        let valeurCopiee = (cap.ratios_stats as any)[baseKey] * effectiveLevelForCopy;
+        // RÈGLE DE COPIE STRICTE :
+        // - Capacité plus forte (isTelemachusWeaker) = Pénalité (ratios * (niveau - 1))
+        // - Capacité plus faible/égale = Stats d'origine telles quelles
+        let valeurCopiee = 0;
+        if (isTelemachusWeaker) {
+          valeurCopiee = (cap.ratios_stats as any)[baseKey] * effectiveLevelForCopy;
+        } else {
+          valeurCopiee = (cap.stats_de_base as any)[baseKey];
+        }
 
         const isBoostedThisStat = baseKey === keyToBoost;
         if (isBoostedThisStat) {
           valeurCopiee *= currentAutoBoostMult;
         }
 
-        // On ne remplace la stat que si elle est supérieure à ce qu'on a déjà
+        // On met à jour la statistique de Telemachus si la valeur est supérieure
         if (valeurCopiee > stats[baseKey].val) {
           stats[baseKey] = { 
             val: valeurCopiee, 
@@ -222,7 +355,6 @@ export default function App() {
             autoBoostMult: isBoostedThisStat ? currentAutoBoostMult : undefined
           };
         } else if (valeurCopiee === stats[baseKey].val && isBoostedThisStat) {
-          // Si la valeur est identique mais que celle-ci nous permet d'afficher le flag "Boosted" dans l'UI
           stats[baseKey].isAutoBoosted = true;
           stats[baseKey].autoBoostMult = currentAutoBoostMult;
         }
@@ -296,11 +428,11 @@ export default function App() {
     const { power, speed, trick, recovery, defense } = statsFinales;
 
     // 1. Dérivation des Extra Stats (Formules combinées)
-    const attackSpeed = power * speed;
-    const attackCharge = power * recovery;
+    const attackSpeed = power * speed / level;
+    const attackCharge = power * recovery / level;
     
     // 2. Somme totale incluant les 5 stats + les 2 extras
-    const totalSum = power + speed + trick + recovery + defense + attackSpeed + attackCharge;
+    const totalSum = power + speed + recovery + defense + attackSpeed + attackCharge;
     
     // 3. Calcul de la moyenne brute en divisant par 5 (pour matcher la progression)
     let rawLevel = totalSum / 5;

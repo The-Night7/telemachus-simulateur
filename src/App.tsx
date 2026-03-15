@@ -43,7 +43,7 @@ const getAuraCost = (niveau: number) => {
 };
 
 // --- COMPOSANT GRAPHIQUE RADAR SVG ---
-const RadarChart = ({ stats, boosts }: { stats: Record<StatKey, number>, boosts: Record<string, number> }) => {
+const RadarChart = ({ stats, boosts, baseStatsInfo }: { stats: Record<StatKey, number>, boosts: Record<string, number>, baseStatsInfo: Record<StatKey, StatInfo> }) => {
   const maxStat = 10;
   const size = 500;
   const cx = size / 2;
@@ -84,7 +84,8 @@ const RadarChart = ({ stats, boosts }: { stats: Record<StatKey, number>, boosts:
           const val = stats[key] || 1;
           const r = (val / maxStat) * radius;
           const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
-          const isBoosted = boosts[key] > 0;
+          // Un nœud est boosté s'il a un boost manuel OU un boost auto/passif (y compris le x1.5 classique)
+          const isBoosted = boosts[key] > 0 || baseStatsInfo[key].isAutoBoosted;
           
           return (
             <circle 
@@ -106,7 +107,7 @@ const RadarChart = ({ stats, boosts }: { stats: Record<StatKey, number>, boosts:
           const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
           const currentRadius = (val / maxStat) * radius;
           const rText = Math.max(radius, currentRadius) + 35; 
-          const isBoosted = boosts[key] > 0;
+          const isBoosted = boosts[key] > 0 || baseStatsInfo[key].isAutoBoosted;
           
           return (
             <text 
@@ -168,14 +169,16 @@ export default function App() {
       const effectiveLevelForCopy = isWeaker ? Math.max(1.0, level - 1.0) : level;
 
       const diff = level - cap.niveau;
-      const isSignificantlyWeaker = diff < -2.0; // Vraiment plus faible que la capacité
-      const isSignificantlyStronger = diff > 1.0; // Vraiment plus fort que la capacité
+      const isSignificantlyWeaker = diff > 2.0; 
+      const isSignificantlyStronger = diff < -1.0; 
 
-      const currentAutoBoostMult = isSignificantlyStronger ? 1.25 : isSignificantlyWeaker ? 1.75 : 1.5;
-
+      let currentAutoBoostMult = 1.5;
       let keyToBoost: string | null = null;
       
       if (activeTab === 'alternative') {
+        // CORRECTION: S'il est plus faible = 1.5 ou 1.75 / S'il est plus fort = 1.5 ou 1.25
+        currentAutoBoostMult = isSignificantlyStronger ? 1.25 : isSignificantlyWeaker ? 1.75 : 1.5;
+        
         const sortedStats = Object.entries(cap.stats_de_base)
           .filter(([key]) => key !== 'trick')
           .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
@@ -187,36 +190,41 @@ export default function App() {
         } else if (sortedStats.length > 0) {
           keyToBoost = sortedStats[0][0]; 
         }
+      } else {
+        // En mode classique, on amplifie TOUJOURS la stat principale (comme l'Aura Manipulation de base)
+        currentAutoBoostMult = 1.5;
+        keyToBoost = cap.stat_principale;
+      }
 
-        if (keyToBoost) {
-          alreadyAutoBoostedStats.add(keyToBoost);
-        }
+      if (keyToBoost) {
+        alreadyAutoBoostedStats.add(keyToBoost);
       }
 
       for (let key in cap.stats_de_base) {
         const baseKey = key as StatKey;
         
-        let valeurCopiee;
-        if (isWeaker) {
-          // Capacité trop forte : utilisation des ratios avec le niveau pénalisé (niveau - 1)
-          valeurCopiee = (cap.ratios_stats as any)[baseKey] * effectiveLevelForCopy;
-        } else {
-          // Capacité plus faible ou égale : on copie simplement les stats de base
-          valeurCopiee = (cap.stats_de_base as any)[baseKey];
-        }
+        // Calcul de la stat copiée de base. 
+        // Si capacité > Telemachus, on utilise ratios * (niveau - 1). 
+        // Si capacité <= Telemachus, on utilise ratios * niveau (ce qui revient à adapter la stat).
+        let valeurCopiee = (cap.ratios_stats as any)[baseKey] * effectiveLevelForCopy;
 
-        const isBoostedInAlternative = activeTab === 'alternative' && baseKey === keyToBoost;
-        if (isBoostedInAlternative) {
+        const isBoostedThisStat = baseKey === keyToBoost;
+        if (isBoostedThisStat) {
           valeurCopiee *= currentAutoBoostMult;
         }
 
+        // On ne remplace la stat que si elle est supérieure à ce qu'on a déjà
         if (valeurCopiee > stats[baseKey].val) {
           stats[baseKey] = { 
             val: valeurCopiee, 
             sourceLevel: cap.niveau, 
-            isAutoBoosted: isBoostedInAlternative,
-            autoBoostMult: isBoostedInAlternative ? currentAutoBoostMult : undefined
+            isAutoBoosted: isBoostedThisStat,
+            autoBoostMult: isBoostedThisStat ? currentAutoBoostMult : undefined
           };
+        } else if (valeurCopiee === stats[baseKey].val && isBoostedThisStat) {
+          // Si la valeur est identique mais que celle-ci nous permet d'afficher le flag "Boosted" dans l'UI
+          stats[baseKey].isAutoBoosted = true;
+          stats[baseKey].autoBoostMult = currentAutoBoostMult;
         }
       }
     });
@@ -600,7 +608,7 @@ export default function App() {
           </div>
 
           <div className="w-full mb-2 mt-12 md:mt-6">
-            <RadarChart stats={statsFinales} boosts={boostState} />
+            <RadarChart stats={statsFinales} boosts={boostState} baseStatsInfo={baseStatsInfo} />
           </div>
 
           {/* AJOUT : LIGNE DU NIVEAU EFFECTIF ESTIMÉ */}
@@ -625,7 +633,7 @@ export default function App() {
 
               return (
                 <div key={key} className={`bg-neutral-950 border rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden group transition-colors duration-300
-                  ${isBoosted ? 'border-yellow-500 bg-yellow-500/10' : 'border-neutral-800'}`}>
+                  ${isBoosted || isAutoBoosted ? 'border-yellow-500 bg-yellow-500/10' : 'border-neutral-800'}`}>
                   
                   {isAutoBoosted && (
                     <div className="absolute top-1 right-1 flex items-center gap-1 text-yellow-400/80 bg-yellow-500/10 px-1.5 py-0.5 rounded-bl-lg" title={`Boost passif x${autoBoostMult} sur la stat forte`}>
@@ -634,7 +642,7 @@ export default function App() {
                     </div>
                   )}
                   
-                  <Icon size={20} className={`mb-2 mt-1 ${isBoosted ? 'text-yellow-500' : color} opacity-80`} />
+                  <Icon size={20} className={`mb-2 mt-1 ${isBoosted || isAutoBoosted ? 'text-yellow-500' : color} opacity-80`} />
                   <span className="text-xs text-neutral-400 uppercase tracking-wider font-semibold mb-1">{label}</span>
                   <span className={`text-xl font-black ${isBoosted || isAutoBoosted ? 'text-yellow-400' : 'text-neutral-100'}`}>
                     {statsFinales[key].toFixed(1)}

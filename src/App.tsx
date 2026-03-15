@@ -273,59 +273,65 @@ export default function App() {
     return finalStats;
   }, [baseStatsInfo, boostState, getBoostOptions]);
 
-  // --- ALGORITHME DU NIVEAU EFFECTIF ESTIMÉ ---
+  // --- ALGORITHME DU NIVEAU EFFECTIF ESTIMÉ (Moyenne Extra + Bridage par Tiers) ---
   const estimatedEffectiveLevel = useMemo(() => {
-    // 1. Somme de toutes les stats SAUF le Trick
-    const sumStatsWithoutTrick = statsFinales.power + statsFinales.speed + statsFinales.recovery + statsFinales.defense;
+    const { power, speed, trick, recovery, defense } = statsFinales;
+
+    // 1. Dérivation des Extra Stats (Formules combinées)
+    const attackSpeed = power * speed;
+    const attackCharge = power * recovery;
     
-    // 2. Première moyenne (divisée par 4) pour pouvoir déduire le Tier actuel
-    const firstAvg = sumStatsWithoutTrick / 10;
+    // 2. Somme totale incluant les 5 stats + les 2 extras
+    const totalSum = power + speed + trick + recovery + defense + attackSpeed + attackCharge;
+    
+    // 3. Calcul de la moyenne brute en divisant par 5 (pour matcher la progression)
+    let rawLevel = totalSum / 5;
 
-    // Pourcentages fixes
-    const CRIPPLE_PERCENTAGE = 1.0;
-    const LOW_PERCENTAGE = 0.7222;
-    const MID_PERCENTAGE = 0.6631;
-    const ELITE_PERCENTAGE = 0.6017;
-    const HIGH_PERCENTAGE = 0.5023;
-    const GOD_PERCENTAGE = 0.4027;
-
-    let tierPercentage;
-    let tierDividend;
-
-    // 3. Déduction du Tier basée sur la première moyenne (les seuils correspondent aux moyennes pour atteindre chaque tier)
-    if (firstAvg >= 5.34) {
-      // God Tier
-      tierPercentage = GOD_PERCENTAGE;
-      tierDividend = 3.07;
-    } else if (firstAvg >= 4.51) {
-      // High Tier
-      tierPercentage = HIGH_PERCENTAGE;
-      tierDividend = 3.45;
-    } else if (firstAvg >= 2.84) {
-      // Elite Tier
-      tierPercentage = ELITE_PERCENTAGE;
-      tierDividend = 3.09;
-    } else if (firstAvg >= 1.40) {
-      // Mid Tier
-      tierPercentage = MID_PERCENTAGE;
-      tierDividend = 2.73;
-    } else if (firstAvg >= 0.90) {
-      // Low Tier
-      tierPercentage = LOW_PERCENTAGE;
-      tierDividend = 2.46;
-    } else {
-      // Cripple
-      tierPercentage = CRIPPLE_PERCENTAGE;
-      tierDividend = 4.0;
+    // Lissage pour les hauts niveaux afin d'éviter une explosion de la valeur
+    if (rawLevel > 7.0) {
+      rawLevel = 7.0 + (rawLevel - 7.0) * 0.4;
     }
 
-    // 4. Calcul de la vraie moyenne finale en utilisant le dividende spécifique au Tier
-    const finalStatAverage = sumStatsWithoutTrick / tierDividend;
+    // 4. Règles strictes de Tiers (basées sur la stat max, sans inclure le 'trick')
+    const baseStats = [power, speed, recovery, defense];
+    const maxBaseStat = Math.max(...baseStats);
+    const statsOver10 = baseStats.filter(s => s >= 10).length;
 
-    // 5. Calcul final : Moyenne Finale / Pourcentage de Prestige
-    const calculatedLevel = finalStatAverage * tierPercentage;
+    let minLvl = 1.0;
+    let maxLvl = 10.0;
 
-    return Math.min(10, calculatedLevel).toFixed(1);
+    if (maxBaseStat <= 2.0) {
+      maxLvl = 1.9; // Low tier
+    } else if (maxBaseStat <= 4.0) {
+      minLvl = 2.0; 
+      maxLvl = 3.0; // Mid tier (jusqu'au niveau 3)
+    } else if (maxBaseStat <= 5.0) {
+      minLvl = 3.1; 
+      maxLvl = 3.9; // Mid tier (passé niveau 3)
+    } else if (maxBaseStat <= 7.0) {
+      minLvl = 4.0; 
+      maxLvl = 4.9; // Elite tier
+    } else if (maxBaseStat <= 9.9) {
+      minLvl = 5.0; 
+      maxLvl = 6.9; // High tier & God tier initial (jusqu'à 7.0)
+    } else {
+      // maxBaseStat >= 10.0 (God tier supérieur)
+      if (statsOver10 <= 1) {
+        minLvl = 7.0;
+        maxLvl = 7.4; 
+      } else if (statsOver10 === 2) {
+        minLvl = 7.5;
+        maxLvl = 8.9; // Niveau 7.5+ avec 2 stats dépassant 10
+      } else {
+        minLvl = 9.0;
+        maxLvl = 10.0; // 3 stats ou + dépassant 10
+      }
+    }
+
+    // 5. Bridage de la moyenne brute avec les limites dictées par les règles du Tier
+    let finalLevel = Math.min(maxLvl, Math.max(minLvl, rawLevel));
+
+    return finalLevel.toFixed(1);
   }, [statsFinales]);
 
 

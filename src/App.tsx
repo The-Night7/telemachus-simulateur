@@ -162,13 +162,15 @@ export default function App() {
       const cap = capacitesData.find(c => c.id === parseInt(slotId));
       if (!cap) return;
 
-      const isStronger = (level - cap.niveau) > 0;
-      const isWeaker = (level - cap.niveau) < 0;
+      const isWeaker = level < cap.niveau; // Telemachus est d'un niveau inférieur à la capacité
       
-      const isSignificantlyWeaker = (level - cap.niveau) > 2.0;
-      const isSignificantlyStronger = (level - cap.niveau) < -1.0;
+      // RÉADAPTATION : Si la capacité est trop élevée, on applique la pénalité "un niveau de moins"
+      const effectiveLevelForCopy = isWeaker ? Math.max(1.0, level - 1.0) : level;
 
-      const ratio = (activeTab === 'alternative' && isWeaker) ? 1.0 : (level / cap.niveau);
+      const diff = level - cap.niveau;
+      const isSignificantlyWeaker = diff < -2.0; // Vraiment plus faible que la capacité
+      const isSignificantlyStronger = diff > 1.0; // Vraiment plus fort que la capacité
+
       const currentAutoBoostMult = isSignificantlyStronger ? 1.25 : isSignificantlyWeaker ? 1.75 : 1.5;
 
       let keyToBoost: string | null = null;
@@ -193,7 +195,15 @@ export default function App() {
 
       for (let key in cap.stats_de_base) {
         const baseKey = key as StatKey;
-        let valeurCopiee = (cap.stats_de_base as any)[baseKey] * ratio; 
+        
+        let valeurCopiee;
+        if (isWeaker) {
+          // Capacité trop forte : utilisation des ratios avec le niveau pénalisé (niveau - 1)
+          valeurCopiee = (cap.ratios_stats as any)[baseKey] * effectiveLevelForCopy;
+        } else {
+          // Capacité plus faible ou égale : on copie simplement les stats de base
+          valeurCopiee = (cap.stats_de_base as any)[baseKey];
+        }
 
         const isBoostedInAlternative = activeTab === 'alternative' && baseKey === keyToBoost;
         if (isBoostedInAlternative) {

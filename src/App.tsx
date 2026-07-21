@@ -292,7 +292,12 @@ export default function App() {
   }, [baseStatsInfo, level, mastery]);
 
   // --- LOGIQUE DE RÉSERVE D'AURA ---
-  const maxAura = useMemo(() => level * 10, [level]);
+  const maxAura = useMemo(() => {
+    if (level >= 7.5) return level * 25;
+    if (level >= 7.0) return level * 20;
+    if (level >= 6.0) return level * 15;
+    return level * 10;
+  }, [level]);
   
   const currentAuraDrain = useMemo(() => {
     let drain = slots.reduce((total, slotId) => {

@@ -2294,7 +2294,7 @@
     "niveau": 6.2,
     "type": "Meta",
     "copiable": true,
-    "stat_principale": "trick",
+    "stat_principale": "power",
     "stats_de_base": {
       "power": 1.0,
       "speed": 1.0,
@@ -2320,7 +2320,7 @@
     "niveau": 5.3,
     "type": "Emission",
     "copiable": true,
-    "stat_principale": "trick",
+    "stat_principale": "power",
     "stats_de_base": {
       "power": 6.0,
       "speed": 4.0,
@@ -2372,7 +2372,7 @@
     "niveau": 8.6,
     "type": "Enhancement",
     "copiable": true,
-    "stat_principale": "trick",
+    "stat_principale": "power",
     "stats_de_base": {
       "power": 8.0,
       "speed": 8.0,
@@ -2398,7 +2398,7 @@
     "niveau": 8.6,
     "type": "Enhancement",
     "copiable": true,
-    "stat_principale": "trick",
+    "stat_principale": "power",
     "stats_de_base": {
       "power": 12.0,
       "speed": 8.0,
@@ -2424,7 +2424,7 @@
     "niveau": 8.6,
     "type": "Enhancement",
     "copiable": true,
-    "stat_principale": "trick",
+    "stat_principale": "defense",
     "stats_de_base": {
       "power": 3.0,
       "speed": 3.0,
@@ -2528,7 +2528,7 @@
     "niveau": 4.8,
     "type": "Quantum",
     "copiable": true,
-    "stat_principale": "trick",
+    "stat_principale": "power",
     "stats_de_base": {
       "power": 6.0,
       "speed": 3.0,
@@ -2554,7 +2554,7 @@
     "niveau": 4.6,
     "type": "Enhancement",
     "copiable": true,
-    "stat_principale": "trick",
+    "stat_principale": "power",
     "stats_de_base": {
       "power": 6.0,
       "speed": 1.0,

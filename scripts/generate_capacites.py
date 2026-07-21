@@ -11,10 +11,12 @@ vérifiées sont figées dans scripts/stat_principale_overrides.json (clé:
 nom_personnage + nom_capacite + niveau). Pour toute nouvelle ligne du CSV sans
 override, un choix par défaut est déduit de la colonne "Nature" du CSV
 (Vivacité -> speed, Defense -> defense, Attaque -> power, Support -> recovery,
-Stratege -> power), avec repli sur la stat brute maximale si la Nature est
-absente/inconnue (c'est le cas de tout le fichier RP, qui n'a pas de colonne
-Nature). Ces valeurs par défaut sont à vérifier manuellement et, si besoin, à
-figer dans le fichier d'overrides.
+Stratege -> power), avec repli sur la stat brute maximale (hors "trick", qui
+scale automatiquement avec le niveau et n'est donc jamais un choix pertinent
+de stat auto-boostée) si la Nature est absente/inconnue — c'est le cas de
+tout le fichier RP, qui n'a pas de colonne Nature. Ces valeurs par défaut
+sont à vérifier manuellement et, si besoin, à figer dans le fichier
+d'overrides.
 
 Usage: python3 scripts/generate_capacites.py
 """
@@ -89,7 +91,8 @@ def main():
             nature = row.get("Nature", "")
             stat_principale = NATURE_TO_STAT.get(nature)
             if stat_principale is None:
-                stat_principale = max(stats, key=stats.get)
+                non_trick_stats = {k: v for k, v in stats.items() if k != "trick"}
+                stat_principale = max(non_trick_stats, key=non_trick_stats.get)
             fallback_used.append((row["Name"], ability, niveau, stat_principale))
 
         type_ = row["Type"]

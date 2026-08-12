@@ -130,8 +130,8 @@ const RadarChart = ({ stats, boosts, baseStatsInfo }: { stats: Record<StatKey, n
 // --- APPLICATION PRINCIPALE ---
 export default function App() {
   const [activeTab, setActiveTab] = useState('classic');
-  const [potential, setPotential] = useState(9.0);
-  const [mastery, setMastery] = useState(6.9);
+  const [potential, setPotential] = useState(9.3);
+  const [mastery, setMastery] = useState(6.4);
   const [slots, setSlots] = useState<string[]>(["", "", "", ""]);
   
   const level = useMemo(() => parseFloat(((potential * mastery) / 10).toFixed(1)), [potential, mastery]);

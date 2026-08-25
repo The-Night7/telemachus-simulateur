@@ -64,8 +64,7 @@ export function parseCapacitesCsv(csvText: string): Capacite[] {
     skipEmptyLines: true,
   });
 
-  const entries: Capacite[] = [];
-  let idCounter = 1;
+  const entries: Omit<Capacite, 'id'>[] = [];
 
   for (const row of rows) {
     const ability = (row['Ability'] || '').trim();
@@ -99,7 +98,6 @@ export function parseCapacitesCsv(csvText: string): Capacite[] {
     const type = row['Type'] || '';
 
     entries.push({
-      id: idCounter++,
       nom_personnage: name,
       nom_capacite: ability,
       niveau,
@@ -114,7 +112,11 @@ export function parseCapacitesCsv(csvText: string): Capacite[] {
     });
   }
 
-  return entries;
+  // Le gsheet n'est pas toujours trié par niveau (blocs RP ajoutés en fin de
+  // section sans tri) : on impose l'ordre croissant pour un menu lisible.
+  entries.sort((a, b) => a.niveau - b.niveau);
+
+  return entries.map((entry, index) => ({ id: index + 1, ...entry }));
 }
 
 export async function fetchCapacites(): Promise<Capacite[]> {

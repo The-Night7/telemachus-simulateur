@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Shield, Zap, Swords, Brain, Heart, ChevronDown, Layers, Lock, Battery, ChevronsUp, Sparkles, Target } from 'lucide-react';
-import capacitesData from './capacites.json';
+import { useCapacites } from './lib/useCapacites';
 
 // --- TYPESCRIPT INTERFACES ---
 type StatKey = 'power' | 'speed' | 'trick' | 'recovery' | 'defense';
@@ -129,6 +129,7 @@ const RadarChart = ({ stats, boosts, baseStatsInfo }: { stats: Record<StatKey, n
 
 // --- APPLICATION PRINCIPALE ---
 export default function App() {
+  const { capacites: capacitesData, loading: capacitesLoading, error: capacitesError, isLive: capacitesLive } = useCapacites();
   const [activeTab, setActiveTab] = useState('classic');
   const [potential, setPotential] = useState(9.3);
   const [mastery, setMastery] = useState(6.4);
@@ -271,7 +272,7 @@ export default function App() {
     });
 
     return stats;
-  }, [level, slots, tierInfo, activeTab]);
+  }, [level, slots, tierInfo, activeTab, capacitesData]);
 
   // --- LOGIQUE DES OPTIONS D'AMPLIFICATION ---
   const getBoostOptions = useCallback((statKey: StatKey): BoostOption[] => {
@@ -472,10 +473,22 @@ export default function App() {
         <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 tracking-tight mb-2">
           TELEMACHUS PAWN
         </h1>
-        <p className="text-neutral-400 font-medium uppercase tracking-widest text-sm md:text-base mb-6">
+        <p className="text-neutral-400 font-medium uppercase tracking-widest text-sm md:text-base mb-2">
           Aura Deity - Simulateur de Capacité
         </p>
-        
+
+        {capacitesLoading && (
+          <p className="text-xs text-neutral-500 mb-4">Synchronisation de la liste des capacités…</p>
+        )}
+        {!capacitesLoading && capacitesError && (
+          <p className="text-xs text-yellow-500/80 mb-4" title={capacitesError}>
+            Liste des capacités hors-ligne (échec de synchronisation avec le gsheet) — données potentiellement obsolètes.
+          </p>
+        )}
+        {!capacitesLoading && !capacitesError && capacitesLive && (
+          <p className="text-xs text-green-500/60 mb-4">Liste des capacités synchronisée avec le gsheet.</p>
+        )}
+
         {/* ONGLETS */}
         <div className="inline-flex bg-neutral-900 border border-neutral-800 p-1 rounded-full shadow-lg">
           <button

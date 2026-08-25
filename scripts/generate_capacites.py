@@ -27,7 +27,7 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CSV_PATH = os.path.join(BASE_DIR, "scripts", "unodex - unodex.csv")
 RP_CSV_PATH = os.path.join(BASE_DIR, "scripts", "unodex - unodex-rp.csv")
-OVERRIDES_PATH = os.path.join(BASE_DIR, "scripts", "stat_principale_overrides.json")
+OVERRIDES_PATH = os.path.join(BASE_DIR, "src", "data", "stat_principale_overrides.json")
 OUTPUT_PATH = os.path.join(BASE_DIR, "src", "capacites.json")
 
 NATURE_TO_STAT = {

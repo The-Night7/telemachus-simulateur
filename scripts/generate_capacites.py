@@ -104,7 +104,7 @@ def main():
             "nom_capacite": ability,
             "niveau": niveau,
             "type": type_,
-            "copiable": type_ != "Mental",
+            "copiable": type_ not in ("Mental", "Meta"),
             "stat_principale": stat_principale,
             "stats_de_base": stats,
             "ratios_stats": ratios,

@@ -102,7 +102,8 @@ export function parseCapacitesCsv(csvText: string): Capacite[] {
       nom_capacite: ability,
       niveau,
       type,
-      copiable: type !== 'Mental',
+      // Mental et Meta ne sont pas copiables par Telemachus (règle de lore).
+      copiable: type !== 'Mental' && type !== 'Meta',
       stat_principale: statPrincipale,
       stats_de_base: stats,
       ratios_stats: ratios,

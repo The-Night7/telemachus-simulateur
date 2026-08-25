@@ -129,7 +129,7 @@ const RadarChart = ({ stats, boosts, baseStatsInfo }: { stats: Record<StatKey, n
 
 // --- APPLICATION PRINCIPALE ---
 export default function App() {
-  const { capacites: capacitesData, loading: capacitesLoading, error: capacitesError, isLive: capacitesLive } = useCapacites();
+  const { capacites: capacitesData, loading: capacitesLoading, error: capacitesError, retry: retryCapacites } = useCapacites();
   const [activeTab, setActiveTab] = useState('classic');
   const [potential, setPotential] = useState(9.3);
   const [mastery, setMastery] = useState(6.4);
@@ -478,14 +478,15 @@ export default function App() {
         </p>
 
         {capacitesLoading && (
-          <p className="text-xs text-neutral-500 mb-4">Synchronisation de la liste des capacités…</p>
+          <p className="text-xs text-neutral-500 mb-4">Chargement de la liste des capacités depuis le gsheet…</p>
         )}
         {!capacitesLoading && capacitesError && (
-          <p className="text-xs text-yellow-500/80 mb-4" title={capacitesError}>
-            Liste des capacités hors-ligne (échec de synchronisation avec le gsheet) — données potentiellement obsolètes.
+          <p className="text-xs text-red-400/80 mb-4" title={capacitesError}>
+            Échec du chargement du gsheet — aucune capacité disponible.{' '}
+            <button onClick={retryCapacites} className="underline hover:text-red-300">Réessayer</button>
           </p>
         )}
-        {!capacitesLoading && !capacitesError && capacitesLive && (
+        {!capacitesLoading && !capacitesError && (
           <p className="text-xs text-green-500/60 mb-4">Liste des capacités synchronisée avec le gsheet.</p>
         )}
 
@@ -612,7 +613,7 @@ export default function App() {
                         : 'border-neutral-700 text-neutral-200 cursor-pointer focus:border-yellow-500 hover:border-neutral-600'}`}
                   >
                     <option value="">-- Emplacement Vide --</option>
-                    {!isLocked && capacitesData.map(cap => {
+                    {!isLocked && capacitesData.filter(cap => cap.copiable).map(cap => {
                       const cost = getAuraCost(cap.niveau);
                       const isTooExpensive = (currentAuraDrain - currentSlotDrain + cost) > maxAura;
                       return (

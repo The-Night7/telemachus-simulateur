@@ -217,14 +217,9 @@ export default function App() {
 
     // 4. FUSION DES STATS FINALES
     equippedCaps.forEach(cap => {
-      const isTelemachusWeaker = level < cap.niveau;
-      
-      // RÉADAPTATION (Malus si la capacité est plus forte)
-      const effectiveLevelForCopy = Math.max(1.0, level - 1.0);
-
       let currentAutoBoostMult = 1.5;
       let keyToBoost: string | null = null;
-      
+
       if (activeTab === 'alternative') {
         currentAutoBoostMult = multMap.get(cap.id) || 1.5;
         keyToBoost = abilityBoostMap.get(cap.id) || null;
@@ -240,16 +235,16 @@ export default function App() {
 
       for (let key in cap.stats_de_base) {
         const baseKey = key as StatKey;
-        
-        // RÈGLE DE COPIE STRICTE :
-        // - Capacité plus forte (isTelemachusWeaker) = Pénalité (ratios * (niveau - 1))
-        // - Capacité plus faible/égale = Stats d'origine telles quelles
-        let valeurCopiee = 0;
-        if (isTelemachusWeaker) {
-          valeurCopiee = (cap.ratios_stats as any)[baseKey] * effectiveLevelForCopy;
-        } else {
-          valeurCopiee = (cap.stats_de_base as any)[baseKey];
-        }
+
+        // RÈGLE DE COPIE :
+        // - Capacité plus forte que Telemachus (isTelemachusWeaker) = Pénalité (ratios * (niveau - 1))
+        // - Capacité plus faible/égale = remontée au niveau de Telemachus (ratios * niveau), jamais
+        //   laissée en dessous de son niveau de base
+        const isTelemachusWeaker = level < cap.niveau;
+        const effectiveLevelForCopy = Math.max(1.0, level - 1.0);
+        let valeurCopiee: number = isTelemachusWeaker
+          ? (cap.ratios_stats as any)[baseKey] * effectiveLevelForCopy
+          : (cap.ratios_stats as any)[baseKey] * level;
 
         const isBoostedThisStat = baseKey === keyToBoost;
         if (isBoostedThisStat) {

@@ -1,3 +1,5 @@
+import tpPortrait from '../assets/tp-pp.png';
+
 type StatKey = 'power' | 'speed' | 'trick' | 'recovery' | 'defense';
 
 // Réplique la fiche de stats unOrdinary (cf. template_graph.jpg à la racine du repo) :
@@ -43,13 +45,37 @@ function drawComicText(ctx: CanvasRenderingContext2D, text: string, x: number, y
   ctx.fillText(text, x, y);
 }
 
-function drawIdentityCard(ctx: CanvasRenderingContext2D, name: string, ability: string, level: string) {
+function drawPortrait(ctx: CanvasRenderingContext2D, img: HTMLImageElement) {
+  const boxRatio = PORTRAIT_BOX.w / PORTRAIT_BOX.h;
+  const imgRatio = img.width / img.height;
+  let sx = 0, sy = 0, sw = img.width, sh = img.height;
+  if (imgRatio > boxRatio) {
+    // image plus large que la case : on rogne les côtés
+    sw = img.height * boxRatio;
+    sx = (img.width - sw) / 2;
+  } else {
+    // image plus haute que la case : on rogne haut/bas
+    sh = img.width / boxRatio;
+    sy = (img.height - sh) / 2;
+  }
+  ctx.drawImage(img, sx, sy, sw, sh, PORTRAIT_BOX.x, PORTRAIT_BOX.y, PORTRAIT_BOX.w, PORTRAIT_BOX.h);
+}
+
+function drawIdentityCard(
+  ctx: CanvasRenderingContext2D,
+  name: string,
+  ability: string,
+  level: string,
+  portrait: HTMLImageElement | null
+) {
   ctx.lineWidth = 3 * SCALE;
   ctx.strokeStyle = '#000000';
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(PORTRAIT_BOX.x, PORTRAIT_BOX.y, PORTRAIT_BOX.w, PORTRAIT_BOX.h);
+  if (portrait) drawPortrait(ctx, portrait);
   ctx.strokeRect(PORTRAIT_BOX.x, PORTRAIT_BOX.y, PORTRAIT_BOX.w, PORTRAIT_BOX.h);
 
+  ctx.fillStyle = '#ffffff';
   ctx.fillRect(LABEL_BOX.x, LABEL_BOX.y, LABEL_BOX.w, LABEL_BOX.h);
   ctx.strokeRect(LABEL_BOX.x, LABEL_BOX.y, LABEL_BOX.w, LABEL_BOX.h);
 
@@ -65,7 +91,16 @@ function drawIdentityCard(ctx: CanvasRenderingContext2D, name: string, ability: 
   ctx.fillText(`Level: ${level}`, textX, firstBaseline + lineHeight * 2);
 }
 
-export function exportRadarPng(
+function loadImage(src: string): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+export async function exportRadarPng(
   stats: Record<StatKey, number>,
   level: number,
   filename = 'telemachus-radar.png'
@@ -76,10 +111,12 @@ export function exportRadarPng(
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
+  const portrait = await loadImage(tpPortrait);
+
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-  drawIdentityCard(ctx, 'Telemachus', 'Aura Deity', level.toFixed(1));
+  drawIdentityCard(ctx, 'Telemachus', 'Aura Deity', level.toFixed(1), portrait);
 
   // Pentagone de référence : toujours régulier, plafonné à 10 (le "gabarit" unOrdinary).
   const basePoints = KEYS.map((_, i) => vertex(BASE_MAX, i));
@@ -116,19 +153,9 @@ export function exportRadarPng(
   ctx.fill();
   ctx.stroke();
 
-  points.forEach((p) => {
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 7 * SCALE, 0, Math.PI * 2);
-    ctx.fillStyle = '#121212';
-    ctx.fill();
-    ctx.lineWidth = 3 * SCALE;
-    ctx.strokeStyle = '#ffd700';
-    ctx.stroke();
-  });
-
   KEYS.forEach((k, i) => {
-    const p = points[i];
-    const labelR = Math.max(RADIUS, p.r) + 32 * SCALE;
+    // Positions des labels fixes (indépendantes des valeurs), comme sur le modèle.
+    const labelR = RADIUS + 32 * SCALE;
     const angle = angleFor(i);
     const x = PENTAGON_CENTER.x + labelR * Math.cos(angle);
     const y = PENTAGON_CENTER.y + labelR * Math.sin(angle);

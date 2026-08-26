@@ -33,12 +33,18 @@ function vertex(val: number, i: number) {
   return { x: PENTAGON_CENTER.x + r * Math.cos(angle), y: PENTAGON_CENTER.y + r * Math.sin(angle), r };
 }
 
-function drawComicText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number) {
-  ctx.font = `italic bold ${34 * SCALE}px "Comic Sans MS", "Chalkboard SE", cursive, sans-serif`;
-  ctx.textAlign = 'center';
+function drawComicText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  align: CanvasTextAlign = 'center'
+) {
+  ctx.font = `italic bold ${30 * SCALE}px "Comic Sans MS", "Chalkboard SE", cursive, sans-serif`;
+  ctx.textAlign = align;
   ctx.textBaseline = 'middle';
   ctx.lineJoin = 'round';
-  ctx.lineWidth = 7 * SCALE;
+  ctx.lineWidth = 6 * SCALE;
   ctx.strokeStyle = '#000000';
   ctx.strokeText(text, x, y);
   ctx.fillStyle = '#ffffff';
@@ -155,11 +161,20 @@ export async function exportRadarPng(
 
   KEYS.forEach((k, i) => {
     // Positions des labels fixes (indépendantes des valeurs), comme sur le modèle.
-    const labelR = RADIUS + 32 * SCALE;
+    const labelR = RADIUS + 45 * SCALE;
     const angle = angleFor(i);
-    const x = PENTAGON_CENTER.x + labelR * Math.cos(angle);
-    const y = PENTAGON_CENTER.y + labelR * Math.sin(angle);
-    drawComicText(ctx, LABELS[k], x, y);
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    // Ancrage à gauche/droite du sommet (texte qui s'éloigne du pentagone) plutôt que
+    // centré dessus, pour ne jamais chevaucher le cadre.
+    const align: CanvasTextAlign = cos > 0.3 ? 'left' : cos < -0.3 ? 'right' : 'center';
+    const sideOffset = align === 'center' ? 0 : 10 * SCALE * Math.sign(cos);
+    const x = PENTAGON_CENTER.x + labelR * cos + sideOffset;
+    const y = PENTAGON_CENTER.y + labelR * sin;
+
+    const val = stats[k] || 1;
+    const text = val > BASE_MAX ? `${LABELS[k]} (${val.toFixed(1)})` : LABELS[k];
+    drawComicText(ctx, text, x, y, align);
   });
 
   canvas.toBlob((blob) => {

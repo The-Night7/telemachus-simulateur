@@ -233,18 +233,34 @@ export default function App() {
         alreadyAutoBoostedStats.add(keyToBoost);
       }
 
+      // Les 2 stats (hors trick) les plus hautes de la capacité d'origine sont
+      // remontées au niveau de Telemachus quand elle est plus faible/égale ;
+      // les 2 autres restent brutes.
+      const nonTrickKeys: StatKey[] = ['power', 'speed', 'recovery', 'defense'];
+      const topTwoNonTrick = new Set(
+        [...nonTrickKeys]
+          .sort((a, b) => (cap.stats_de_base as any)[b] - (cap.stats_de_base as any)[a])
+          .slice(0, 2)
+      );
+
       for (let key in cap.stats_de_base) {
         const baseKey = key as StatKey;
 
         // RÈGLE DE COPIE :
         // - Capacité plus forte que Telemachus (isTelemachusWeaker) = Pénalité (ratios * (niveau - 1))
-        // - Capacité plus faible/égale = remontée au niveau de Telemachus (ratios * niveau), jamais
-        //   laissée en dessous de son niveau de base
+        //   sur toutes les stats.
+        // - Capacité plus faible/égale = Trick et les 2 stats les plus hautes remontées au niveau de
+        //   Telemachus (ratios * niveau) ; les 2 autres stats restent brutes.
         const isTelemachusWeaker = level < cap.niveau;
         const effectiveLevelForCopy = Math.max(1.0, level - 1.0);
-        let valeurCopiee: number = isTelemachusWeaker
-          ? (cap.ratios_stats as any)[baseKey] * effectiveLevelForCopy
-          : (cap.ratios_stats as any)[baseKey] * level;
+        let valeurCopiee: number;
+        if (isTelemachusWeaker) {
+          valeurCopiee = (cap.ratios_stats as any)[baseKey] * effectiveLevelForCopy;
+        } else if (baseKey === 'trick' || topTwoNonTrick.has(baseKey)) {
+          valeurCopiee = (cap.ratios_stats as any)[baseKey] * level;
+        } else {
+          valeurCopiee = (cap.stats_de_base as any)[baseKey];
+        }
 
         const isBoostedThisStat = baseKey === keyToBoost;
         if (isBoostedThisStat) {

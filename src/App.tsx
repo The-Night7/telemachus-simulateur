@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Shield, Zap, Swords, Brain, Heart, ChevronDown, Layers, Lock, Battery, ChevronsUp, Sparkles, Target } from 'lucide-react';
+import { Shield, Zap, Swords, Brain, Heart, ChevronDown, Layers, Lock, Battery, ChevronsUp, Sparkles, Target, Download } from 'lucide-react';
 import { useCapacites } from './lib/useCapacites';
+import { exportRadarPng } from './lib/exportRadarPng';
 
 // --- TYPESCRIPT INTERFACES ---
 type StatKey = 'power' | 'speed' | 'trick' | 'recovery' | 'defense';
@@ -677,6 +678,15 @@ export default function App() {
               </div>
             )}
           </div>
+
+          <button
+            onClick={() => exportRadarPng(statsFinales)}
+            className="absolute top-6 right-6 z-10 flex items-center gap-2 px-3 py-1 bg-neutral-950 border border-neutral-800 rounded-lg shadow-sm hover:border-yellow-500/50 hover:text-yellow-500 text-neutral-400 transition-colors"
+            title="Exporter le graphique en PNG"
+          >
+            <Download size={14} />
+            <span className="text-xs font-bold uppercase tracking-wide">Exporter PNG</span>
+          </button>
 
           <div className="w-full mb-2 mt-12 md:mt-6">
             <RadarChart stats={statsFinales} boosts={boostState} baseStatsInfo={baseStatsInfo} />

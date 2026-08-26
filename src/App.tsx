@@ -680,7 +680,7 @@ export default function App() {
           </div>
 
           <button
-            onClick={() => exportRadarPng(statsFinales)}
+            onClick={() => exportRadarPng(statsFinales, level)}
             className="absolute top-6 right-6 z-10 flex items-center gap-2 px-3 py-1 bg-neutral-950 border border-neutral-800 rounded-lg shadow-sm hover:border-yellow-500/50 hover:text-yellow-500 text-neutral-400 transition-colors"
             title="Exporter le graphique en PNG"
           >

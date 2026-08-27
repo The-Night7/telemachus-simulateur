@@ -161,15 +161,14 @@ export async function exportRadarPng(
 
   KEYS.forEach((k, i) => {
     // Positions des labels fixes (indépendantes des valeurs), comme sur le modèle.
-    const labelR = RADIUS + 45 * SCALE;
     const angle = angleFor(i);
     const cos = Math.cos(angle);
     const sin = Math.sin(angle);
     // Ancrage à gauche/droite du sommet (texte qui s'éloigne du pentagone) plutôt que
     // centré dessus, pour ne jamais chevaucher le cadre.
     const align: CanvasTextAlign = cos > 0.3 ? 'left' : cos < -0.3 ? 'right' : 'center';
-    const sideOffset = align === 'center' ? 0 : 10 * SCALE * Math.sign(cos);
-    const x = PENTAGON_CENTER.x + labelR * cos + sideOffset;
+    const labelR = RADIUS + (align === 'center' ? 45 * SCALE : 18 * SCALE);
+    const x = PENTAGON_CENTER.x + labelR * cos;
     const y = PENTAGON_CENTER.y + labelR * sin;
 
     const val = stats[k] || 1;

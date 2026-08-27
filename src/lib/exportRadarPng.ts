@@ -15,13 +15,13 @@ const LABELS: Record<StatKey, string> = {
 
 // Mesures prises directement sur template_graph.jpg (1200x640), mises à l'échelle.
 const SCALE = 1.5;
-const CANVAS_W = 1200 * SCALE;
+const CANVAS_W = 1280 * SCALE;
 const CANVAS_H = 640 * SCALE;
 
 const PORTRAIT_BOX = { x: 83 * SCALE, y: 67 * SCALE, w: (501 - 83) * SCALE, h: (435 - 67) * SCALE };
 const LABEL_BOX = { x: 110 * SCALE, y: 434 * SCALE, w: (477 - 110) * SCALE, h: (594 - 434) * SCALE };
 
-const PENTAGON_CENTER = { x: 840 * SCALE, y: 334 * SCALE };
+const PENTAGON_CENTER = { x: 880 * SCALE, y: 334 * SCALE };
 const RADIUS = 230 * SCALE;
 const BASE_MAX = 10;
 
@@ -164,9 +164,10 @@ export async function exportRadarPng(
   const LABEL_RADIUS_EXTRA: Partial<Record<StatKey, number>> = {
     recovery: 12 * SCALE,
     trick: 12 * SCALE,
+    defense: 1 * SCALE,
   };
   const LABEL_Y_EXTRA: Partial<Record<StatKey, number>> = {
-    defense: -20 * SCALE,
+    defense: 1 * SCALE,
   };
 
   KEYS.forEach((k, i) => {

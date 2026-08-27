@@ -159,6 +159,16 @@ export async function exportRadarPng(
   ctx.fill();
   ctx.stroke();
 
+  // Ajustements fins par label : recovery/trick un peu plus loin du bord du pentagone,
+  // defense remontée pour ne pas déborder sur le graphique.
+  const LABEL_RADIUS_EXTRA: Partial<Record<StatKey, number>> = {
+    recovery: 12 * SCALE,
+    trick: 12 * SCALE,
+  };
+  const LABEL_Y_EXTRA: Partial<Record<StatKey, number>> = {
+    defense: -20 * SCALE,
+  };
+
   KEYS.forEach((k, i) => {
     // Positions des labels fixes (indépendantes des valeurs), comme sur le modèle.
     const angle = angleFor(i);
@@ -167,9 +177,9 @@ export async function exportRadarPng(
     // Ancrage à gauche/droite du sommet (texte qui s'éloigne du pentagone) plutôt que
     // centré dessus, pour ne jamais chevaucher le cadre.
     const align: CanvasTextAlign = cos > 0.3 ? 'left' : cos < -0.3 ? 'right' : 'center';
-    const labelR = RADIUS + (align === 'center' ? 45 * SCALE : 18 * SCALE);
+    const labelR = RADIUS + (align === 'center' ? 45 * SCALE : 18 * SCALE) + (LABEL_RADIUS_EXTRA[k] || 0);
     const x = PENTAGON_CENTER.x + labelR * cos;
-    const y = PENTAGON_CENTER.y + labelR * sin;
+    const y = PENTAGON_CENTER.y + labelR * sin + (LABEL_Y_EXTRA[k] || 0);
 
     const val = stats[k] || 1;
     const text = val > BASE_MAX ? `${LABELS[k]} (${val.toFixed(1)})` : LABELS[k];

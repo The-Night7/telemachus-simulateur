@@ -183,8 +183,13 @@ export async function exportRadarPng(
     const y = PENTAGON_CENTER.y + labelR * sin + (LABEL_Y_EXTRA[k] || 0);
 
     const val = stats[k] || 1;
-    const text = val > BASE_MAX ? `${LABELS[k]} (${val.toFixed(1)})` : LABELS[k];
-    drawComicText(ctx, text, x, y, align);
+    if (val > BASE_MAX) {
+      // Valeur affichée sous le label plutôt qu'à côté, pour ne pas élargir le texte.
+      drawComicText(ctx, LABELS[k], x, y - 17 * SCALE, align);
+      drawComicText(ctx, `(${val.toFixed(1)})`, x, y + 17 * SCALE, align);
+    } else {
+      drawComicText(ctx, LABELS[k], x, y, align);
+    }
   });
 
   canvas.toBlob((blob) => {

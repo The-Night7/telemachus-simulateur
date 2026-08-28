@@ -235,7 +235,9 @@ export default function App() {
         currentAutoBoostMult = multMap.get(cap.id) || 1.5;
         keyToBoost = abilityBoostMap.get(cap.id) || null;
       } else {
-        currentAutoBoostMult = 1.5;
+        // Boost réduit à x1.2 quand la capacité copiée est de plus d'un niveau
+        // plus faible que Telemachus (au lieu du x1.5 par défaut).
+        currentAutoBoostMult = (level - cap.niveau > 1) ? 1.2 : 1.5;
         keyToBoost = cap.stat_principale;
       }
 
@@ -258,22 +260,23 @@ export default function App() {
         const baseKey = key as StatKey;
 
         // RÈGLE DE COPIE :
-        // - Capacité plus forte que Telemachus (isTelemachusWeaker) = Pénalité (ratios * (niveau - 1))
-        //   sur toutes les stats.
+        // - Capacité plus forte que Telemachus (isTelemachusWeaker) = ramenée à son niveau
+        //   (ratios * niveau), sans pénalité, sur toutes les stats.
         // - Capacité plus faible/égale = Trick et les 2 stats les plus hautes remontées au niveau de
         //   Telemachus (ratios * niveau) ; les 2 autres stats restent brutes.
         const isTelemachusWeaker = level < cap.niveau;
-        const effectiveLevelForCopy = Math.max(1.0, level - 1.0);
         let valeurCopiee: number;
         if (isTelemachusWeaker) {
-          valeurCopiee = (cap.ratios_stats as any)[baseKey] * effectiveLevelForCopy;
+          valeurCopiee = (cap.ratios_stats as any)[baseKey] * level;
         } else if (baseKey === 'trick' || topTwoNonTrick.has(baseKey)) {
           valeurCopiee = (cap.ratios_stats as any)[baseKey] * level;
         } else {
           valeurCopiee = (cap.stats_de_base as any)[baseKey];
         }
 
-        const isBoostedThisStat = baseKey === keyToBoost;
+        // L'autoboost ne s'applique qu'aux capacités plus faibles/égales (celles remontées
+        // au niveau de Telemachus) — jamais à une capacité plus forte que lui.
+        const isBoostedThisStat = !isTelemachusWeaker && baseKey === keyToBoost;
         if (isBoostedThisStat) {
           valeurCopiee *= currentAutoBoostMult;
         }

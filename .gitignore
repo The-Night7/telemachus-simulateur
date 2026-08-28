@@ -28,4 +28,4 @@ dist-ssr
 # Candara: proprietary Microsoft font, self-hosted locally (public/fonts) so
 # Chrome renders it correctly instead of relying on (broken) system font
 # resolution — never commit/redistribute it, it isn't ours to publish.
-# public/fonts/candara*.ttf
+public/fonts/candara*.ttf

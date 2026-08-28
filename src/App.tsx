@@ -133,7 +133,7 @@ export default function App() {
   const { capacites: capacitesData, loading: capacitesLoading, error: capacitesError, retry: retryCapacites } = useCapacites();
   const [activeTab, setActiveTab] = useState('classic');
   const [potential, setPotential] = useState(9.3);
-  const [mastery, setMastery] = useState(6.4);
+  const [mastery, setMastery] = useState(6.2);
   const [slots, setSlots] = useState<string[]>(["", "", "", ""]);
   
   const level = useMemo(() => parseFloat(((potential * mastery) / 10).toFixed(1)), [potential, mastery]);

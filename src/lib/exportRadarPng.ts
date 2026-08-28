@@ -40,7 +40,7 @@ function drawComicText(
   y: number,
   align: CanvasTextAlign = 'center'
 ) {
-  ctx.font = `italic bold ${30 * SCALE}px "Comic Sans MS", "Chalkboard SE", cursive, sans-serif`;
+  ctx.font = `italic bold ${30 * SCALE}px "Candara", "Calibri", "Segoe UI", sans-serif`;
   ctx.textAlign = align;
   ctx.textBaseline = 'middle';
   ctx.lineJoin = 'round';
@@ -85,7 +85,7 @@ function drawIdentityCard(
   ctx.fillRect(LABEL_BOX.x, LABEL_BOX.y, LABEL_BOX.w, LABEL_BOX.h);
   ctx.strokeRect(LABEL_BOX.x, LABEL_BOX.y, LABEL_BOX.w, LABEL_BOX.h);
 
-  ctx.font = `bold ${30 * SCALE}px Arial, "Helvetica Neue", sans-serif`;
+  ctx.font = `bold ${30 * SCALE}px "Candara", "Calibri", "Segoe UI", sans-serif`;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = '#000000';

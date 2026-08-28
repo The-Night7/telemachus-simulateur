@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Shield, Zap, Swords, Brain, Heart, ChevronDown, Layers, Lock, Battery, ChevronsUp, Sparkles, Target, Download } from 'lucide-react';
+import { Shield, Zap, Swords, Brain, Heart, ChevronDown, Layers, Lock, Battery, ChevronsUp, Sparkles, Target, Download, RefreshCw } from 'lucide-react';
 import { useCapacites } from './lib/useCapacites';
 import { exportRadarPng } from './lib/exportRadarPng';
 
@@ -490,7 +490,10 @@ export default function App() {
         </p>
 
         {capacitesLoading && (
-          <p className="text-xs text-neutral-500 mb-4">Chargement de la liste des capacités depuis le gsheet…</p>
+          <p className="text-xs text-neutral-500 mb-4 flex items-center justify-center gap-1.5">
+            <RefreshCw size={12} className="animate-spin" />
+            Chargement de la liste des capacités depuis le gsheet…
+          </p>
         )}
         {!capacitesLoading && capacitesError && (
           <p className="text-xs text-red-400/80 mb-4" title={capacitesError}>
@@ -499,7 +502,17 @@ export default function App() {
           </p>
         )}
         {!capacitesLoading && !capacitesError && (
-          <p className="text-xs text-green-500/60 mb-4">Liste des capacités synchronisée avec le gsheet.</p>
+          <p className="text-xs text-green-500/60 mb-4 flex items-center justify-center gap-1.5">
+            Liste des capacités synchronisée avec le gsheet.
+            <button
+              onClick={retryCapacites}
+              title="Resynchroniser avec le gsheet"
+              aria-label="Resynchroniser avec le gsheet"
+              className="text-neutral-600 hover:text-green-400 transition-colors"
+            >
+              <RefreshCw size={12} />
+            </button>
+          </p>
         )}
 
         {/* ONGLETS */}

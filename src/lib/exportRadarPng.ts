@@ -40,7 +40,8 @@ function drawComicText(
   y: number,
   align: CanvasTextAlign = 'center'
 ) {
-  ctx.font = `italic bold ${30 * SCALE}px "Candara", "Calibri", "Segoe UI", sans-serif`;
+  // Noto Sans, pas Candara : Candara est réservée à la carte d'identité (cf. graph-unordinary).
+  ctx.font = `italic bold ${30 * SCALE}px "Noto Sans", "Segoe UI", sans-serif`;
   ctx.textAlign = align;
   ctx.textBaseline = 'middle';
   ctx.lineJoin = 'round';
@@ -67,6 +68,24 @@ function drawPortrait(ctx: CanvasRenderingContext2D, img: HTMLImageElement) {
   ctx.drawImage(img, sx, sy, sw, sh, PORTRAIT_BOX.x, PORTRAIT_BOX.y, PORTRAIT_BOX.w, PORTRAIT_BOX.h);
 }
 
+// Candara est une police Microsoft propriétaire, présente seulement sous Windows/Office —
+// ailleurs fontconfig la substitue silencieusement (vérifié : le gras devenait Noto Sans
+// Black, pas Bold). "Noto Sans" est chargée via Google Fonts, donc c'est elle qui s'affiche
+// presque partout ; Candara reste en premier pour qu'une machine qui l'a vraiment l'utilise.
+const CANDARA_STACK = `'Candara', 'Noto Sans', sans-serif`;
+
+function drawIdentityLine(ctx: CanvasRenderingContext2D, label: string, value: string, x: number, y: number) {
+  const fontSize = 30 * SCALE;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#000000';
+  ctx.font = `700 ${fontSize}px ${CANDARA_STACK}`;
+  ctx.fillText(label, x, y);
+  const labelWidth = ctx.measureText(label).width;
+  ctx.font = `400 ${fontSize}px ${CANDARA_STACK}`;
+  ctx.fillText(` ${value}`, x + labelWidth, y);
+}
+
 function drawIdentityCard(
   ctx: CanvasRenderingContext2D,
   name: string,
@@ -85,16 +104,12 @@ function drawIdentityCard(
   ctx.fillRect(LABEL_BOX.x, LABEL_BOX.y, LABEL_BOX.w, LABEL_BOX.h);
   ctx.strokeRect(LABEL_BOX.x, LABEL_BOX.y, LABEL_BOX.w, LABEL_BOX.h);
 
-  ctx.font = `bold ${30 * SCALE}px "Candara", "Calibri", "Segoe UI", sans-serif`;
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'alphabetic';
-  ctx.fillStyle = '#000000';
   const textX = LABEL_BOX.x + 20 * SCALE;
   const lineHeight = LABEL_BOX.h / 3.6;
   const firstBaseline = LABEL_BOX.y + lineHeight * 0.95;
-  ctx.fillText(`Name: ${name}`, textX, firstBaseline);
-  ctx.fillText(`Ability: ${ability}`, textX, firstBaseline + lineHeight);
-  ctx.fillText(`Level: ${level}`, textX, firstBaseline + lineHeight * 2);
+  drawIdentityLine(ctx, 'Name:', name, textX, firstBaseline);
+  drawIdentityLine(ctx, 'Ability:', ability, textX, firstBaseline + lineHeight);
+  drawIdentityLine(ctx, 'Level:', level, textX, firstBaseline + lineHeight * 2);
 }
 
 function loadImage(src: string): Promise<HTMLImageElement | null> {
@@ -117,7 +132,16 @@ export async function exportRadarPng(
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
-  const portrait = await loadImage(tpPortrait);
+  // Attendre le chargement des polices web (Noto Sans pour les labels du radar,
+  // Candara auto-hébergée pour la carte d'identité) avant de dessiner — sinon le
+  // premier rendu du canvas retombe sur une police système, contrairement au DOM
+  // qui gère ça nativement via font-display: swap.
+  const [portrait] = await Promise.all([
+    loadImage(tpPortrait),
+    document.fonts.load(`italic bold ${30 * SCALE}px "Noto Sans"`).catch(() => null),
+    document.fonts.load(`700 ${30 * SCALE}px "Candara"`).catch(() => null),
+    document.fonts.load(`400 ${30 * SCALE}px "Candara"`).catch(() => null),
+  ]);
 
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
@@ -143,8 +167,21 @@ export async function exportRadarPng(
   ctx.fillStyle = baseGradient;
   ctx.fill();
 
+  // Rayons du centre vers chaque sommet, comme les graduations d'un radar chart classique.
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.25)';
+  ctx.lineWidth = 1.5 * SCALE;
+  basePoints.forEach((p) => {
+    ctx.beginPath();
+    ctx.moveTo(PENTAGON_CENTER.x, PENTAGON_CENTER.y);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+  });
+
+  ctx.beginPath();
+  basePoints.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+  ctx.closePath();
   ctx.lineJoin = 'round';
-  ctx.lineWidth = 9 * SCALE;
+  ctx.lineWidth = 3 * SCALE;
   ctx.strokeStyle = '#1e3a3e';
   ctx.stroke();
 
@@ -154,7 +191,7 @@ export async function exportRadarPng(
   points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
   ctx.closePath();
   ctx.fillStyle = 'rgba(255, 215, 0, 0.45)';
-  ctx.lineWidth = 5 * SCALE;
+  ctx.lineWidth = 4 * SCALE;
   ctx.strokeStyle = '#ffd700';
   ctx.fill();
   ctx.stroke();

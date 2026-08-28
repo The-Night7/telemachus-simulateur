@@ -2,3 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Self-hosted from the user's own licensed copy (public/fonts, gitignored — never
+   redistributed). Declaring it here makes Chrome use the real font directly as a
+   web font instead of resolving "Candara" through the OS, which this Chrome
+   build fails to do correctly even when the font is genuinely installed. */
+@font-face {
+  font-family: 'Candara';
+  src: url('/fonts/candara.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Candara';
+  src: url('/fonts/candarab.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Candara';
+  src: url('/fonts/candarai.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Candara';
+  src: url('/fonts/candaraz.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}

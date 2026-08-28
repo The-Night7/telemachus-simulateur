@@ -630,7 +630,7 @@ export default function App() {
                       const isTooExpensive = (currentAuraDrain - currentSlotDrain + cost) > maxAura;
                       return (
                         <option key={cap.id} value={cap.id} disabled={(slots.includes(cap.id.toString()) && slotValue !== cap.id.toString()) || (isTooExpensive && slotValue !== cap.id.toString())}>
-                          {cap.nom_capacite} - Niv {cap.niveau} {slots.includes(cap.id.toString()) && slotValue !== cap.id.toString() ? "(Déjà équipé)" : isTooExpensive && slotValue !== cap.id.toString() ? "[Aura Insuffisante]" : ""}
+                          {cap.nom_capacite} ({cap.nom_personnage}) - Niv {cap.niveau} {slots.includes(cap.id.toString()) && slotValue !== cap.id.toString() ? "(Déjà équipé)" : isTooExpensive && slotValue !== cap.id.toString() ? "[Aura Insuffisante]" : ""}
                         </option>
                       )
                     })}

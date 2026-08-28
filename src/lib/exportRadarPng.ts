@@ -196,7 +196,7 @@ export async function exportRadarPng(
   points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
   ctx.closePath();
   ctx.fillStyle = 'rgba(255, 215, 0, 0.45)';
-  ctx.lineWidth = 4 * SCALE;
+  ctx.lineWidth = 2 * SCALE;
   ctx.strokeStyle = '#ffd700';
   ctx.fill();
   ctx.stroke();

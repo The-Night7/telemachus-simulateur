@@ -281,6 +281,10 @@ export default function App() {
           valeurCopiee *= currentAutoBoostMult;
         }
 
+        // Pénalité d'inefficacité de copie : s'applique après tout le reste (branche +
+        // autoboost éventuel), sur toutes les stats copiées.
+        valeurCopiee *= 0.75;
+
         // On met à jour la statistique de Telemachus si la valeur est supérieure
         if (valeurCopiee > stats[baseKey].val) {
           stats[baseKey] = { 

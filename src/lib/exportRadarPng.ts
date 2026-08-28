@@ -1,6 +1,10 @@
-import tpPortrait from '../assets/tp-pp.png';
-
 type StatKey = 'power' | 'speed' | 'trick' | 'recovery' | 'defense';
+
+export interface RadarIdentity {
+  name: string;
+  ability: string;
+  portraitSrc: string;
+}
 
 // Réplique la fiche de stats unOrdinary (cf. template_graph.jpg à la racine du repo) :
 // case portrait + bloc Name/Ability/Level à gauche, pentagone de stats à droite.
@@ -124,7 +128,8 @@ function loadImage(src: string): Promise<HTMLImageElement | null> {
 export async function exportRadarPng(
   stats: Record<StatKey, number>,
   level: number,
-  filename = 'telemachus-radar.png'
+  identity: RadarIdentity,
+  filename = `${identity.name.toLowerCase()}-radar.png`
 ) {
   const canvas = document.createElement('canvas');
   canvas.width = CANVAS_W;
@@ -137,7 +142,7 @@ export async function exportRadarPng(
   // premier rendu du canvas retombe sur une police système, contrairement au DOM
   // qui gère ça nativement via font-display: swap.
   const [portrait] = await Promise.all([
-    loadImage(tpPortrait),
+    loadImage(identity.portraitSrc),
     document.fonts.load(`italic bold ${30 * SCALE}px "Noto Sans"`).catch(() => null),
     document.fonts.load(`700 ${30 * SCALE}px "Candara"`).catch(() => null),
     document.fonts.load(`400 ${30 * SCALE}px "Candara"`).catch(() => null),
@@ -146,7 +151,7 @@ export async function exportRadarPng(
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-  drawIdentityCard(ctx, 'Telemachus', 'Aura Deity', level.toFixed(1), portrait);
+  drawIdentityCard(ctx, identity.name, identity.ability, level.toFixed(1), portrait);
 
   // Pentagone de référence : toujours régulier, plafonné à 10 (le "gabarit" unOrdinary).
   const basePoints = KEYS.map((_, i) => vertex(BASE_MAX, i));

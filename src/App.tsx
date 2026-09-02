@@ -38,11 +38,11 @@ const statConfig: { key: StatKey, label: string, Icon: React.ElementType, color:
 
 // --- LOGIQUE DE TIER ET DE SLOTS DE TELEMACHUS ---
 const getTierInfo = (level: number) => {
-  if (level < 2.0) return { name: "Low-Tier", slots: 1, color: "text-neutral-400" };
-  if (level < 4.0) return { name: "Mid-Tier", slots: 2, color: "text-green-400" };
-  if (level < 5.0) return { name: "Elite-Tier", slots: 2, color: "text-blue-400" };
-  if (level < 6.0) return { name: "High-Tier", slots: 3, color: "text-purple-400" };
-  return { name: "God-Tier", slots: 4, color: "text-yellow-400" };
+  if (level < 2.0) return { name: "Low-Tier", slots: 1, color: "text-neutral-400", badge: "text-neutral-400 bg-neutral-400/10 border-neutral-400/30" };
+  if (level < 4.0) return { name: "Mid-Tier", slots: 2, color: "text-green-400", badge: "text-green-400 bg-green-400/10 border-green-400/30" };
+  if (level < 5.0) return { name: "Elite-Tier", slots: 2, color: "text-blue-400", badge: "text-blue-400 bg-blue-400/10 border-blue-400/30" };
+  if (level < 6.0) return { name: "High-Tier", slots: 3, color: "text-purple-400", badge: "text-purple-400 bg-purple-400/10 border-purple-400/30" };
+  return { name: "God-Tier", slots: 4, color: "text-yellow-400", badge: "text-yellow-400 bg-yellow-400/10 border-yellow-400/30" };
 };
 
 // --- LOGIQUE DE DRAIN D'AURA DE BASE ---
@@ -554,42 +554,40 @@ export default function App() {
         {/* PANNEAU GAUCHE : CONTRÔLES */}
         <div className="lg:col-span-5 space-y-6">
           
-          <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl shadow-xl flex flex-col gap-4 border-l-4 border-l-yellow-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <label className="text-lg font-bold text-neutral-200 block">
+          <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl shadow-xl border-l-4 border-l-yellow-500">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="flex flex-col">
+                <label className="text-xs text-neutral-400 uppercase tracking-wider font-semibold mb-1 block">
                   Niveau Actuel
                 </label>
-                <span className={`text-sm font-bold uppercase tracking-wider ${tierInfo.color}`}>
+                <div className="text-3xl font-black text-yellow-500 leading-none">
+                  {level.toFixed(1)}
+                </div>
+                <span className={`mt-2 w-fit text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${tierInfo.badge}`}>
                   {tierInfo.name}
                 </span>
               </div>
-              <div className="text-3xl font-black text-yellow-500">
-                {level.toFixed(1)}
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4 mt-2 pt-4 border-t border-neutral-800">
+
               <div>
                 <label className="text-xs text-neutral-400 uppercase tracking-wider font-semibold mb-1 block">Potentiel</label>
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   value={potential}
                   onChange={(e) => setPotential(parseFloat(e.target.value) || 1)}
-                  step="0.1" 
-                  min="1.0" 
+                  step="0.1"
+                  min="1.0"
                   max="10.0"
                   className="w-full bg-neutral-950 text-neutral-200 text-lg font-bold py-2 px-3 rounded-lg border border-neutral-700 focus:outline-none focus:border-yellow-500 transition-colors"
                 />
               </div>
               <div>
                 <label className="text-xs text-neutral-400 uppercase tracking-wider font-semibold mb-1 block">Maîtrise</label>
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   value={mastery}
                   onChange={(e) => setMastery(parseFloat(e.target.value) || 1)}
-                  step="0.1" 
-                  min="1.0" 
+                  step="0.1"
+                  min="1.0"
                   max="10.0"
                   className="w-full bg-neutral-950 text-neutral-200 text-lg font-bold py-2 px-3 rounded-lg border border-neutral-700 focus:outline-none focus:border-yellow-500 transition-colors"
                 />
@@ -607,8 +605,8 @@ export default function App() {
                 <p className="text-xs text-neutral-500 mt-1">L'amplification et la copie drainent l'aura.</p>
               </div>
               <div className="text-right">
-                <span className="text-2xl font-black text-yellow-500">{auraRemaining}</span>
-                <span className="text-neutral-500 text-sm ml-1">/ {maxAura}</span>
+                <span className="text-2xl font-black text-yellow-500">{Math.ceil(auraRemaining)}</span>
+                <span className="text-neutral-500 text-sm ml-1">/ {Math.ceil(maxAura)}</span>
               </div>
             </div>
             

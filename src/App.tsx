@@ -142,7 +142,7 @@ export default function App() {
   const { capacites: capacitesData, loading: capacitesLoading, error: capacitesError, retry: retryCapacites } = useCapacites();
   const [activeTab, setActiveTab] = useState('classic');
   const [potential, setPotential] = useState(9.3);
-  const [mastery, setMastery] = useState(6.3);
+  const [mastery, setMastery] = useState(6.5);
   const [slots, setSlots] = useState<string[]>(["", "", "", ""]);
   const [radarIdentityIndex, setRadarIdentityIndex] = useState(0);
 

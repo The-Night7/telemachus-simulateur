@@ -211,11 +211,13 @@ const RadarChart = ({
   boosts,
   baseStatsInfo,
   layers = [],
+  capAt10 = false,
 }: {
   stats: Record<StatKey, number>;
   boosts: Record<string, number>;
   baseStatsInfo: Record<StatKey, StatInfo>;
   layers?: { id: string; stats: Record<StatKey, number> }[];
+  capAt10?: boolean;
 }) => {
   const maxStat = 10;
   const size = 500;
@@ -255,7 +257,7 @@ const RadarChart = ({
             modeLayers dans App), donc on ne veut pas une forme fusionnée en plus qui
             ferait doublon — exactement comme john_unordinary. */}
         {!hasLayers && (
-          <polygon points={getPoints(stats, false)} fill="rgba(255, 215, 0, 0.3)" stroke="#ffd700" strokeWidth="3" className="transition-all duration-500 ease-in-out drop-shadow-[0_0_10px_rgba(255,215,0,0.5)]" />
+          <polygon points={getPoints(stats, capAt10)} fill="rgba(255, 215, 0, 0.3)" stroke="#ffd700" strokeWidth="3" className="transition-all duration-500 ease-in-out drop-shadow-[0_0_10px_rgba(255,215,0,0.5)]" />
         )}
 
         {/* Calques de modes (style Phase Shift) : chaque capacité équipée qui a des
@@ -266,7 +268,7 @@ const RadarChart = ({
         {layers.map(layer => (
           <polygon
             key={`layer-${layer.id}`}
-            points={getPoints(layer.stats, false)}
+            points={getPoints(layer.stats, capAt10)}
             fill="rgba(255, 215, 0, 0.3)"
             stroke="#ffd700"
             strokeWidth="3"
@@ -274,9 +276,11 @@ const RadarChart = ({
           />
         ))}
 
-        {/* Nodes : marquent les sommets de l'Aura Shape, donc masqués avec elle. */}
+        {/* Nodes : marquent les sommets de l'Aura Shape, donc masqués avec elle et
+            plafonnés comme elle (capAt10) — seuls Aura Shape/Nodes respectent l'option. */}
         {!hasLayers && keys.map((key, i) => {
-          const val = stats[key] || 1;
+          const rawVal = stats[key] || 1;
+          const val = capAt10 ? Math.min(rawVal, maxStat) : rawVal;
           const r = (val / maxStat) * radius;
           const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
           const isBoosted = boosts[key] > 0 || baseStatsInfo[key].isAutoBoosted;
@@ -295,12 +299,15 @@ const RadarChart = ({
           )
         })}
 
-        {/* Labels */}
+        {/* Labels : positions toujours normales (bord du pentagone), jamais plafonnées
+            ni poussées vers l'extérieur — seule la forme du graphique (Aura Shape/Nodes)
+            respecte l'option capAt10. Les valeurs réelles restent visibles dans la grille
+            de stats en dessous, indépendamment de cette option. */}
         {keys.map((key, i) => {
           const val = stats[key] || 1;
           const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
           const currentRadius = (val / maxStat) * radius;
-          const rText = Math.max(radius, currentRadius) + 35; 
+          const rText = Math.max(radius, currentRadius) + 35;
           const isBoosted = boosts[key] > 0 || baseStatsInfo[key].isAutoBoosted;
           
           return (
@@ -332,6 +339,9 @@ export default function App() {
   const [mastery, setMastery] = useState(6.5);
   const [slots, setSlots] = useState<string[]>(["", "", "", ""]);
   const [radarIdentityIndex, setRadarIdentityIndex] = useState(0);
+  // Plafonne la FORME du graphique radar à 10 (les valeurs réelles restent affichées
+  // normalement dans la grille de stats en dessous et dans les labels du radar).
+  const [capStatsAt10, setCapStatsAt10] = useState(false);
   // Emplacement dont le panneau "Modes" (variantes style Phase Shift) est ouvert.
   const [activeModeDrawer, setActiveModeDrawer] = useState<number | null>(null);
   // Modes additionnels choisis par emplacement, pour les capacités qui partagent une
@@ -934,6 +944,18 @@ export default function App() {
                 <span className="text-xs font-bold text-yellow-400 uppercase tracking-wide">Boost Passif Actif</span>
               </div>
             )}
+
+            <button
+              onClick={() => setCapStatsAt10(!capStatsAt10)}
+              className={`w-fit px-2 py-0.5 text-xs font-bold rounded-full border transition-colors flex items-center gap-1 ${
+                capStatsAt10
+                  ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500'
+                  : 'bg-neutral-950 text-neutral-400 border-neutral-800 hover:text-neutral-200'
+              }`}
+              title="Plafonner la forme du radar à 10 (les valeurs réelles restent affichées telles quelles)"
+            >
+              Cap à 10
+            </button>
           </div>
 
           <div className="absolute top-6 right-6 z-10 flex items-center gap-2">
@@ -958,6 +980,7 @@ export default function App() {
                 statsFinales,
                 level,
                 RADAR_IDENTITIES[radarIdentityIndex],
+                capStatsAt10,
                 modeLayers.map(l => ({ label: `${l.nomCapacite} · ${l.label}`, stats: l.stats }))
               )}
               className="flex items-center gap-2 px-3 py-1 bg-neutral-950 border border-neutral-800 rounded-lg shadow-sm hover:border-yellow-500/50 hover:text-yellow-500 text-neutral-400 transition-colors"
@@ -969,7 +992,7 @@ export default function App() {
           </div>
 
           <div className="w-full mb-2 mt-12 md:mt-6">
-            <RadarChart stats={statsFinales} boosts={boostState} baseStatsInfo={baseStatsInfo} layers={modeLayers} />
+            <RadarChart stats={statsFinales} boosts={boostState} baseStatsInfo={baseStatsInfo} layers={modeLayers} capAt10={capStatsAt10} />
           </div>
 
           {/* Légende des calques de modes actifs (style Phase Shift) : toutes les formes

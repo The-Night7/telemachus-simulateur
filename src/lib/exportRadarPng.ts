@@ -142,6 +142,7 @@ export async function exportRadarPng(
   stats: Record<StatKey, number>,
   level: number,
   identity: RadarIdentity,
+  capAt10 = false,
   layers: RadarLayer[] = [],
   filename = `${identity.name.toLowerCase()}-radar.png`
 ) {
@@ -204,12 +205,14 @@ export async function exportRadarPng(
   ctx.strokeStyle = '#1e3a3e';
   ctx.stroke();
 
-  // Graphique réel : peut dépasser le pentagone de référence (ex: Trick > 10).
+  // Graphique réel : peut dépasser le pentagone de référence (ex: Trick > 10), sauf si
+  // l'option "Cap à 10" est active — la forme est alors plafonnée, mais la valeur réelle
+  // reste annotée sous le label (voir plus bas) exactement comme dans le radar interactif.
   // Masqué dès qu'un calque est actif (voir layers.length) — chaque calque EST déjà
   // un build complet, donc on ne veut pas une forme fusionnée en plus qui ferait
   // doublon — exactement comme john_unordinary.
   if (layers.length === 0) {
-    const points = KEYS.map((k, i) => vertex(stats[k] || 1, i));
+    const points = KEYS.map((k, i) => vertex(capAt10 ? Math.min(stats[k] || 1, BASE_MAX) : (stats[k] || 1), i));
     ctx.beginPath();
     points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
     ctx.closePath();
@@ -226,7 +229,9 @@ export async function exportRadarPng(
   // superposition de plusieurs formes identiques qui les distingue (recouvrement
   // plus dense), pas une couleur ou une opacité différente (cf. john_unordinary).
   layers.forEach((layer) => {
-    const layerPoints = KEYS.map((k, i) => vertex(layer.stats[k] || 1, i));
+    const layerPoints = KEYS.map((k, i) =>
+      vertex(capAt10 ? Math.min(layer.stats[k] || 1, BASE_MAX) : layer.stats[k] || 1, i)
+    );
     ctx.beginPath();
     layerPoints.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
     ctx.closePath();

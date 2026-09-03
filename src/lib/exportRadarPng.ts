@@ -7,16 +7,17 @@ export interface RadarIdentity {
 }
 
 // Un calque = la contribution isolée d'une capacité qui a des variantes de mode
-// (style Phase Shift, ex: "Phase Shift (Def)"), tracée en plus de l'Aura Shape
-// fusionnée — jamais à sa place — pour comparer visuellement ce mode-là au
-// résultat final. Cf. RadarChart > layers dans App.tsx pour l'équivalent SVG.
+// (style Phase Shift, ex: "Phase Shift (Def)"), tracée à la PLACE de la forme
+// fusionnée normale dès qu'au moins un calque est actif (cf. layers.length plus
+// bas) — exactement comme john_unordinary. Cf. RadarChart > layers dans App.tsx
+// pour l'équivalent SVG.
 export interface RadarLayer {
   label: string;
   stats: Record<string, number>;
 }
 
-const LAYER_FILL = 'rgba(255, 255, 255, 0.08)';
-const LAYER_STROKE = 'rgba(0, 0, 0, 0.55)';
+const LAYER_FILL = 'rgba(255, 215, 0, 0.45)';
+const LAYER_STROKE = '#ffd700';
 
 // Réplique la fiche de stats unOrdinary (cf. template_graph.jpg à la racine du repo) :
 // case portrait + bloc Name/Ability/Level à gauche, pentagone de stats à droite.
@@ -204,31 +205,36 @@ export async function exportRadarPng(
   ctx.stroke();
 
   // Graphique réel : peut dépasser le pentagone de référence (ex: Trick > 10).
-  const points = KEYS.map((k, i) => vertex(stats[k] || 1, i));
-  ctx.beginPath();
-  points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
-  ctx.closePath();
-  ctx.fillStyle = 'rgba(255, 215, 0, 0.45)';
-  ctx.lineWidth = 2 * SCALE;
-  ctx.strokeStyle = '#ffd700';
-  ctx.fill();
-  ctx.stroke();
+  // Masqué dès qu'un calque est actif (voir layers.length) — chaque calque EST déjà
+  // un build complet, donc on ne veut pas une forme fusionnée en plus qui ferait
+  // doublon — exactement comme john_unordinary.
+  if (layers.length === 0) {
+    const points = KEYS.map((k, i) => vertex(stats[k] || 1, i));
+    ctx.beginPath();
+    points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+    ctx.closePath();
+    ctx.fillStyle = LAYER_FILL;
+    ctx.lineWidth = 2 * SCALE;
+    ctx.strokeStyle = LAYER_STROKE;
+    ctx.fill();
+    ctx.stroke();
+  }
 
-  // Calques de modes (style Phase Shift) : contribution isolée de chaque capacité
-  // équipée qui a des variantes de mode, tracée par-dessus l'Aura Shape fusionnée
-  // (jamais à sa place) pour comparer visuellement ce mode-là au résultat final.
+  // Calques de modes (style Phase Shift) : chaque capacité équipée qui a des
+  // variantes de mode est tracée avec EXACTEMENT le même style que la forme
+  // normale — même remplissage, même contour — pour rester cohérent ; c'est la
+  // superposition de plusieurs formes identiques qui les distingue (recouvrement
+  // plus dense), pas une couleur ou une opacité différente (cf. john_unordinary).
   layers.forEach((layer) => {
     const layerPoints = KEYS.map((k, i) => vertex(layer.stats[k] || 1, i));
     ctx.beginPath();
     layerPoints.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
     ctx.closePath();
-    ctx.setLineDash([6 * SCALE, 4 * SCALE]);
     ctx.fillStyle = LAYER_FILL;
-    ctx.lineWidth = 2.5 * SCALE;
+    ctx.lineWidth = 2 * SCALE;
     ctx.strokeStyle = LAYER_STROKE;
     ctx.fill();
     ctx.stroke();
-    ctx.setLineDash([]);
   });
 
   // Ajustements fins par label : recovery/trick un peu plus loin du bord du pentagone,

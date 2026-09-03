@@ -357,9 +357,11 @@ export default function App() {
   // --- CALQUES DE MODES (style Phase Shift) ---
   // Pour chaque capacité équipée qui a des variantes de mode (ex: Phase Shift
   // (Def)/(Off) chez Zeke), trace sa contribution ISOLÉE (comme si elle était
-  // seule équipée) en plus de l'Aura Shape fusionnée normale, pour comparer visuellement
-  // ce mode-là à la forme finale — cf. computeMergedStatsInfo, réutilisé tel quel avec
-  // une seule capacité. N'affecte jamais baseStatsInfo/statsFinales eux-mêmes.
+  // seule équipée) À LA PLACE de l'Aura Shape fusionnée normale dès qu'au moins un
+  // calque existe (cf. RadarChart > hasLayers) — exactement comme john_unordinary :
+  // ce sont les silhouettes superposées qui se comparent, pas une forme fusionnée en
+  // plus. Cf. computeMergedStatsInfo, réutilisé tel quel avec une seule capacité.
+  // N'affecte jamais baseStatsInfo/statsFinales eux-mêmes (qui restent le "vrai" build).
   const modeLayers = useMemo(() => {
     const layers: { id: string; label: string; nomCapacite: string; stats: Record<StatKey, number> }[] = [];
 
@@ -874,8 +876,10 @@ export default function App() {
             <RadarChart stats={statsFinales} boosts={boostState} baseStatsInfo={baseStatsInfo} layers={modeLayers} />
           </div>
 
-          {/* Légende des calques de modes actifs (style Phase Shift) : contour en
-              pointillés blancs sur le radar, identifié ici par capacité + mode. */}
+          {/* Légende des calques de modes actifs (style Phase Shift) : toutes les formes
+              partagent la même couleur (l'Aura Shape est masquée pendant ce temps) —
+              seule leur silhouette les distingue en se superposant, donc pas de pastille
+              de couleur ici non plus. */}
           {modeLayers.length > 0 && (
             <div className="w-full flex flex-wrap justify-center gap-2 mb-3">
               {modeLayers.map(layer => (

@@ -373,17 +373,20 @@ export default function App() {
   );
 
   // --- CALQUES DE MODES (style Phase Shift) ---
-  // Pour chaque mode actif (principal ou additionnel) d'un emplacement dont la capacité
-  // appartient à un groupe de plusieurs variantes (ex: Phase Shift (Def)/(Off) chez
-  // Zeke), simule le build COMPLET (toutes les capacités équipées, TOUS les autres
-  // emplacements et leurs modes gardant leur contribution normale) en substituant
-  // UNIQUEMENT ce mode à la contribution de CET emplacement — traité comme deux calques
-  // séparés qui se comparent EN CONTEXTE avec le reste du build, pas isolés sur les
-  // stats de repos de Telemachus (cf. john_unordinary : mergeSlotsIntoStats avec
-  // overrideSlotIndex/overrideId). Tracé À LA PLACE de l'Aura Shape fusionnée normale
-  // dès qu'au moins un calque existe (cf. RadarChart > hasLayers). N'affecte jamais
-  // baseStatsInfo/statsFinales eux-mêmes, qui restent la fusion de TOUS les modes
-  // actifs de TOUS les emplacements (le "vrai" build).
+  // On fusionne au maximum : un emplacement avec un SEUL mode actif (pas d'extra
+  // coché) est une capacité normale comme une autre — elle n'a rien à comparer,
+  // donc pas de calque dédié, juste sa contribution normale dans le build fusionné
+  // (equippedCaps/baseStatsInfo). Les calques n'apparaissent QUE pour un emplacement
+  // qui a au moins 2 modes actifs EN MÊME TEMPS (principal + au moins un extra coché) :
+  // pour chaque mode actif de CET emplacement, simule le build COMPLET (toutes les
+  // capacités équipées, TOUS les autres emplacements et leurs modes gardant leur
+  // contribution normale) en substituant UNIQUEMENT ce mode à la contribution de cet
+  // emplacement — les calques se comparent EN CONTEXTE avec le reste du build, jamais
+  // isolés sur les stats de repos de Telemachus (cf. john_unordinary :
+  // mergeSlotsIntoStats avec overrideSlotIndex/overrideId). Tracé À LA PLACE de l'Aura
+  // Shape fusionnée normale dès qu'au moins un calque existe (cf. RadarChart >
+  // hasLayers). N'affecte jamais baseStatsInfo/statsFinales eux-mêmes, qui restent la
+  // fusion de TOUS les modes actifs de TOUS les emplacements (le "vrai" build).
   const modeLayers = useMemo(() => {
     const layers: { id: string; label: string; nomCapacite: string; stats: Record<StatKey, number> }[] = [];
 
@@ -392,10 +395,9 @@ export default function App() {
       const principal = capacitesData.find(c => c.id === parseInt(slotId));
       if (!principal) return;
 
-      const siblingCount = capacitesData.filter(c => c.mode_group_key === principal.mode_group_key).length;
-      if (siblingCount <= 1) return;
-
       const activeIds = [slotId, ...(slotExtraModes[index] || [])];
+      if (activeIds.length <= 1) return;
+
       activeIds.forEach(id => {
         const cap = capacitesData.find(c => c.id === parseInt(id));
         if (!cap) return;

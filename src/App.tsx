@@ -12,7 +12,7 @@ import arlequinePortrait from './assets/Arlequine.jpeg';
 const RADAR_IDENTITIES: RadarIdentity[] = [
   { name: 'Telemachus', ability: 'Aura Deity', portraitSrc: tpPortrait },
   { name: 'Arlequin', ability: 'Aura Deity', portraitSrc: arlequinPortrait },
-  { name: 'Arlequine', ability: 'Aura Deity', portraitSrc: arlequinePortrait },
+  { name: 'Arlequin', ability: 'Aura Deity', portraitSrc: arlequinePortrait },
 ];
 
 // --- TYPESCRIPT INTERFACES ---
@@ -235,6 +235,7 @@ const RadarChart = ({
   };
 
   const levels = [2, 4, 6, 8, 10];
+  const hasLayers = layers.length > 0;
 
   return (
     <div className="relative w-full aspect-square max-w-[450px] mx-auto bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-neutral-800 to-neutral-950 rounded-full p-4 shadow-2xl border border-neutral-800">
@@ -249,47 +250,51 @@ const RadarChart = ({
           )
         })}
         
-        {/* Aura Shape */}
-        <polygon points={getPoints(stats, false)} fill="rgba(255, 215, 0, 0.3)" stroke="#ffd700" strokeWidth="3" className="transition-all duration-500 ease-in-out drop-shadow-[0_0_10px_rgba(255,215,0,0.5)]" />
+        {/* Aura Shape : masquée dès qu'un calque est actif (voir hasLayers) — chaque
+            calque EST déjà un build complet (toutes les capacités équipées, cf.
+            modeLayers dans App), donc on ne veut pas une forme fusionnée en plus qui
+            ferait doublon — exactement comme john_unordinary. */}
+        {!hasLayers && (
+          <polygon points={getPoints(stats, false)} fill="rgba(255, 215, 0, 0.3)" stroke="#ffd700" strokeWidth="3" className="transition-all duration-500 ease-in-out drop-shadow-[0_0_10px_rgba(255,215,0,0.5)]" />
+        )}
 
-        {/* Calques de modes (style Phase Shift) : la contribution isolée de chaque
-            capacité équipée qui a des variantes de mode, tracée par-dessus l'Aura Shape
-            fusionnée pour comparer visuellement ce mode-là au résultat final — jamais à
-            la place de l'Aura Shape (contrairement à un simple "calque" qui remplacerait
-            la forme, ici les deux coexistent toujours). */}
+        {/* Calques de modes (style Phase Shift) : chaque capacité équipée qui a des
+            variantes de mode est tracée avec EXACTEMENT le même style que l'Aura Shape
+            normale — même remplissage, même contour — pour rester cohérent ; c'est la
+            superposition de plusieurs formes identiques qui les distingue (recouvrement
+            plus dense), pas une couleur ou une opacité différente (cf. john_unordinary). */}
         {layers.map(layer => (
           <polygon
             key={`layer-${layer.id}`}
             points={getPoints(layer.stats, false)}
-            fill="rgba(255,255,255,0.05)"
-            stroke="rgba(255,255,255,0.65)"
-            strokeWidth="2"
-            strokeDasharray="6 4"
-            className="transition-all duration-500 ease-in-out"
+            fill="rgba(255, 215, 0, 0.3)"
+            stroke="#ffd700"
+            strokeWidth="3"
+            className="transition-all duration-500 ease-in-out drop-shadow-[0_0_10px_rgba(255,215,0,0.5)]"
           />
         ))}
 
-        {/* Nodes */}
-        {keys.map((key, i) => {
+        {/* Nodes : marquent les sommets de l'Aura Shape, donc masqués avec elle. */}
+        {!hasLayers && keys.map((key, i) => {
           const val = stats[key] || 1;
           const r = (val / maxStat) * radius;
           const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
           const isBoosted = boosts[key] > 0 || baseStatsInfo[key].isAutoBoosted;
-          
+
           return (
-            <circle 
-              key={`pt-${key}`} 
-              cx={cx + r * Math.cos(angle)} 
-              cy={cy + r * Math.sin(angle)} 
-              r={isBoosted ? "7" : "5"} 
-              fill={isBoosted ? "#ffd700" : "#121212"} 
-              stroke="#ffd700" 
-              strokeWidth="2.5" 
-              className="transition-all duration-500 ease-in-out" 
+            <circle
+              key={`pt-${key}`}
+              cx={cx + r * Math.cos(angle)}
+              cy={cy + r * Math.sin(angle)}
+              r={isBoosted ? "7" : "5"}
+              fill={isBoosted ? "#ffd700" : "#121212"}
+              stroke="#ffd700"
+              strokeWidth="2.5"
+              className="transition-all duration-500 ease-in-out"
             />
           )
         })}
-        
+
         {/* Labels */}
         {keys.map((key, i) => {
           const val = stats[key] || 1;

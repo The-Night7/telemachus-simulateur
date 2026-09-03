@@ -334,6 +334,12 @@ export default function App() {
   const [radarIdentityIndex, setRadarIdentityIndex] = useState(0);
   // Emplacement dont le panneau "Modes" (variantes style Phase Shift) est ouvert.
   const [activeModeDrawer, setActiveModeDrawer] = useState<number | null>(null);
+  // Modes additionnels choisis par emplacement, pour les capacités qui partagent une
+  // mode_group_key (ex: Phase Shift (Def)/(Off) chez Zeke) — le mode choisi dans le
+  // <select> du slot reste le mode "principal", extraIds ajoute d'autres modes du même
+  // groupe qui restent actifs EN MÊME TEMPS (fusionnés dans le build + calques sur le
+  // radar), exactement comme john_unordinary.
+  const [slotExtraModes, setSlotExtraModes] = useState<Record<number, string[]>>({});
 
   const level = useMemo(() => parseFloat(((potential * mastery) / 10).toFixed(1)), [potential, mastery]);
   const [boostState, setBoostState] = useState<Record<string, number>>({ power: 0, speed: 0, trick: 0, recovery: 0, defense: 0 });
@@ -343,10 +349,22 @@ export default function App() {
   
   const activeBoostsCount = useMemo(() => Object.values(boostState).filter(v => v > 0).length, [boostState]);
 
-  // Capacités actuellement équipées (un seul emplacement par slot, cf. tierInfo.slots).
-  const equippedCaps = useMemo(() => slots
-    .map((id, index) => (index < tierInfo.slots && id) ? capacitesData.find(c => c.id === parseInt(id)) : null)
-    .filter((c): c is Capacite => c !== null && c !== undefined), [slots, tierInfo, capacitesData]);
+  // Capacités actuellement équipées : le pick "principal" de chaque emplacement, plus
+  // ses éventuels modes additionnels (slotExtraModes) — tous actifs en même temps.
+  const equippedCaps = useMemo(() => {
+    const list: Capacite[] = [];
+    slots.forEach((id, index) => {
+      if (index >= tierInfo.slots || !id) return;
+      const principal = capacitesData.find(c => c.id === parseInt(id));
+      if (!principal) return;
+      list.push(principal);
+      (slotExtraModes[index] || []).forEach(extraId => {
+        const extra = capacitesData.find(c => c.id === parseInt(extraId));
+        if (extra) list.push(extra);
+      });
+    });
+    return list;
+  }, [slots, slotExtraModes, tierInfo, capacitesData]);
 
   // --- MOTEUR DE FUSION ET IDENTIFICATION DES STATS FORTES/FAIBLES (AVEC POOL DE REPARTITION) ---
   const baseStatsInfo = useMemo(
@@ -355,13 +373,14 @@ export default function App() {
   );
 
   // --- CALQUES DE MODES (style Phase Shift) ---
-  // Pour chaque capacité équipée qui a des variantes de mode (ex: Phase Shift
-  // (Def)/(Off) chez Zeke), trace sa contribution ISOLÉE (comme si elle était
-  // seule équipée) À LA PLACE de l'Aura Shape fusionnée normale dès qu'au moins un
-  // calque existe (cf. RadarChart > hasLayers) — exactement comme john_unordinary :
-  // ce sont les silhouettes superposées qui se comparent, pas une forme fusionnée en
-  // plus. Cf. computeMergedStatsInfo, réutilisé tel quel avec une seule capacité.
-  // N'affecte jamais baseStatsInfo/statsFinales eux-mêmes (qui restent le "vrai" build).
+  // Pour chaque mode actif (principal ou additionnel, cf. equippedCaps) qui appartient
+  // à un groupe de plusieurs variantes (ex: Phase Shift (Def)/(Off) chez Zeke), trace sa
+  // contribution ISOLÉE (comme si elle était seule équipée) À LA PLACE de l'Aura Shape
+  // fusionnée normale dès qu'au moins un calque existe (cf. RadarChart > hasLayers) —
+  // exactement comme john_unordinary : ce sont les silhouettes superposées qui se
+  // comparent, pas une forme fusionnée en plus. Cf. computeMergedStatsInfo, réutilisé
+  // tel quel avec une seule capacité. N'affecte jamais baseStatsInfo/statsFinales
+  // eux-mêmes, qui restent la fusion de TOUS les modes actifs (le "vrai" build).
   const modeLayers = useMemo(() => {
     const layers: { id: string; label: string; nomCapacite: string; stats: Record<StatKey, number> }[] = [];
 
@@ -514,11 +533,21 @@ export default function App() {
 
 
   // --- INTERACTIONS ---
+  const clearSlotExtraModes = (index: number) => {
+    setSlotExtraModes(prev => {
+      if (!prev[index]) return prev;
+      const next = { ...prev };
+      delete next[index];
+      return next;
+    });
+  };
+
   const updateSlot = (index: number, value: string) => {
     if (!value) {
       const newSlots = [...slots];
       newSlots[index] = "";
       setSlots(newSlots);
+      clearSlotExtraModes(index);
       if (activeModeDrawer === index) setActiveModeDrawer(null);
       return;
     }
@@ -535,21 +564,38 @@ export default function App() {
     const projectedAuraDrain = currentAuraDrain - currentDrainInThisSlot + newDrain;
 
     if (projectedAuraDrain > maxAura) return;
-    if (isModeConflicting(cap, index)) return;
 
     const newSlots = [...slots];
     newSlots[index] = value;
     setSlots(newSlots);
+
+    // Le nouveau pick "principal" peut appartenir à un autre groupe de modes (ou à
+    // aucun) : on ne garde que les extras qui partagent encore sa mode_group_key, et on
+    // retire le nouveau pick lui-même s'il y était déjà (cf. john_unordinary).
+    setSlotExtraModes(prev => {
+      const existing = prev[index];
+      if (!existing) return prev;
+      const filtered = existing.filter(id => {
+        if (id === value) return false;
+        const sibling = capacitesData.find(c => c.id === parseInt(id));
+        return sibling && sibling.mode_group_key === cap.mode_group_key;
+      });
+      if (filtered.length === 0) {
+        const next = { ...prev };
+        delete next[index];
+        return next;
+      }
+      return { ...prev, [index]: filtered };
+    });
   };
 
-  // Une capacité "conflicting" est une variante de mode (même mode_group_key,
-  // ex: Phase Shift (Def) vs (Off)) déjà équipée dans un AUTRE emplacement —
-  // un seul mode d'une même capacité peut être actif à la fois sur tout le build.
-  const isModeConflicting = (cap: Capacite, forIndex: number) => {
-    return slots.some((sid, i) => {
-      if (i === forIndex || i >= tierInfo.slots || !sid) return false;
-      const other = capacitesData.find(c => c.id === parseInt(sid));
-      return !!other && other.id !== cap.id && other.mode_group_key === cap.mode_group_key;
+  const toggleSlotModeExtra = (index: number, modeId: string) => {
+    setSlotExtraModes(prev => {
+      const existing = prev[index] || [];
+      const next = existing.includes(modeId)
+        ? existing.filter(id => id !== modeId)
+        : [...existing, modeId];
+      return { ...prev, [index]: next };
     });
   };
 
@@ -588,6 +634,14 @@ export default function App() {
         newSlots[i] = "";
       }
       setSlots(newSlots);
+      setSlotExtraModes(prev => {
+        const next: Record<number, string[]> = {};
+        Object.keys(prev).forEach(k => {
+          const idx = Number(k);
+          if (idx < currentTier.slots) next[idx] = prev[idx];
+        });
+        return next;
+      });
     }
     if (activeModeDrawer !== null && activeModeDrawer >= currentTier.slots) {
       setActiveModeDrawer(null);
@@ -601,6 +655,7 @@ export default function App() {
   const drawerSiblings = drawerCap
     ? capacitesData.filter(c => c.mode_group_key === drawerCap.mode_group_key && c.copiable)
     : [];
+  const drawerExtraIds = (activeModeDrawer !== null && slotExtraModes[activeModeDrawer]) || [];
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 font-sans p-4 md:p-8 selection:bg-yellow-500/30 pb-20">
@@ -751,6 +806,15 @@ export default function App() {
               const siblingModes = currentCap
                 ? capacitesData.filter(c => c.mode_group_key === currentCap.mode_group_key && c.copiable)
                 : [];
+              const activeExtraCount = (slotExtraModes[index] || []).length;
+              // Une capacité déjà active ailleurs (comme pick principal OU comme mode
+              // additionnel d'un autre emplacement) ne peut pas être re-choisie ici.
+              const usedElsewhereIds = new Set<string>();
+              slots.forEach((sid, i) => {
+                if (i === index || !sid) return;
+                usedElsewhereIds.add(sid);
+                (slotExtraModes[i] || []).forEach(id => usedElsewhereIds.add(id));
+              });
 
               return (
                 <div key={index} className="relative group">
@@ -767,18 +831,15 @@ export default function App() {
                     {!isLocked && capacitesData.filter(cap => cap.copiable).map(cap => {
                       const cost = getAuraCost(cap.niveau);
                       const isSelf = slotValue === cap.id.toString();
-                      const alreadyEquipped = slots.includes(cap.id.toString()) && !isSelf;
+                      const alreadyEquipped = usedElsewhereIds.has(cap.id.toString()) && !isSelf;
                       const isTooExpensive = (currentAuraDrain - currentSlotDrain + cost) > maxAura && !isSelf;
-                      const modeConflict = !isSelf && isModeConflicting(cap, index);
                       const reason = alreadyEquipped
                         ? "(Déjà équipé)"
-                        : modeConflict
-                          ? "(Autre mode déjà équipé)"
-                          : isTooExpensive
-                            ? "[Aura Insuffisante]"
-                            : "";
+                        : isTooExpensive
+                          ? "[Aura Insuffisante]"
+                          : "";
                       return (
-                        <option key={cap.id} value={cap.id} disabled={alreadyEquipped || isTooExpensive || modeConflict}>
+                        <option key={cap.id} value={cap.id} disabled={alreadyEquipped || isTooExpensive}>
                           {cap.nom_capacite} ({cap.nom_personnage}) - Niv {cap.niveau} {reason}
                         </option>
                       )
@@ -789,11 +850,16 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => setActiveModeDrawer(index)}
-                      title="Choisir le mode actif de cette capacité"
+                      title="Choisir les modes actifs de cette capacité"
                       className="mt-1.5 flex items-center gap-1 text-[11px] font-bold text-neutral-500 hover:text-yellow-500 transition-colors"
                     >
                       <Layers size={12} />
                       Modes
+                      {activeExtraCount > 0 && (
+                        <span className="px-1.5 rounded-full bg-yellow-500/20 text-yellow-400">
+                          {1 + activeExtraCount}
+                        </span>
+                      )}
                     </button>
                   )}
 
@@ -965,8 +1031,11 @@ export default function App() {
       </div>
 
       {/* Panneau "Modes" (variantes style Phase Shift), ouvert depuis le bouton
-          "Modes" d'un emplacement — un seul mode d'une même capacité peut être
-          actif à la fois sur tout le build (cf. isModeConflicting). */}
+          "Modes" d'un emplacement — plusieurs modes d'une même capacité peuvent être
+          actifs en même temps (fusionnés dans le build + calques sur le radar),
+          exactement comme john_unordinary. Le pick du <select> reste le mode
+          "principal" (toujours actif, décoché impossible depuis ce panneau) ; les
+          autres modes du groupe se cochent/décochent librement via slotExtraModes. */}
       {activeModeDrawer !== null && drawerCap && (
         <>
           <div
@@ -980,7 +1049,7 @@ export default function App() {
                   <Layers size={18} className="text-yellow-500" />
                   Modes
                 </h3>
-                <p className="text-xs text-neutral-500 mt-1">Choisissez le mode actif de cette capacité.</p>
+                <p className="text-xs text-neutral-500 mt-1">Choisissez les modes à inclure — plusieurs peuvent être actifs à la fois.</p>
               </div>
               <button
                 onClick={() => setActiveModeDrawer(null)}
@@ -996,33 +1065,29 @@ export default function App() {
 
             <div className="space-y-2">
               {drawerSiblings.map((sib) => {
-                const isActive = sib.id === drawerCap.id;
-                const conflicting = !isActive && isModeConflicting(sib, activeModeDrawer);
+                const isPrimary = sib.id === drawerCap.id;
+                const isChecked = isPrimary || drawerExtraIds.includes(String(sib.id));
                 return (
                   <label
                     key={sib.id}
                     className={`flex items-center gap-3 p-2.5 rounded-lg border transition-colors ${
-                      isActive ? 'border-yellow-500/40 bg-yellow-500/5' : 'border-neutral-800'
+                      isChecked ? 'border-yellow-500/40 bg-yellow-500/5' : 'border-neutral-800'
                     } ${
-                      conflicting ? 'opacity-40 cursor-not-allowed' : isActive ? 'cursor-default' : 'cursor-pointer hover:border-neutral-700'
+                      isPrimary ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer hover:border-neutral-700'
                     }`}
                   >
                     <input
-                      type="radio"
-                      name={`mode-slot-${activeModeDrawer}`}
-                      checked={isActive}
-                      disabled={conflicting}
-                      onChange={() => updateSlot(activeModeDrawer, String(sib.id))}
+                      type="checkbox"
+                      checked={isChecked}
+                      disabled={isPrimary}
+                      onChange={() => toggleSlotModeExtra(activeModeDrawer, String(sib.id))}
                       className="accent-yellow-500"
                     />
                     <span className="text-sm text-neutral-200 flex-1">
                       {sib.mode_label || sib.nom_capacite}
                     </span>
-                    {isActive && (
+                    {isPrimary && (
                       <span className="text-[10px] font-bold uppercase text-yellow-500">Actif</span>
-                    )}
-                    {conflicting && (
-                      <span className="text-[10px] font-bold uppercase text-red-400">Autre slot</span>
                     )}
                   </label>
                 );

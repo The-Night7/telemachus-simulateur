@@ -24,6 +24,18 @@ export interface Capacite {
   id: number;
   nom_personnage: string;
   nom_capacite: string;
+  // Nom de la capacité sans son suffixe de mode (ex: "Phase Shift" pour
+  // "Phase Shift (Def)"), utilisé pour regrouper les modes entre eux.
+  nom_capacite_base: string;
+  // Suffixe de mode extrait entre parenthèses (ex: "Def"), ou null si la
+  // capacité n'a pas de suffixe distinctif (ex: variantes homonymes comme les
+  // multiples lignes "Aura Deity" de Telemachus/Arlequin).
+  mode_label: string | null;
+  // Clé de regroupement des modes d'une même capacité au même niveau :
+  // personnage + nom de base + niveau. Deux lignes partageant cette clé sont
+  // des modes de la même capacité (ex: Phase Shift (Def)/(Off) chez Zeke) —
+  // un seul mode d'un même groupe peut être équipé à la fois (cf. App.tsx).
+  mode_group_key: string;
   niveau: number;
   type: string;
   copiable: boolean;
@@ -57,6 +69,15 @@ const parseFrNumber = (raw: string | undefined): number => {
 };
 
 const trunc3 = (x: number) => Math.trunc(x * 1000) / 1000;
+
+// Isole le suffixe de mode entre parenthèses en fin de nom (ex:
+// "Phase Shift (Def)" -> base "Phase Shift", label "Def"). Sans parenthèses
+// finales, la capacité n'a pas de suffixe (base = nom complet).
+const splitModeSuffix = (ability: string): { base: string; label: string | null } => {
+  const match = ability.match(/^(.*?)\s*\(([^)]*)\)\s*$/);
+  if (!match) return { base: ability, label: null };
+  return { base: match[1].trim(), label: match[2].trim() };
+};
 
 export function parseCapacitesCsv(csvText: string): Capacite[] {
   const { data: rows } = Papa.parse<Record<string, string>>(csvText, {
@@ -96,10 +117,14 @@ export function parseCapacitesCsv(csvText: string): Capacite[] {
     ) as Record<StatKey, number>;
 
     const type = row['Type'] || '';
+    const { base: nomCapaciteBase, label: modeLabel } = splitModeSuffix(ability);
 
     entries.push({
       nom_personnage: name,
       nom_capacite: ability,
+      nom_capacite_base: nomCapaciteBase,
+      mode_label: modeLabel,
+      mode_group_key: `${name}::${nomCapaciteBase}::${niveau}`,
       niveau,
       type,
       // Mental et Meta ne sont pas copiables par Telemachus (règle de lore).

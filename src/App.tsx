@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Shield, Zap, Swords, Brain, Heart, ChevronDown, Layers, Lock, Battery, ChevronsUp, Sparkles, Target, Download, RefreshCw } from 'lucide-react';
+import { Shield, Zap, Swords, Brain, Heart, ChevronDown, Layers, Lock, Battery, ChevronsUp, Sparkles, Target, Download, RefreshCw, X } from 'lucide-react';
 import { useCapacites } from './lib/useCapacites';
+import type { Capacite } from './lib/capacitesSource';
 import { exportRadarPng, type RadarIdentity } from './lib/exportRadarPng';
 import tpPortrait from './assets/tp-pp.png';
 import arlequinPortrait from './assets/arlequin.webp';
@@ -50,8 +51,170 @@ const getAuraCost = (niveau: number) => {
   return parseFloat((niveau * (niveau / 1.5)).toFixed(1));
 };
 
+// --- MOTEUR DE FUSION ET IDENTIFICATION DES STATS FORTES/FAIBLES (AVEC POOL DE REPARTITION) ---
+// Extrait de baseStatsInfo pour être réutilisé tel quel à la fois pour le build
+// équipé complet (tous les slots) et pour isoler UNE capacité seule (cf.
+// modeLayers dans App : contribution d'un mode de type Phase Shift affiché
+// comme calque sur le radar, indépendamment des autres capacités équipées).
+const computeMergedStatsInfo = (
+  equippedCaps: Capacite[],
+  level: number,
+  activeTab: string
+): Record<StatKey, StatInfo> => {
+  let stats: Record<StatKey, StatInfo> = {
+    power: { val: 1, sourceLevel: level, isAutoBoosted: false },
+    speed: { val: 1, sourceLevel: level, isAutoBoosted: false },
+    trick: { val: level * 2.414, sourceLevel: level, isAutoBoosted: false },
+    recovery: { val: 1, sourceLevel: level, isAutoBoosted: false },
+    defense: { val: 1, sourceLevel: level, isAutoBoosted: false }
+  };
+
+  // 2. CALCUL DES MULTIPLICATEURS (Shine-City)
+  const multMap = new Map<number, number>();
+  if (activeTab === 'alternative') {
+    // Capacités plus faibles ou égales
+    const weakerCaps = equippedCaps.filter(cap => cap.niveau <= level).sort((a, b) => a.niveau - b.niveau);
+    weakerCaps.forEach((cap, idx) => {
+      const diff = level - cap.niveau;
+      // Si la capacité est bien plus faible (>= 2 niveaux d'écart) ET c'est la plus faible -> 1.75
+      if (idx === 0 && diff >= 2.0) {
+        multMap.set(cap.id, 1.75);
+      } else if (idx === 0 && diff <= -1.0) {
+        multMap.set(cap.id, 1.25);
+      } else {
+        multMap.set(cap.id, 1.5);
+      }
+    });
+
+    // Capacités trop complexes (plus fortes que lui)
+    const strongerCaps = equippedCaps.filter(cap => cap.niveau > level);
+    strongerCaps.forEach(cap => {
+      const diff = cap.niveau - level;
+      // Si la capacité est bien trop puissante (>= 1 niveau d'écart) -> 1.25
+      if (diff >= 1.0) {
+        multMap.set(cap.id, 1.25);
+      } else {
+        multMap.set(cap.id, 1.5);
+      }
+    });
+  }
+
+  // 3. RÉPARTITION GLOBALE DES STATS À BOOSTER (Shine-City)
+  const abilityBoostMap = new Map<number, string>();
+  if (activeTab === 'alternative') {
+    const pool: { id: number, stat: string, val: number }[] = [];
+    equippedCaps.forEach(cap => {
+      ['power', 'speed', 'recovery', 'defense'].forEach(stat => {
+        pool.push({ id: cap.id, stat, val: (cap.stats_de_base as any)[stat] });
+      });
+    });
+
+    pool.sort((a, b) => {
+      if (b.val !== a.val) return b.val - a.val;
+      const capA = equippedCaps.find(c => c.id === a.id);
+      const capB = equippedCaps.find(c => c.id === b.id);
+      return (capB?.niveau || 0) - (capA?.niveau || 0);
+    });
+
+    const assignedStats = new Set<string>();
+
+    for (const item of pool) {
+      if (!abilityBoostMap.has(item.id) && !assignedStats.has(item.stat)) {
+        abilityBoostMap.set(item.id, item.stat);
+        assignedStats.add(item.stat);
+      }
+    }
+  }
+
+  // 4. FUSION DES STATS FINALES
+  equippedCaps.forEach(cap => {
+    let currentAutoBoostMult = 1.5;
+    let keyToBoost: string | null = null;
+
+    if (activeTab === 'alternative') {
+      currentAutoBoostMult = multMap.get(cap.id) || 1.5;
+      keyToBoost = abilityBoostMap.get(cap.id) || null;
+    } else {
+      // Boost réduit à x1.2 quand la capacité copiée est de plus d'un niveau
+      // plus faible que Telemachus (au lieu du x1.5 par défaut).
+      currentAutoBoostMult = (level - cap.niveau > 1) ? 1.2 : 1.5;
+      keyToBoost = cap.stat_principale;
+    }
+
+    const alreadyAutoBoostedStats = new Set<string>();
+    if (keyToBoost) {
+      alreadyAutoBoostedStats.add(keyToBoost);
+    }
+
+    // Les 2 stats (hors trick) les plus hautes de la capacité d'origine sont
+    // remontées au niveau de Telemachus quand elle est plus faible/égale ;
+    // les 2 autres restent brutes.
+    const nonTrickKeys: StatKey[] = ['power', 'speed', 'recovery', 'defense'];
+    const topTwoNonTrick = new Set(
+      [...nonTrickKeys]
+        .sort((a, b) => (cap.stats_de_base as any)[b] - (cap.stats_de_base as any)[a])
+        .slice(0, 2)
+    );
+
+    for (let key in cap.stats_de_base) {
+      const baseKey = key as StatKey;
+
+      // RÈGLE DE COPIE :
+      // - Capacité plus forte que Telemachus (isTelemachusWeaker) = ramenée à son niveau
+      //   (ratios * niveau), sans pénalité, sur toutes les stats.
+      // - Capacité plus faible/égale = Trick et les 2 stats les plus hautes remontées au niveau de
+      //   Telemachus (ratios * niveau) ; les 2 autres stats restent brutes.
+      const isTelemachusWeaker = level < cap.niveau;
+      let valeurCopiee: number;
+      if (isTelemachusWeaker) {
+        valeurCopiee = (cap.ratios_stats as any)[baseKey] * level;
+      } else if (baseKey === 'trick' || topTwoNonTrick.has(baseKey)) {
+        valeurCopiee = (cap.ratios_stats as any)[baseKey] * level;
+      } else {
+        valeurCopiee = (cap.stats_de_base as any)[baseKey];
+      }
+
+      // L'autoboost ne s'applique qu'aux capacités plus faibles/égales (celles remontées
+      // au niveau de Telemachus) — jamais à une capacité plus forte que lui.
+      const isBoostedThisStat = !isTelemachusWeaker && baseKey === keyToBoost;
+      if (isBoostedThisStat) {
+        valeurCopiee *= currentAutoBoostMult;
+      }
+
+      // Pénalité d'inefficacité de copie : s'applique après tout le reste (branche +
+      // autoboost éventuel), sur toutes les stats copiées.
+      valeurCopiee *= 0.75;
+
+      // On met à jour la statistique de Telemachus si la valeur est supérieure
+      if (valeurCopiee > stats[baseKey].val) {
+        stats[baseKey] = {
+          val: valeurCopiee,
+          sourceLevel: cap.niveau,
+          isAutoBoosted: isBoostedThisStat,
+          autoBoostMult: isBoostedThisStat ? currentAutoBoostMult : undefined
+        };
+      } else if (valeurCopiee === stats[baseKey].val && isBoostedThisStat) {
+        stats[baseKey].isAutoBoosted = true;
+        stats[baseKey].autoBoostMult = currentAutoBoostMult;
+      }
+    }
+  });
+
+  return stats;
+};
+
 // --- COMPOSANT GRAPHIQUE RADAR SVG ---
-const RadarChart = ({ stats, boosts, baseStatsInfo }: { stats: Record<StatKey, number>, boosts: Record<string, number>, baseStatsInfo: Record<StatKey, StatInfo> }) => {
+const RadarChart = ({
+  stats,
+  boosts,
+  baseStatsInfo,
+  layers = [],
+}: {
+  stats: Record<StatKey, number>;
+  boosts: Record<string, number>;
+  baseStatsInfo: Record<StatKey, StatInfo>;
+  layers?: { id: string; stats: Record<StatKey, number> }[];
+}) => {
   const maxStat = 10;
   const size = 500;
   const cx = size / 2;
@@ -86,7 +249,24 @@ const RadarChart = ({ stats, boosts, baseStatsInfo }: { stats: Record<StatKey, n
         
         {/* Aura Shape */}
         <polygon points={getPoints(stats, false)} fill="rgba(255, 215, 0, 0.3)" stroke="#ffd700" strokeWidth="3" className="transition-all duration-500 ease-in-out drop-shadow-[0_0_10px_rgba(255,215,0,0.5)]" />
-        
+
+        {/* Calques de modes (style Phase Shift) : la contribution isolée de chaque
+            capacité équipée qui a des variantes de mode, tracée par-dessus l'Aura Shape
+            fusionnée pour comparer visuellement ce mode-là au résultat final — jamais à
+            la place de l'Aura Shape (contrairement à un simple "calque" qui remplacerait
+            la forme, ici les deux coexistent toujours). */}
+        {layers.map(layer => (
+          <polygon
+            key={`layer-${layer.id}`}
+            points={getPoints(layer.stats, false)}
+            fill="rgba(255,255,255,0.05)"
+            stroke="rgba(255,255,255,0.65)"
+            strokeWidth="2"
+            strokeDasharray="6 4"
+            className="transition-all duration-500 ease-in-out"
+          />
+        ))}
+
         {/* Nodes */}
         {keys.map((key, i) => {
           const val = stats[key] || 1;
@@ -145,6 +325,8 @@ export default function App() {
   const [mastery, setMastery] = useState(6.5);
   const [slots, setSlots] = useState<string[]>(["", "", "", ""]);
   const [radarIdentityIndex, setRadarIdentityIndex] = useState(0);
+  // Emplacement dont le panneau "Modes" (variantes style Phase Shift) est ouvert.
+  const [activeModeDrawer, setActiveModeDrawer] = useState<number | null>(null);
 
   const level = useMemo(() => parseFloat(((potential * mastery) / 10).toFixed(1)), [potential, mastery]);
   const [boostState, setBoostState] = useState<Record<string, number>>({ power: 0, speed: 0, trick: 0, recovery: 0, defense: 0 });
@@ -154,154 +336,47 @@ export default function App() {
   
   const activeBoostsCount = useMemo(() => Object.values(boostState).filter(v => v > 0).length, [boostState]);
 
+  // Capacités actuellement équipées (un seul emplacement par slot, cf. tierInfo.slots).
+  const equippedCaps = useMemo(() => slots
+    .map((id, index) => (index < tierInfo.slots && id) ? capacitesData.find(c => c.id === parseInt(id)) : null)
+    .filter((c): c is Capacite => c !== null && c !== undefined), [slots, tierInfo, capacitesData]);
+
   // --- MOTEUR DE FUSION ET IDENTIFICATION DES STATS FORTES/FAIBLES (AVEC POOL DE REPARTITION) ---
-  const baseStatsInfo = useMemo(() => {
-    let stats: Record<StatKey, StatInfo> = { 
-      power: { val: 1, sourceLevel: level, isAutoBoosted: false }, 
-      speed: { val: 1, sourceLevel: level, isAutoBoosted: false }, 
-      trick: { val: level * 2.414, sourceLevel: level, isAutoBoosted: false }, 
-      recovery: { val: 1, sourceLevel: level, isAutoBoosted: false }, 
-      defense: { val: 1, sourceLevel: level, isAutoBoosted: false } 
-    };
-    
-    // 1. Récupérer toutes les capacités actuellement équipées
-    const equippedCaps = slots
-      .map((id, index) => (index < tierInfo.slots && id) ? capacitesData.find(c => c.id === parseInt(id)) : null)
-      .filter(c => c !== null && c !== undefined) as typeof capacitesData;
+  const baseStatsInfo = useMemo(
+    () => computeMergedStatsInfo(equippedCaps, level, activeTab),
+    [equippedCaps, level, activeTab]
+  );
 
-    // 2. CALCUL DES MULTIPLICATEURS (Shine-City)
-    const multMap = new Map<number, number>();
-    if (activeTab === 'alternative') {
-      // Capacités plus faibles ou égales
-      const weakerCaps = equippedCaps.filter(cap => cap.niveau <= level).sort((a, b) => a.niveau - b.niveau);
-      weakerCaps.forEach((cap, idx) => {
-        const diff = level - cap.niveau;
-        // Si la capacité est bien plus faible (>= 2 niveaux d'écart) ET c'est la plus faible -> 1.75
-        if (idx === 0 && diff >= 2.0) {
-          multMap.set(cap.id, 1.75);
-        } else if (idx === 0 && diff <= -1.0) {
-          multMap.set(cap.id, 1.25);
-        } else {
-          multMap.set(cap.id, 1.5);
-        }
-      });
+  // --- CALQUES DE MODES (style Phase Shift) ---
+  // Pour chaque capacité équipée qui a des variantes de mode (ex: Phase Shift
+  // (Def)/(Off) chez Zeke), trace sa contribution ISOLÉE (comme si elle était
+  // seule équipée) en plus de l'Aura Shape fusionnée normale, pour comparer visuellement
+  // ce mode-là à la forme finale — cf. computeMergedStatsInfo, réutilisé tel quel avec
+  // une seule capacité. N'affecte jamais baseStatsInfo/statsFinales eux-mêmes.
+  const modeLayers = useMemo(() => {
+    const layers: { id: string; label: string; nomCapacite: string; stats: Record<StatKey, number> }[] = [];
 
-      // Capacités trop complexes (plus fortes que lui)
-      const strongerCaps = equippedCaps.filter(cap => cap.niveau > level);
-      strongerCaps.forEach(cap => {
-        const diff = cap.niveau - level;
-        // Si la capacité est bien trop puissante (>= 1 niveau d'écart) -> 1.25
-        if (diff >= 1.0) {
-          multMap.set(cap.id, 1.25);
-        } else {
-          multMap.set(cap.id, 1.5);
-        }
-      });
-    }
-
-    // 3. RÉPARTITION GLOBALE DES STATS À BOOSTER (Shine-City)
-    const abilityBoostMap = new Map<number, string>();
-    if (activeTab === 'alternative') {
-      const pool: { id: number, stat: string, val: number }[] = [];
-      equippedCaps.forEach(cap => {
-        ['power', 'speed', 'recovery', 'defense'].forEach(stat => {
-          pool.push({ id: cap.id, stat, val: (cap.stats_de_base as any)[stat] });
-        });
-      });
-
-      pool.sort((a, b) => {
-        if (b.val !== a.val) return b.val - a.val;
-        const capA = equippedCaps.find(c => c.id === a.id);
-        const capB = equippedCaps.find(c => c.id === b.id);
-        return (capB?.niveau || 0) - (capA?.niveau || 0);
-      });
-
-      const assignedStats = new Set<string>();
-
-      for (const item of pool) {
-        if (!abilityBoostMap.has(item.id) && !assignedStats.has(item.stat)) {
-          abilityBoostMap.set(item.id, item.stat);
-          assignedStats.add(item.stat);
-        }
-      }
-    }
-
-    // 4. FUSION DES STATS FINALES
     equippedCaps.forEach(cap => {
-      let currentAutoBoostMult = 1.5;
-      let keyToBoost: string | null = null;
+      const siblingCount = capacitesData.filter(c => c.mode_group_key === cap.mode_group_key).length;
+      if (siblingCount <= 1) return;
 
-      if (activeTab === 'alternative') {
-        currentAutoBoostMult = multMap.get(cap.id) || 1.5;
-        keyToBoost = abilityBoostMap.get(cap.id) || null;
-      } else {
-        // Boost réduit à x1.2 quand la capacité copiée est de plus d'un niveau
-        // plus faible que Telemachus (au lieu du x1.5 par défaut).
-        currentAutoBoostMult = (level - cap.niveau > 1) ? 1.2 : 1.5;
-        keyToBoost = cap.stat_principale;
-      }
-
-      const alreadyAutoBoostedStats = new Set<string>();
-      if (keyToBoost) {
-        alreadyAutoBoostedStats.add(keyToBoost);
-      }
-
-      // Les 2 stats (hors trick) les plus hautes de la capacité d'origine sont
-      // remontées au niveau de Telemachus quand elle est plus faible/égale ;
-      // les 2 autres restent brutes.
-      const nonTrickKeys: StatKey[] = ['power', 'speed', 'recovery', 'defense'];
-      const topTwoNonTrick = new Set(
-        [...nonTrickKeys]
-          .sort((a, b) => (cap.stats_de_base as any)[b] - (cap.stats_de_base as any)[a])
-          .slice(0, 2)
-      );
-
-      for (let key in cap.stats_de_base) {
-        const baseKey = key as StatKey;
-
-        // RÈGLE DE COPIE :
-        // - Capacité plus forte que Telemachus (isTelemachusWeaker) = ramenée à son niveau
-        //   (ratios * niveau), sans pénalité, sur toutes les stats.
-        // - Capacité plus faible/égale = Trick et les 2 stats les plus hautes remontées au niveau de
-        //   Telemachus (ratios * niveau) ; les 2 autres stats restent brutes.
-        const isTelemachusWeaker = level < cap.niveau;
-        let valeurCopiee: number;
-        if (isTelemachusWeaker) {
-          valeurCopiee = (cap.ratios_stats as any)[baseKey] * level;
-        } else if (baseKey === 'trick' || topTwoNonTrick.has(baseKey)) {
-          valeurCopiee = (cap.ratios_stats as any)[baseKey] * level;
-        } else {
-          valeurCopiee = (cap.stats_de_base as any)[baseKey];
-        }
-
-        // L'autoboost ne s'applique qu'aux capacités plus faibles/égales (celles remontées
-        // au niveau de Telemachus) — jamais à une capacité plus forte que lui.
-        const isBoostedThisStat = !isTelemachusWeaker && baseKey === keyToBoost;
-        if (isBoostedThisStat) {
-          valeurCopiee *= currentAutoBoostMult;
-        }
-
-        // Pénalité d'inefficacité de copie : s'applique après tout le reste (branche +
-        // autoboost éventuel), sur toutes les stats copiées.
-        valeurCopiee *= 0.75;
-
-        // On met à jour la statistique de Telemachus si la valeur est supérieure
-        if (valeurCopiee > stats[baseKey].val) {
-          stats[baseKey] = { 
-            val: valeurCopiee, 
-            sourceLevel: cap.niveau, 
-            isAutoBoosted: isBoostedThisStat,
-            autoBoostMult: isBoostedThisStat ? currentAutoBoostMult : undefined
-          };
-        } else if (valeurCopiee === stats[baseKey].val && isBoostedThisStat) {
-          stats[baseKey].isAutoBoosted = true;
-          stats[baseKey].autoBoostMult = currentAutoBoostMult;
-        }
-      }
+      const isolated = computeMergedStatsInfo([cap], level, activeTab);
+      layers.push({
+        id: String(cap.id),
+        label: cap.mode_label || cap.nom_capacite,
+        nomCapacite: cap.nom_capacite_base,
+        stats: {
+          power: isolated.power.val,
+          speed: isolated.speed.val,
+          trick: isolated.trick.val,
+          recovery: isolated.recovery.val,
+          defense: isolated.defense.val,
+        },
+      });
     });
 
-    return stats;
-  }, [level, slots, tierInfo, activeTab, capacitesData]);
+    return layers;
+  }, [equippedCaps, capacitesData, level, activeTab]);
 
   // --- LOGIQUE DES OPTIONS D'AMPLIFICATION ---
   const getBoostOptions = useCallback((statKey: StatKey): BoostOption[] => {
@@ -435,6 +510,7 @@ export default function App() {
       const newSlots = [...slots];
       newSlots[index] = "";
       setSlots(newSlots);
+      if (activeModeDrawer === index) setActiveModeDrawer(null);
       return;
     }
 
@@ -446,14 +522,26 @@ export default function App() {
 
     const currentDrainInThisSlot = currentCap ? getAuraCost(currentCap.niveau) : 0;
     const newDrain = getAuraCost(cap.niveau);
-    
+
     const projectedAuraDrain = currentAuraDrain - currentDrainInThisSlot + newDrain;
 
     if (projectedAuraDrain > maxAura) return;
+    if (isModeConflicting(cap, index)) return;
 
     const newSlots = [...slots];
     newSlots[index] = value;
     setSlots(newSlots);
+  };
+
+  // Une capacité "conflicting" est une variante de mode (même mode_group_key,
+  // ex: Phase Shift (Def) vs (Off)) déjà équipée dans un AUTRE emplacement —
+  // un seul mode d'une même capacité peut être actif à la fois sur tout le build.
+  const isModeConflicting = (cap: Capacite, forIndex: number) => {
+    return slots.some((sid, i) => {
+      if (i === forIndex || i >= tierInfo.slots || !sid) return false;
+      const other = capacitesData.find(c => c.id === parseInt(sid));
+      return !!other && other.id !== cap.id && other.mode_group_key === cap.mode_group_key;
+    });
   };
 
   const handleBoostClick = (key: string) => {
@@ -492,7 +580,18 @@ export default function App() {
       }
       setSlots(newSlots);
     }
+    if (activeModeDrawer !== null && activeModeDrawer >= currentTier.slots) {
+      setActiveModeDrawer(null);
+    }
   }, [level, slotsUsed, activeTab]);
+
+  // --- PANNEAU "MODES" (variantes style Phase Shift) ---
+  const drawerCap = (activeModeDrawer !== null && slots[activeModeDrawer])
+    ? capacitesData.find(c => c.id === parseInt(slots[activeModeDrawer]))
+    : null;
+  const drawerSiblings = drawerCap
+    ? capacitesData.filter(c => c.mode_group_key === drawerCap.mode_group_key && c.copiable)
+    : [];
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 font-sans p-4 md:p-8 selection:bg-yellow-500/30 pb-20">
@@ -640,6 +739,9 @@ export default function App() {
               const currentCap = slotValue ? capacitesData.find(c => c.id === parseInt(slotValue)) : null;
               const currentSlotDrain = currentCap ? getAuraCost(currentCap.niveau) : 0;
               const levelDiff = currentCap ? (level - currentCap.niveau) : 0;
+              const siblingModes = currentCap
+                ? capacitesData.filter(c => c.mode_group_key === currentCap.mode_group_key && c.copiable)
+                : [];
 
               return (
                 <div key={index} className="relative group">
@@ -648,22 +750,44 @@ export default function App() {
                     onChange={(e) => updateSlot(index, e.target.value)}
                     disabled={isLocked}
                     className={`w-full appearance-none bg-neutral-950 border py-3 pl-4 pr-32 md:pr-40 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500/50 transition-all font-medium
-                      ${isLocked 
-                        ? 'border-neutral-800 text-neutral-600 cursor-not-allowed bg-neutral-950/50' 
+                      ${isLocked
+                        ? 'border-neutral-800 text-neutral-600 cursor-not-allowed bg-neutral-950/50'
                         : 'border-neutral-700 text-neutral-200 cursor-pointer focus:border-yellow-500 hover:border-neutral-600'}`}
                   >
                     <option value="">-- Emplacement Vide --</option>
                     {!isLocked && capacitesData.filter(cap => cap.copiable).map(cap => {
                       const cost = getAuraCost(cap.niveau);
-                      const isTooExpensive = (currentAuraDrain - currentSlotDrain + cost) > maxAura;
+                      const isSelf = slotValue === cap.id.toString();
+                      const alreadyEquipped = slots.includes(cap.id.toString()) && !isSelf;
+                      const isTooExpensive = (currentAuraDrain - currentSlotDrain + cost) > maxAura && !isSelf;
+                      const modeConflict = !isSelf && isModeConflicting(cap, index);
+                      const reason = alreadyEquipped
+                        ? "(Déjà équipé)"
+                        : modeConflict
+                          ? "(Autre mode déjà équipé)"
+                          : isTooExpensive
+                            ? "[Aura Insuffisante]"
+                            : "";
                       return (
-                        <option key={cap.id} value={cap.id} disabled={(slots.includes(cap.id.toString()) && slotValue !== cap.id.toString()) || (isTooExpensive && slotValue !== cap.id.toString())}>
-                          {cap.nom_capacite} ({cap.nom_personnage}) - Niv {cap.niveau} {slots.includes(cap.id.toString()) && slotValue !== cap.id.toString() ? "(Déjà équipé)" : isTooExpensive && slotValue !== cap.id.toString() ? "[Aura Insuffisante]" : ""}
+                        <option key={cap.id} value={cap.id} disabled={alreadyEquipped || isTooExpensive || modeConflict}>
+                          {cap.nom_capacite} ({cap.nom_personnage}) - Niv {cap.niveau} {reason}
                         </option>
                       )
                     })}
                   </select>
-                  
+
+                  {!isLocked && siblingModes.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setActiveModeDrawer(index)}
+                      title="Choisir le mode actif de cette capacité"
+                      className="mt-1.5 flex items-center gap-1 text-[11px] font-bold text-neutral-500 hover:text-yellow-500 transition-colors"
+                    >
+                      <Layers size={12} />
+                      Modes
+                    </button>
+                  )}
+
                   {slotValue && currentCap && !isLocked && (
                     <div className="absolute right-10 top-1/2 -translate-y-1/2 flex items-center gap-1.5 md:gap-2">
                       <div className={`text-[10px] md:text-xs font-bold px-1.5 md:px-2 py-1 rounded-md border ${
@@ -725,7 +849,12 @@ export default function App() {
               ))}
             </div>
             <button
-              onClick={() => exportRadarPng(statsFinales, level, RADAR_IDENTITIES[radarIdentityIndex])}
+              onClick={() => exportRadarPng(
+                statsFinales,
+                level,
+                RADAR_IDENTITIES[radarIdentityIndex],
+                modeLayers.map(l => ({ label: `${l.nomCapacite} · ${l.label}`, stats: l.stats }))
+              )}
               className="flex items-center gap-2 px-3 py-1 bg-neutral-950 border border-neutral-800 rounded-lg shadow-sm hover:border-yellow-500/50 hover:text-yellow-500 text-neutral-400 transition-colors"
               title="Exporter le graphique en PNG"
             >
@@ -735,8 +864,23 @@ export default function App() {
           </div>
 
           <div className="w-full mb-2 mt-12 md:mt-6">
-            <RadarChart stats={statsFinales} boosts={boostState} baseStatsInfo={baseStatsInfo} />
+            <RadarChart stats={statsFinales} boosts={boostState} baseStatsInfo={baseStatsInfo} layers={modeLayers} />
           </div>
+
+          {/* Légende des calques de modes actifs (style Phase Shift) : contour en
+              pointillés blancs sur le radar, identifié ici par capacité + mode. */}
+          {modeLayers.length > 0 && (
+            <div className="w-full flex flex-wrap justify-center gap-2 mb-3">
+              {modeLayers.map(layer => (
+                <span
+                  key={layer.id}
+                  className="text-[11px] font-semibold text-neutral-300 bg-neutral-950 border border-neutral-800 rounded-full px-2 py-0.5"
+                >
+                  {layer.nomCapacite} · {layer.label}
+                </span>
+              ))}
+            </div>
+          )}
 
           {/* AJOUT : LIGNE DU NIVEAU EFFECTIF ESTIMÉ */}
           <div className="w-full flex justify-end mb-3 pr-2">
@@ -808,6 +952,74 @@ export default function App() {
 
         </div>
       </div>
+
+      {/* Panneau "Modes" (variantes style Phase Shift), ouvert depuis le bouton
+          "Modes" d'un emplacement — un seul mode d'une même capacité peut être
+          actif à la fois sur tout le build (cf. isModeConflicting). */}
+      {activeModeDrawer !== null && drawerCap && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/60 z-40"
+            onClick={() => setActiveModeDrawer(null)}
+          />
+          <div className="fixed top-0 right-0 h-full w-full max-w-sm bg-neutral-900 border-l border-neutral-800 z-50 shadow-2xl p-6 overflow-y-auto">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-neutral-100 flex items-center gap-2">
+                  <Layers size={18} className="text-yellow-500" />
+                  Modes
+                </h3>
+                <p className="text-xs text-neutral-500 mt-1">Choisissez le mode actif de cette capacité.</p>
+              </div>
+              <button
+                onClick={() => setActiveModeDrawer(null)}
+                className="text-neutral-500 hover:text-neutral-200 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="text-sm font-semibold text-yellow-500 mt-4 mb-3">
+              {drawerCap.nom_capacite_base} — {drawerCap.nom_personnage} (Niv {drawerCap.niveau})
+            </p>
+
+            <div className="space-y-2">
+              {drawerSiblings.map((sib) => {
+                const isActive = sib.id === drawerCap.id;
+                const conflicting = !isActive && isModeConflicting(sib, activeModeDrawer);
+                return (
+                  <label
+                    key={sib.id}
+                    className={`flex items-center gap-3 p-2.5 rounded-lg border transition-colors ${
+                      isActive ? 'border-yellow-500/40 bg-yellow-500/5' : 'border-neutral-800'
+                    } ${
+                      conflicting ? 'opacity-40 cursor-not-allowed' : isActive ? 'cursor-default' : 'cursor-pointer hover:border-neutral-700'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name={`mode-slot-${activeModeDrawer}`}
+                      checked={isActive}
+                      disabled={conflicting}
+                      onChange={() => updateSlot(activeModeDrawer, String(sib.id))}
+                      className="accent-yellow-500"
+                    />
+                    <span className="text-sm text-neutral-200 flex-1">
+                      {sib.mode_label || sib.nom_capacite}
+                    </span>
+                    {isActive && (
+                      <span className="text-[10px] font-bold uppercase text-yellow-500">Actif</span>
+                    )}
+                    {conflicting && (
+                      <span className="text-[10px] font-bold uppercase text-red-400">Autre slot</span>
+                    )}
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

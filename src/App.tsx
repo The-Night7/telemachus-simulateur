@@ -373,38 +373,66 @@ export default function App() {
   );
 
   // --- CALQUES DE MODES (style Phase Shift) ---
-  // Pour chaque mode actif (principal ou additionnel, cf. equippedCaps) qui appartient
-  // à un groupe de plusieurs variantes (ex: Phase Shift (Def)/(Off) chez Zeke), trace sa
-  // contribution ISOLÉE (comme si elle était seule équipée) À LA PLACE de l'Aura Shape
-  // fusionnée normale dès qu'au moins un calque existe (cf. RadarChart > hasLayers) —
-  // exactement comme john_unordinary : ce sont les silhouettes superposées qui se
-  // comparent, pas une forme fusionnée en plus. Cf. computeMergedStatsInfo, réutilisé
-  // tel quel avec une seule capacité. N'affecte jamais baseStatsInfo/statsFinales
-  // eux-mêmes, qui restent la fusion de TOUS les modes actifs (le "vrai" build).
+  // Pour chaque mode actif (principal ou additionnel) d'un emplacement dont la capacité
+  // appartient à un groupe de plusieurs variantes (ex: Phase Shift (Def)/(Off) chez
+  // Zeke), simule le build COMPLET (toutes les capacités équipées, TOUS les autres
+  // emplacements et leurs modes gardant leur contribution normale) en substituant
+  // UNIQUEMENT ce mode à la contribution de CET emplacement — traité comme deux calques
+  // séparés qui se comparent EN CONTEXTE avec le reste du build, pas isolés sur les
+  // stats de repos de Telemachus (cf. john_unordinary : mergeSlotsIntoStats avec
+  // overrideSlotIndex/overrideId). Tracé À LA PLACE de l'Aura Shape fusionnée normale
+  // dès qu'au moins un calque existe (cf. RadarChart > hasLayers). N'affecte jamais
+  // baseStatsInfo/statsFinales eux-mêmes, qui restent la fusion de TOUS les modes
+  // actifs de TOUS les emplacements (le "vrai" build).
   const modeLayers = useMemo(() => {
     const layers: { id: string; label: string; nomCapacite: string; stats: Record<StatKey, number> }[] = [];
 
-    equippedCaps.forEach(cap => {
-      const siblingCount = capacitesData.filter(c => c.mode_group_key === cap.mode_group_key).length;
+    slots.forEach((slotId, index) => {
+      if (index >= tierInfo.slots || !slotId) return;
+      const principal = capacitesData.find(c => c.id === parseInt(slotId));
+      if (!principal) return;
+
+      const siblingCount = capacitesData.filter(c => c.mode_group_key === principal.mode_group_key).length;
       if (siblingCount <= 1) return;
 
-      const isolated = computeMergedStatsInfo([cap], level, activeTab);
-      layers.push({
-        id: String(cap.id),
-        label: cap.mode_label || cap.nom_capacite,
-        nomCapacite: cap.nom_capacite_base,
-        stats: {
-          power: isolated.power.val,
-          speed: isolated.speed.val,
-          trick: isolated.trick.val,
-          recovery: isolated.recovery.val,
-          defense: isolated.defense.val,
-        },
+      const activeIds = [slotId, ...(slotExtraModes[index] || [])];
+      activeIds.forEach(id => {
+        const cap = capacitesData.find(c => c.id === parseInt(id));
+        if (!cap) return;
+
+        const overrideCaps: Capacite[] = [];
+        slots.forEach((sid, i) => {
+          if (i >= tierInfo.slots || !sid) return;
+          if (i === index) {
+            overrideCaps.push(cap);
+            return;
+          }
+          const p = capacitesData.find(c => c.id === parseInt(sid));
+          if (p) overrideCaps.push(p);
+          (slotExtraModes[i] || []).forEach(extraId => {
+            const extra = capacitesData.find(c => c.id === parseInt(extraId));
+            if (extra) overrideCaps.push(extra);
+          });
+        });
+
+        const isolated = computeMergedStatsInfo(overrideCaps, level, activeTab);
+        layers.push({
+          id: `${index}-${cap.id}`,
+          label: cap.mode_label || cap.nom_capacite,
+          nomCapacite: cap.nom_capacite_base,
+          stats: {
+            power: isolated.power.val,
+            speed: isolated.speed.val,
+            trick: isolated.trick.val,
+            recovery: isolated.recovery.val,
+            defense: isolated.defense.val,
+          },
+        });
       });
     });
 
     return layers;
-  }, [equippedCaps, capacitesData, level, activeTab]);
+  }, [slots, slotExtraModes, tierInfo, capacitesData, level, activeTab]);
 
   // --- LOGIQUE DES OPTIONS D'AMPLIFICATION ---
   const getBoostOptions = useCallback((statKey: StatKey): BoostOption[] => {

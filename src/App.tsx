@@ -5,12 +5,14 @@ import type { Capacite } from './lib/capacitesSource';
 import { exportRadarPng, type RadarIdentity } from './lib/exportRadarPng';
 import tpPortrait from './assets/tp-pp.png';
 import arlequinPortrait from './assets/arlequin.webp';
+import arlequinePortrait from './assets/Arlequine.jpeg';
 
 // Identités exportables sur la fiche radar : mêmes stats/mécaniques, juste le nom,
 // l'ability affichée et le portrait qui changent selon le masque choisi.
 const RADAR_IDENTITIES: RadarIdentity[] = [
   { name: 'Telemachus', ability: 'Aura Deity', portraitSrc: tpPortrait },
   { name: 'Arlequin', ability: 'Aura Deity', portraitSrc: arlequinPortrait },
+  { name: 'Arlequine', ability: 'Aura Deity', portraitSrc: arlequinePortrait },
 ];
 
 // --- TYPESCRIPT INTERFACES ---

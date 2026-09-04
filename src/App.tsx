@@ -4,13 +4,23 @@ import { useCapacites } from './lib/useCapacites';
 import type { Capacite } from './lib/capacitesSource';
 import { exportRadarPng, type RadarIdentity } from './lib/exportRadarPng';
 import tpPortrait from './assets/tp-pp.png';
+import telemachusHighTierPortrait from './assets/telemachus.jpg';
 import arlequinPortrait from './assets/arlequin.webp';
 import arlequinePortrait from './assets/Arlequine.jpeg';
 
+// Niveau à partir duquel le portrait de Telemachus sur la fiche exportée passe à sa
+// forme éveillée (telemachus.jpg) au lieu du portrait de base (tp-pp.png).
+const TELEMACHUS_HIGH_TIER_PORTRAIT_LEVEL = 6.0;
+
 // Identités exportables sur la fiche radar : mêmes stats/mécaniques, juste le nom,
-// l'ability affichée et le portrait qui changent selon le masque choisi.
-const RADAR_IDENTITIES: RadarIdentity[] = [
-  { name: 'Telemachus', ability: 'Aura Deity', portraitSrc: tpPortrait },
+// l'ability affichée et le portrait qui changent selon le masque choisi. Le portrait de
+// Telemachus dépend du niveau actuel (cf. TELEMACHUS_HIGH_TIER_PORTRAIT_LEVEL).
+const buildRadarIdentities = (level: number): RadarIdentity[] => [
+  {
+    name: 'Telemachus',
+    ability: 'Aura Deity',
+    portraitSrc: level >= TELEMACHUS_HIGH_TIER_PORTRAIT_LEVEL ? telemachusHighTierPortrait : tpPortrait,
+  },
   { name: 'Arlequin', ability: 'Aura Deity', portraitSrc: arlequinPortrait },
   { name: 'Arlequin', ability: 'Aura Deity', portraitSrc: arlequinePortrait },
 ];
@@ -352,6 +362,7 @@ export default function App() {
   const [slotExtraModes, setSlotExtraModes] = useState<Record<number, string[]>>({});
 
   const level = useMemo(() => parseFloat(((potential * mastery) / 10).toFixed(1)), [potential, mastery]);
+  const radarIdentities = useMemo(() => buildRadarIdentities(level), [level]);
   const [boostState, setBoostState] = useState<Record<string, number>>({ power: 0, speed: 0, trick: 0, recovery: 0, defense: 0 });
 
   const tierInfo = useMemo(() => getTierInfo(level), [level]);
@@ -960,7 +971,7 @@ export default function App() {
 
           <div className="absolute top-6 right-6 z-10 flex items-center gap-2">
             <div className="flex bg-neutral-950 border border-neutral-800 rounded-lg p-0.5 shadow-sm">
-              {RADAR_IDENTITIES.map((identity, index) => (
+              {radarIdentities.map((identity, index) => (
                 <button
                   key={identity.name}
                   onClick={() => setRadarIdentityIndex(index)}
@@ -979,7 +990,7 @@ export default function App() {
               onClick={() => exportRadarPng(
                 statsFinales,
                 level,
-                RADAR_IDENTITIES[radarIdentityIndex],
+                radarIdentities[radarIdentityIndex],
                 capStatsAt10,
                 modeLayers.map(l => ({ label: `${l.nomCapacite} · ${l.label}`, stats: l.stats })),
                 activeTab === 'alternative'

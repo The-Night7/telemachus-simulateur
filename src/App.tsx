@@ -14,16 +14,20 @@ const TELEMACHUS_HIGH_TIER_PORTRAIT_LEVEL = 6.0;
 
 // Identités exportables sur la fiche radar : mêmes stats/mécaniques, juste le nom,
 // l'ability affichée et le portrait qui changent selon le masque choisi. Le portrait de
-// Telemachus dépend du niveau actuel (cf. TELEMACHUS_HIGH_TIER_PORTRAIT_LEVEL).
-const buildRadarIdentities = (level: number): RadarIdentity[] => [
-  {
-    name: 'Telemachus',
-    ability: 'Aura Deity',
-    portraitSrc: level >= TELEMACHUS_HIGH_TIER_PORTRAIT_LEVEL ? telemachusHighTierPortrait : tpPortrait,
-  },
-  { name: 'Arlequin', ability: 'Aura Deity', portraitSrc: arlequinPortrait },
-  { name: 'Arlequin', ability: 'Aura Deity', portraitSrc: arlequinePortrait },
-];
+// Telemachus dépend du niveau actuel (cf. TELEMACHUS_HIGH_TIER_PORTRAIT_LEVEL) ; le nom
+// de la capacité dépend du système actif ("Aura Master" en Shine-City, "Aura Deity" sinon).
+const buildRadarIdentities = (level: number, isShineCity: boolean): RadarIdentity[] => {
+  const ability = isShineCity ? 'Aura Master' : 'Aura Deity';
+  return [
+    {
+      name: 'Telemachus',
+      ability,
+      portraitSrc: level >= TELEMACHUS_HIGH_TIER_PORTRAIT_LEVEL ? telemachusHighTierPortrait : tpPortrait,
+    },
+    { name: 'Arlequin', ability, portraitSrc: arlequinPortrait },
+    { name: 'Arlequin', ability, portraitSrc: arlequinePortrait },
+  ];
+};
 
 // --- TYPESCRIPT INTERFACES ---
 type StatKey = 'power' | 'speed' | 'trick' | 'recovery' | 'defense';
@@ -345,8 +349,8 @@ const RadarChart = ({
 export default function App() {
   const { capacites: capacitesData, loading: capacitesLoading, error: capacitesError, retry: retryCapacites } = useCapacites();
   const [activeTab, setActiveTab] = useState('classic');
-  const [potential, setPotential] = useState(9.3);
-  const [mastery, setMastery] = useState(6.5);
+  const [potential, setPotential] = useState(9.5);
+  const [mastery, setMastery] = useState(6.3);
   const [slots, setSlots] = useState<string[]>(["", "", "", ""]);
   const [radarIdentityIndex, setRadarIdentityIndex] = useState(0);
   // Plafonne la FORME du graphique radar à 10 (les valeurs réelles restent affichées
@@ -362,7 +366,10 @@ export default function App() {
   const [slotExtraModes, setSlotExtraModes] = useState<Record<number, string[]>>({});
 
   const level = useMemo(() => parseFloat(((potential * mastery) / 10).toFixed(1)), [potential, mastery]);
-  const radarIdentities = useMemo(() => buildRadarIdentities(level), [level]);
+  const radarIdentities = useMemo(
+    () => buildRadarIdentities(level, activeTab === 'alternative'),
+    [level, activeTab]
+  );
   const [boostState, setBoostState] = useState<Record<string, number>>({ power: 0, speed: 0, trick: 0, recovery: 0, defense: 0 });
 
   const tierInfo = useMemo(() => getTierInfo(level), [level]);

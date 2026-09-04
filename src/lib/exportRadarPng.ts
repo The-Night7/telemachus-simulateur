@@ -22,12 +22,22 @@ const LAYER_STROKE = '#ffd700';
 // Réplique la fiche de stats unOrdinary (cf. template_graph.jpg à la racine du repo) :
 // case portrait + bloc Name/Ability/Level à gauche, pentagone de stats à droite.
 const KEYS: StatKey[] = ['power', 'speed', 'trick', 'recovery', 'defense'];
-const LABELS: Record<StatKey, string> = {
+const LABELS_EN: Record<StatKey, string> = {
   power: 'Power',
   speed: 'Speed',
   trick: 'Trick',
   recovery: 'Recovery',
   defense: 'Defense',
+};
+// Labels en français utilisés uniquement sur l'export du Système Shine-City (cf.
+// exportRadarPng > frenchLabels) — le reste de l'app garde les noms de stats anglais
+// d'origine unOrdinary partout ailleurs.
+const LABELS_FR: Record<StatKey, string> = {
+  power: 'Puissance',
+  speed: 'Vitesse',
+  trick: 'Ruse',
+  recovery: 'Récupération',
+  defense: 'Défense',
 };
 
 // Mesures prises directement sur template_graph.jpg (1200x640), mises à l'échelle.
@@ -144,8 +154,12 @@ export async function exportRadarPng(
   identity: RadarIdentity,
   capAt10 = false,
   layers: RadarLayer[] = [],
+  // Système Shine-City : labels du pentagone en français (cf. LABELS_FR) au lieu des
+  // noms de stats anglais d'origine unOrdinary utilisés partout ailleurs dans l'app.
+  frenchLabels = false,
   filename = `${identity.name.toLowerCase()}-radar.png`
 ) {
+  const LABELS = frenchLabels ? LABELS_FR : LABELS_EN;
   const canvas = document.createElement('canvas');
   canvas.width = CANVAS_W;
   canvas.height = CANVAS_H;

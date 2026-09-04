@@ -981,7 +981,8 @@ export default function App() {
                 level,
                 RADAR_IDENTITIES[radarIdentityIndex],
                 capStatsAt10,
-                modeLayers.map(l => ({ label: `${l.nomCapacite} · ${l.label}`, stats: l.stats }))
+                modeLayers.map(l => ({ label: `${l.nomCapacite} · ${l.label}`, stats: l.stats })),
+                activeTab === 'alternative'
               )}
               className="flex items-center gap-2 px-3 py-1 bg-neutral-950 border border-neutral-800 rounded-lg shadow-sm hover:border-yellow-500/50 hover:text-yellow-500 text-neutral-400 transition-colors"
               title="Exporter le graphique en PNG"

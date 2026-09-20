@@ -12,6 +12,13 @@ import arlequinePortrait from './assets/Arlequine.jpeg';
 // forme éveillée (telemachus.jpg) au lieu du portrait de base (tp-pp.png).
 const TELEMACHUS_HIGH_TIER_PORTRAIT_LEVEL = 6.0;
 
+// Potentiel/Mastery par défaut à l'ouverture de chaque système. Le Système Classique
+// garde ses valeurs historiques ; le Système Shine-City a les siennes propres.
+const CLASSIC_DEFAULT_POTENTIAL = 9.5;
+const CLASSIC_DEFAULT_MASTERY = 6.4;
+const SHINE_CITY_DEFAULT_POTENTIAL = 8.0;
+const SHINE_CITY_DEFAULT_MASTERY = 7.1;
+
 // Identités exportables sur la fiche radar : mêmes stats/mécaniques, juste le nom,
 // l'ability affichée et le portrait qui changent selon le masque choisi. Le portrait de
 // Telemachus dépend du niveau actuel (cf. TELEMACHUS_HIGH_TIER_PORTRAIT_LEVEL) ; le nom
@@ -349,8 +356,8 @@ const RadarChart = ({
 export default function App() {
   const { capacites: capacitesData, loading: capacitesLoading, error: capacitesError, retry: retryCapacites } = useCapacites();
   const [activeTab, setActiveTab] = useState('classic');
-  const [potential, setPotential] = useState(9.5);
-  const [mastery, setMastery] = useState(6.4);
+  const [potential, setPotential] = useState(CLASSIC_DEFAULT_POTENTIAL);
+  const [mastery, setMastery] = useState(CLASSIC_DEFAULT_MASTERY);
   const [slots, setSlots] = useState<string[]>(["", "", "", ""]);
   const [radarIdentityIndex, setRadarIdentityIndex] = useState(0);
   // Plafonne la FORME du graphique radar à 10 (les valeurs réelles restent affichées
@@ -756,13 +763,21 @@ export default function App() {
         {/* ONGLETS */}
         <div className="inline-flex bg-neutral-900 border border-neutral-800 p-1 rounded-full shadow-lg">
           <button
-            onClick={() => setActiveTab('classic')}
+            onClick={() => {
+              setActiveTab('classic');
+              setPotential(CLASSIC_DEFAULT_POTENTIAL);
+              setMastery(CLASSIC_DEFAULT_MASTERY);
+            }}
             className={`px-6 py-2 rounded-full font-bold text-sm uppercase tracking-wide transition-all ${activeTab === 'classic' ? 'bg-yellow-500 text-neutral-950 shadow-md' : 'text-neutral-500 hover:text-neutral-300'}`}
           >
             Système Classique
           </button>
           <button
-            onClick={() => setActiveTab('alternative')}
+            onClick={() => {
+              setActiveTab('alternative');
+              setPotential(SHINE_CITY_DEFAULT_POTENTIAL);
+              setMastery(SHINE_CITY_DEFAULT_MASTERY);
+            }}
             className={`px-6 py-2 rounded-full font-bold text-sm uppercase tracking-wide transition-all ${activeTab === 'alternative' ? 'bg-yellow-500 text-neutral-950 shadow-md' : 'text-neutral-500 hover:text-neutral-300'}`}
           >
             Système Shine-City

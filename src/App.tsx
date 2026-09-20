@@ -350,7 +350,7 @@ export default function App() {
   const { capacites: capacitesData, loading: capacitesLoading, error: capacitesError, retry: retryCapacites } = useCapacites();
   const [activeTab, setActiveTab] = useState('classic');
   const [potential, setPotential] = useState(9.5);
-  const [mastery, setMastery] = useState(6.3);
+  const [mastery, setMastery] = useState(6.4);
   const [slots, setSlots] = useState<string[]>(["", "", "", ""]);
   const [radarIdentityIndex, setRadarIdentityIndex] = useState(0);
   // Plafonne la FORME du graphique radar à 10 (les valeurs réelles restent affichées

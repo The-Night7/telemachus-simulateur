@@ -723,7 +723,7 @@ export default function App() {
   const drawerExtraIds = (activeModeDrawer !== null && slotExtraModes[activeModeDrawer]) || [];
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 font-sans p-4 md:p-8 selection:bg-yellow-500/30 pb-20">
+    <div className="min-h-screen bg-neutral-950 text-neutral-100 font-sans px-3 py-4 sm:p-4 md:p-8 selection:bg-yellow-500/30 pb-20">
       
       {/* En-tête */}
       <div className="max-w-6xl mx-auto mb-6 text-center">
@@ -761,14 +761,14 @@ export default function App() {
         )}
 
         {/* ONGLETS */}
-        <div className="inline-flex bg-neutral-900 border border-neutral-800 p-1 rounded-full shadow-lg">
+        <div className="inline-flex max-w-full bg-neutral-900 border border-neutral-800 p-1 rounded-full shadow-lg">
           <button
             onClick={() => {
               setActiveTab('classic');
               setPotential(CLASSIC_DEFAULT_POTENTIAL);
               setMastery(CLASSIC_DEFAULT_MASTERY);
             }}
-            className={`px-6 py-2 rounded-full font-bold text-sm uppercase tracking-wide transition-all ${activeTab === 'classic' ? 'bg-yellow-500 text-neutral-950 shadow-md' : 'text-neutral-500 hover:text-neutral-300'}`}
+            className={`px-3 sm:px-6 py-2 rounded-full font-bold text-xs sm:text-sm uppercase tracking-wide transition-all ${activeTab === 'classic' ? 'bg-yellow-500 text-neutral-950 shadow-md' : 'text-neutral-500 hover:text-neutral-300'}`}
           >
             Système Classique
           </button>
@@ -778,20 +778,20 @@ export default function App() {
               setPotential(SHINE_CITY_DEFAULT_POTENTIAL);
               setMastery(SHINE_CITY_DEFAULT_MASTERY);
             }}
-            className={`px-6 py-2 rounded-full font-bold text-sm uppercase tracking-wide transition-all ${activeTab === 'alternative' ? 'bg-yellow-500 text-neutral-950 shadow-md' : 'text-neutral-500 hover:text-neutral-300'}`}
+            className={`px-3 sm:px-6 py-2 rounded-full font-bold text-xs sm:text-sm uppercase tracking-wide transition-all ${activeTab === 'alternative' ? 'bg-yellow-500 text-neutral-950 shadow-md' : 'text-neutral-500 hover:text-neutral-300'}`}
           >
             Système Shine-City
           </button>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
         
         {/* PANNEAU GAUCHE : CONTRÔLES */}
-        <div className="lg:col-span-5 space-y-6">
+        <div className="lg:col-span-5 space-y-4 sm:space-y-6">
           
-          <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl shadow-xl border-l-4 border-l-yellow-500">
-            <div className="grid grid-cols-3 gap-4">
+          <div className="bg-neutral-900 border border-neutral-800 p-4 sm:p-6 rounded-2xl shadow-xl border-l-4 border-l-yellow-500">
+            <div className="grid grid-cols-3 gap-3 sm:gap-4">
               <div className="flex flex-col">
                 <label className="text-xs text-neutral-400 uppercase tracking-wider font-semibold mb-1 block">
                   Niveau Actuel
@@ -831,8 +831,8 @@ export default function App() {
             </div>
           </div>
 
-          <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl shadow-xl">
-            <div className="flex justify-between items-end mb-3">
+          <div className="bg-neutral-900 border border-neutral-800 p-4 sm:p-6 rounded-2xl shadow-xl">
+            <div className="flex justify-between items-end gap-3 mb-3">
               <div>
                 <h2 className="text-neutral-200 font-bold text-lg flex items-center gap-2">
                   <Battery size={20} className={auraPercentage > 90 ? "text-red-500" : "text-yellow-500"} /> 
@@ -856,15 +856,15 @@ export default function App() {
             <div className="mt-4 pt-4 border-t border-neutral-800 flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <ChevronsUp size={16} className="text-yellow-500" />
-                <span className="text-sm text-neutral-400 font-semibold uppercase tracking-wider">Amplifications Actives</span>
+                <span className="text-xs sm:text-sm text-neutral-400 font-semibold uppercase tracking-wider">Amplifications Actives</span>
               </div>
-              <span className="text-sm font-bold text-yellow-500 bg-yellow-500/10 px-3 py-1 rounded-full border border-yellow-500/30">
+              <span className="shrink-0 text-xs sm:text-sm font-bold text-yellow-500 bg-yellow-500/10 px-2.5 sm:px-3 py-1 rounded-full border border-yellow-500/30">
                 {activeBoostsCount} Stat{activeBoostsCount > 1 ? 's' : ''} Boostée{activeBoostsCount > 1 ? 's' : ''}
               </span>
             </div>
           </div>
 
-          <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl shadow-xl space-y-4">
+          <div className="bg-neutral-900 border border-neutral-800 p-4 sm:p-6 rounded-2xl shadow-xl space-y-4">
             <h2 className="text-neutral-400 font-semibold mb-4 text-sm uppercase tracking-wider flex items-center gap-2">
               <Layers size={18} />
               Auras Copiées ({slotsUsed}/{tierInfo.slots})
@@ -890,12 +890,13 @@ export default function App() {
               });
 
               return (
-                <div key={index} className="relative group">
+                <div key={index} className="group">
+                  <div className="relative">
                   <select
                     value={slotValue}
                     onChange={(e) => updateSlot(index, e.target.value)}
                     disabled={isLocked}
-                    className={`w-full appearance-none bg-neutral-950 border py-3 pl-4 pr-32 md:pr-40 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500/50 transition-all font-medium
+                    className={`w-full appearance-none bg-neutral-950 border py-3 pl-3 sm:pl-4 pr-32 md:pr-40 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500/50 transition-all font-medium
                       ${isLocked
                         ? 'border-neutral-800 text-neutral-600 cursor-not-allowed bg-neutral-950/50'
                         : 'border-neutral-700 text-neutral-200 cursor-pointer focus:border-yellow-500 hover:border-neutral-600'}`}
@@ -919,25 +920,8 @@ export default function App() {
                     })}
                   </select>
 
-                  {!isLocked && siblingModes.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => setActiveModeDrawer(index)}
-                      title="Choisir les modes actifs de cette capacité"
-                      className="mt-1.5 flex items-center gap-1 text-[11px] font-bold text-neutral-500 hover:text-yellow-500 transition-colors"
-                    >
-                      <Layers size={12} />
-                      Modes
-                      {activeExtraCount > 0 && (
-                        <span className="px-1.5 rounded-full bg-yellow-500/20 text-yellow-400">
-                          {1 + activeExtraCount}
-                        </span>
-                      )}
-                    </button>
-                  )}
-
                   {slotValue && currentCap && !isLocked && (
-                    <div className="absolute right-10 top-1/2 -translate-y-1/2 flex items-center gap-1.5 md:gap-2">
+                    <div className="absolute right-10 top-1/2 -translate-y-1/2 flex items-center gap-1.5 md:gap-2 pointer-events-none md:pointer-events-auto">
                       <div className={`text-[10px] md:text-xs font-bold px-1.5 md:px-2 py-1 rounded-md border ${
                         levelDiff >= 0 
                           ? 'text-green-400 bg-green-400/10 border-green-400/20' 
@@ -956,6 +940,24 @@ export default function App() {
                   ) : (
                     <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-500 pointer-events-none" size={20} />
                   )}
+                  </div>
+
+                  {!isLocked && siblingModes.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setActiveModeDrawer(index)}
+                      title="Choisir les modes actifs de cette capacité"
+                      className="mt-1.5 flex items-center gap-1 text-[11px] font-bold text-neutral-500 hover:text-yellow-500 transition-colors"
+                    >
+                      <Layers size={12} />
+                      Modes
+                      {activeExtraCount > 0 && (
+                        <span className="px-1.5 rounded-full bg-yellow-500/20 text-yellow-400">
+                          {1 + activeExtraCount}
+                        </span>
+                      )}
+                    </button>
+                  )}
                 </div>
               );
             })}
@@ -963,9 +965,9 @@ export default function App() {
         </div>
 
         {/* PANNEAU DROIT : VISUALISATION */}
-        <div className="lg:col-span-7 flex flex-col items-center justify-center bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl relative">
+        <div className="lg:col-span-7 flex flex-col items-center justify-center bg-neutral-900 border border-neutral-800 rounded-2xl p-3 sm:p-6 shadow-xl relative">
           
-          <div className="absolute top-6 left-6 flex flex-col gap-2 z-10">
+          <div className="w-full flex flex-wrap items-center gap-2 mb-2 md:mb-0 md:w-auto md:absolute md:top-6 md:left-6 md:flex-col md:items-start z-10">
             <div className="flex items-center gap-2 px-3 py-1 bg-neutral-950 border border-neutral-800 rounded-lg shadow-sm w-fit">
               <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
               <span className="text-xs font-bold text-neutral-400 uppercase tracking-wide">Aura Jaune</span>
@@ -991,11 +993,11 @@ export default function App() {
             </button>
           </div>
 
-          <div className="absolute top-6 right-6 z-10 flex items-center gap-2">
+          <div className="w-full flex flex-wrap items-center justify-between gap-2 md:w-auto md:justify-start md:absolute md:top-6 md:right-6 z-10">
             <div className="flex bg-neutral-950 border border-neutral-800 rounded-lg p-0.5 shadow-sm">
               {radarIdentities.map((identity, index) => (
                 <button
-                  key={identity.name}
+                  key={index}
                   onClick={() => setRadarIdentityIndex(index)}
                   className={`px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wide transition-colors ${
                     radarIdentityIndex === index
@@ -1025,7 +1027,7 @@ export default function App() {
             </button>
           </div>
 
-          <div className="w-full mb-2 mt-12 md:mt-6">
+          <div className="w-full mb-2 mt-2 md:mt-6">
             <RadarChart stats={statsFinales} boosts={boostState} baseStatsInfo={baseStatsInfo} layers={modeLayers} capAt10={capStatsAt10} />
           </div>
 
@@ -1047,7 +1049,7 @@ export default function App() {
           )}
 
           {/* AJOUT : LIGNE DU NIVEAU EFFECTIF ESTIMÉ */}
-          <div className="w-full flex justify-end mb-3 pr-2">
+          <div className="w-full flex justify-center sm:justify-end mb-3 sm:pr-2">
             <div className="flex items-center gap-2 text-[13px] text-neutral-400 font-medium">
               <Target size={14} className="opacity-70" />
               <span>Estimated Effective Level :</span>
@@ -1055,7 +1057,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="w-full grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="w-full grid grid-cols-2 md:grid-cols-5 gap-2 sm:gap-3">
             {statConfig.map(({ key, label, Icon, color }) => {
               const currentIdx = boostState[key];
               const isBoosted = currentIdx > 0;
@@ -1067,7 +1069,7 @@ export default function App() {
               const cannotAffordInitial = !isBoosted && (auraRemaining < (options[0]?.cost || 999));
 
               return (
-                <div key={key} className={`bg-neutral-950 border rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden group transition-colors duration-300
+                <div key={key} className={`bg-neutral-950 border rounded-xl p-3 flex last:col-span-2 md:last:col-span-1 flex-col items-center justify-center text-center shadow-inner relative overflow-hidden group transition-colors duration-300
                   ${isBoosted || isAutoBoosted ? 'border-yellow-500 bg-yellow-500/10' : 'border-neutral-800'}`}>
                   
                   {isAutoBoosted && (
@@ -1129,7 +1131,7 @@ export default function App() {
             className="fixed inset-0 bg-black/60 z-40"
             onClick={() => setActiveModeDrawer(null)}
           />
-          <div className="fixed top-0 right-0 h-full w-full max-w-sm bg-neutral-900 border-l border-neutral-800 z-50 shadow-2xl p-6 overflow-y-auto">
+          <div className="fixed top-0 right-0 h-full w-full max-w-sm bg-neutral-900 border-l border-neutral-800 z-50 shadow-2xl p-4 sm:p-6 overflow-y-auto">
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="text-lg font-bold text-neutral-100 flex items-center gap-2">
@@ -1140,7 +1142,8 @@ export default function App() {
               </div>
               <button
                 onClick={() => setActiveModeDrawer(null)}
-                className="text-neutral-500 hover:text-neutral-200 transition-colors"
+                aria-label="Fermer"
+                className="-m-2 p-2 text-neutral-500 hover:text-neutral-200 transition-colors"
               >
                 <X size={18} />
               </button>

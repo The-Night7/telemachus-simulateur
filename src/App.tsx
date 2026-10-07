@@ -15,7 +15,7 @@ const TELEMACHUS_HIGH_TIER_PORTRAIT_LEVEL = 6.0;
 // Potentiel/Mastery par défaut à l'ouverture de chaque système. Le Système Classique
 // garde ses valeurs historiques ; le Système Shine-City a les siennes propres.
 const CLASSIC_DEFAULT_POTENTIAL = 9.5;
-const CLASSIC_DEFAULT_MASTERY = 6.4;
+const CLASSIC_DEFAULT_MASTERY = 6.5;
 const SHINE_CITY_DEFAULT_POTENTIAL = 8.0;
 const SHINE_CITY_DEFAULT_MASTERY = 7.1;
 

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Shield, Zap, Swords, Brain, Heart, ChevronDown, Layers, Lock, Battery, ChevronsUp, Sparkles, Target, Download, RefreshCw, X } from 'lucide-react';
 import { useCapacites } from './lib/useCapacites';
-import type { Capacite } from './lib/capacitesSource';
+import { bonusStatsAtLevel, type Capacite } from './lib/capacitesSource';
 import { exportRadarPng, type RadarIdentity } from './lib/exportRadarPng';
 import tpPortrait from './assets/tp-pp.png';
 import telemachusHighTierPortrait from './assets/telemachus.jpg';
@@ -82,14 +82,17 @@ const getAuraCost = (niveau: number) => {
 const computeMergedStatsInfo = (
   equippedCaps: Capacite[],
   level: number,
-  activeTab: string
+  activeTab: string,
+  // Bonus du gsheet propres à Telemachus (cf. telemachusBonus dans App),
+  // ajoutés à ses stats de base uniquement — jamais aux capacités copiées.
+  telemachusBonus: Record<StatKey, number>
 ): Record<StatKey, StatInfo> => {
   let stats: Record<StatKey, StatInfo> = {
-    power: { val: 1, sourceLevel: level, isAutoBoosted: false },
-    speed: { val: 1, sourceLevel: level, isAutoBoosted: false },
-    trick: { val: level * 2.414, sourceLevel: level, isAutoBoosted: false },
-    recovery: { val: 1, sourceLevel: level, isAutoBoosted: false },
-    defense: { val: 1, sourceLevel: level, isAutoBoosted: false }
+    power: { val: 1 + telemachusBonus.power, sourceLevel: level, isAutoBoosted: false },
+    speed: { val: 1 + telemachusBonus.speed, sourceLevel: level, isAutoBoosted: false },
+    trick: { val: level * 2.414 + telemachusBonus.trick, sourceLevel: level, isAutoBoosted: false },
+    recovery: { val: 1 + telemachusBonus.recovery, sourceLevel: level, isAutoBoosted: false },
+    defense: { val: 1 + telemachusBonus.defense, sourceLevel: level, isAutoBoosted: false }
   };
 
   // 2. CALCUL DES MULTIPLICATEURS (Shine-City)
@@ -402,9 +405,19 @@ export default function App() {
   }, [slots, slotExtraModes, tierInfo, capacitesData]);
 
   // --- MOTEUR DE FUSION ET IDENTIFICATION DES STATS FORTES/FAIBLES (AVEC POOL DE REPARTITION) ---
+  // Bonus en vigueur au niveau actuel, d'après les lignes "Telemachus" du gsheet.
+  // Version classique uniquement : Shine-City n'a pas de bonus.
+  const telemachusBonus = useMemo(
+    () =>
+      activeTab === 'classic'
+        ? bonusStatsAtLevel(capacitesData.filter(c => c.nom_personnage === 'Telemachus'), level)
+        : { power: 0, speed: 0, trick: 0, recovery: 0, defense: 0 },
+    [capacitesData, level, activeTab]
+  );
+
   const baseStatsInfo = useMemo(
-    () => computeMergedStatsInfo(equippedCaps, level, activeTab),
-    [equippedCaps, level, activeTab]
+    () => computeMergedStatsInfo(equippedCaps, level, activeTab, telemachusBonus),
+    [equippedCaps, level, activeTab, telemachusBonus]
   );
 
   // --- CALQUES DE MODES (style Phase Shift) ---
@@ -452,7 +465,7 @@ export default function App() {
           });
         });
 
-        const isolated = computeMergedStatsInfo(overrideCaps, level, activeTab);
+        const isolated = computeMergedStatsInfo(overrideCaps, level, activeTab, telemachusBonus);
         layers.push({
           id: `${index}-${cap.id}`,
           label: cap.mode_label || cap.nom_capacite,
@@ -469,7 +482,7 @@ export default function App() {
     });
 
     return layers;
-  }, [slots, slotExtraModes, tierInfo, capacitesData, level, activeTab]);
+  }, [slots, slotExtraModes, tierInfo, capacitesData, level, activeTab, telemachusBonus]);
 
   // --- LOGIQUE DES OPTIONS D'AMPLIFICATION ---
   const getBoostOptions = useCallback((statKey: StatKey): BoostOption[] => {

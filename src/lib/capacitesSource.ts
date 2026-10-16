@@ -45,6 +45,10 @@ export interface Capacite {
   tier: string;
   nature: string;
   description: string;
+  // Colonnes "<Stat> Bonus" : points de bonus notés sur cette ligne, null si
+  // la case est vide (une ligne de niveau supérieur hérite alors du bonus
+  // noté plus bas, cf. bonusAtLevel).
+  bonus: Record<StatKey, number | null>;
 }
 
 type OverrideEntry = { nom_personnage: string; nom_capacite: string; niveau: number; stat_principale: StatKey };
@@ -67,6 +71,43 @@ const parseFrNumber = (raw: string | undefined): number => {
   const n = parseFloat(raw.replace(',', '.'));
   return Number.isNaN(n) ? 0 : n;
 };
+
+const parseBonus = (raw: string | undefined): number | null => {
+  if (!raw || raw.trim() === '') return null;
+  const n = parseFloat(raw.replace(',', '.'));
+  return Number.isNaN(n) ? null : n;
+};
+
+// Chaque point de bonus ajoute 0.02 au ratio stat/niveau (même règle que
+// graph-unordinary).
+const BONUS_PER_POINT = 0.02;
+
+// Bonus en vigueur à `level` pour chaque stat : la valeur notée sur la ligne de
+// plus haut niveau <= `level`. Une nouvelle note remplace l'ancienne (jamais
+// cumulée), une case vide garde la précédente, et avant la première note le
+// bonus est nul.
+export function bonusAtLevel(rows: Capacite[], level: number): Record<StatKey, number> {
+  const bonus = { power: 0, speed: 0, trick: 0, recovery: 0, defense: 0 };
+  [...rows]
+    .filter((row) => row.niveau <= level + 0.001)
+    .sort((a, b) => a.niveau - b.niveau)
+    .forEach((row) =>
+      STAT_KEYS.forEach((k) => {
+        const noted = row.bonus[k];
+        if (noted !== null) bonus[k] = noted;
+      })
+    );
+  return bonus;
+}
+
+// Valeur ajoutée à chaque stat par le bonus en vigueur à `level`.
+export function bonusStatsAtLevel(rows: Capacite[], level: number): Record<StatKey, number> {
+  const bonus = bonusAtLevel(rows, level);
+  return Object.fromEntries(STAT_KEYS.map((k) => [k, BONUS_PER_POINT * bonus[k] * level])) as Record<
+    StatKey,
+    number
+  >;
+}
 
 const trunc3 = (x: number) => Math.trunc(x * 1000) / 1000;
 
@@ -135,6 +176,10 @@ export function parseCapacitesCsv(csvText: string): Capacite[] {
       tier: row['Tier'] || '',
       nature: row['Nature'] || '',
       description: row['Ability Description'] || '',
+      bonus: Object.fromEntries(STAT_KEYS.map((k) => [k, parseBonus(row[`${statColumn[k]} Bonus`])])) as Record<
+        StatKey,
+        number | null
+      >,
     });
   }
 

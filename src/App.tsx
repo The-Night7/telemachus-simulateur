@@ -737,7 +737,36 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 font-sans px-3 py-4 sm:p-4 md:p-8 selection:bg-yellow-500/30 pb-20">
-      
+      <div className="flex flex-col lg:flex-row lg:items-start gap-6 lg:gap-8">
+
+      {/* BARRE LATÉRALE : descriptions (colonne "Ability Description" du gsheet) des
+          capacités copiées, modes additionnels compris. Sous le simulateur sur mobile. */}
+      <aside className="order-last lg:order-first lg:w-80 xl:w-96 lg:shrink-0 lg:sticky lg:top-8 lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto bg-neutral-900 border border-neutral-800 rounded-2xl shadow-xl p-4 sm:p-5">
+        <h2 className="text-neutral-400 font-semibold mb-4 text-sm uppercase tracking-wider flex items-center gap-2">
+          <Layers size={18} />
+          Descriptions
+        </h2>
+        {equippedCaps.length === 0 ? (
+          <p className="text-xs text-neutral-500">Aucune capacité copiée.</p>
+        ) : (
+          <div className="space-y-4">
+            {equippedCaps.map((cap) => (
+              <div key={cap.id} className="border-l-2 border-yellow-500/60 pl-3">
+                <p className="text-sm font-bold text-yellow-500">{cap.nom_capacite}</p>
+                <p className="text-[11px] text-neutral-500 uppercase tracking-wider mb-1.5">
+                  {cap.nom_personnage} — Niv {cap.niveau}{cap.type ? ` — ${cap.type}` : ''}
+                </p>
+                <p className="text-xs text-neutral-300 leading-relaxed whitespace-pre-line">
+                  {cap.description || <span className="italic text-neutral-600">Pas de description.</span>}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </aside>
+
+      <div className="flex-1 min-w-0">
+
       {/* En-tête */}
       <div className="max-w-6xl mx-auto mb-6 text-center">
         <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 tracking-tight mb-2">
@@ -1130,6 +1159,8 @@ export default function App() {
           </div>
 
         </div>
+      </div>
+      </div>
       </div>
 
       {/* Panneau "Modes" (variantes style Phase Shift), ouvert depuis le bouton

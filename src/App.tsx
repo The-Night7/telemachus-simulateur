@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Shield, Zap, Swords, Brain, Heart, ChevronDown, Layers, Lock, Battery, ChevronsUp, Sparkles, Target, Download, RefreshCw, X } from 'lucide-react';
+import { Shield, Zap, Swords, Brain, Heart, ChevronDown, Layers, Lock, Battery, ChevronsUp, Sparkles, Target, Download, RefreshCw, X, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useCapacites } from './lib/useCapacites';
 import { bonusStatsAtLevel, type Capacite } from './lib/capacitesSource';
 import { exportRadarPng, type RadarIdentity } from './lib/exportRadarPng';
@@ -368,6 +368,11 @@ export default function App() {
   const [capStatsAt10, setCapStatsAt10] = useState(false);
   // Emplacement dont le panneau "Modes" (variantes style Phase Shift) est ouvert.
   const [activeModeDrawer, setActiveModeDrawer] = useState<number | null>(null);
+  // Volet gauche des descriptions : ouvert par défaut sur grand écran, replié sur
+  // mobile où il recouvre le simulateur.
+  const [descPanelOpen, setDescPanelOpen] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches
+  );
   // Modes additionnels choisis par emplacement, pour les capacités qui partagent une
   // mode_group_key (ex: Phase Shift (Def)/(Off) chez Zeke) — le mode choisi dans le
   // <select> du slot reste le mode "principal", extraIds ajoute d'autres modes du même
@@ -736,16 +741,40 @@ export default function App() {
   const drawerExtraIds = (activeModeDrawer !== null && slotExtraModes[activeModeDrawer]) || [];
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 font-sans px-3 py-4 sm:p-4 md:p-8 selection:bg-yellow-500/30 pb-20">
-      <div className="flex flex-col lg:flex-row lg:items-start gap-6 lg:gap-8">
+    <div className={`min-h-screen bg-neutral-950 text-neutral-100 font-sans px-3 py-4 sm:p-4 md:p-8 selection:bg-yellow-500/30 pb-20 transition-[padding] duration-300 ${descPanelOpen ? 'lg:pl-[22rem] xl:pl-[26rem]' : ''}`}>
 
-      {/* BARRE LATÉRALE : descriptions (colonne "Ability Description" du gsheet) des
-          capacités copiées, modes additionnels compris. Sous le simulateur sur mobile. */}
-      <aside className="order-last lg:order-first lg:w-80 xl:w-96 lg:shrink-0 lg:sticky lg:top-8 lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto bg-neutral-900 border border-neutral-800 rounded-2xl shadow-xl p-4 sm:p-5">
-        <h2 className="text-neutral-400 font-semibold mb-4 text-sm uppercase tracking-wider flex items-center gap-2">
-          <Layers size={18} />
-          Descriptions
-        </h2>
+      {/* VOLET GAUCHE : descriptions (colonne "Ability Description" du gsheet) des
+          capacités copiées, modes additionnels compris. Repliable ; sur grand écran le
+          contenu se recentre dans l'espace restant, sur mobile le volet le recouvre. */}
+      {!descPanelOpen && (
+        <button
+          onClick={() => setDescPanelOpen(true)}
+          title="Afficher les descriptions"
+          aria-label="Afficher les descriptions"
+          className="fixed left-0 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center gap-2 bg-neutral-900 border border-l-0 border-neutral-800 rounded-r-xl px-1.5 py-3 text-neutral-400 hover:text-yellow-500 shadow-xl transition-colors"
+        >
+          <PanelLeftOpen size={18} />
+          <span className="text-[10px] font-bold uppercase tracking-wider [writing-mode:vertical-rl] rotate-180">Descriptions</span>
+        </button>
+      )}
+      {descPanelOpen && (
+        <div className="fixed inset-0 bg-black/60 z-30 lg:hidden" onClick={() => setDescPanelOpen(false)} />
+      )}
+      <aside className={`fixed top-0 left-0 h-full w-full max-w-xs lg:w-80 xl:w-96 lg:max-w-none z-40 bg-neutral-900 border-r border-neutral-800 shadow-2xl p-4 sm:p-5 overflow-y-auto transition-transform duration-300 ${descPanelOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-neutral-400 font-semibold text-sm uppercase tracking-wider flex items-center gap-2">
+            <Layers size={18} />
+            Descriptions
+          </h2>
+          <button
+            onClick={() => setDescPanelOpen(false)}
+            title="Replier"
+            aria-label="Replier les descriptions"
+            className="-m-2 p-2 text-neutral-500 hover:text-neutral-200 transition-colors"
+          >
+            <PanelLeftClose size={18} />
+          </button>
+        </div>
         {equippedCaps.length === 0 ? (
           <p className="text-xs text-neutral-500">Aucune capacité copiée.</p>
         ) : (
@@ -764,9 +793,6 @@ export default function App() {
           </div>
         )}
       </aside>
-
-      <div className="flex-1 min-w-0">
-
       {/* En-tête */}
       <div className="max-w-6xl mx-auto mb-6 text-center">
         <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 tracking-tight mb-2">
@@ -1159,8 +1185,6 @@ export default function App() {
           </div>
 
         </div>
-      </div>
-      </div>
       </div>
 
       {/* Panneau "Modes" (variantes style Phase Shift), ouvert depuis le bouton

@@ -61,6 +61,12 @@ const statConfig: { key: StatKey, label: string, Icon: React.ElementType, color:
 ];
 
 // --- LOGIQUE DE TIER ET DE SLOTS DE TELEMACHUS ---
+// Amplificateur / Déamplificateur (mêmes facteurs que graph-unordinary) : appliqués
+// au niveau de Telemachus AVANT la copie, donc tout le moteur de fusion travaille
+// avec ce niveau modifié, y compris le tier (nombre de copies) et la réserve d'aura.
+const AMPLIFIER_FACTOR = 1.5;
+const DEAMPLIFIER_FACTOR = 0.5;
+
 const getTierInfo = (level: number) => {
   if (level < 2.0) return { name: "Low-Tier", slots: 1, color: "text-neutral-400", badge: "text-neutral-400 bg-neutral-400/10 border-neutral-400/30" };
   if (level < 4.0) return { name: "Mid-Tier", slots: 2, color: "text-green-400", badge: "text-green-400 bg-green-400/10 border-green-400/30" };
@@ -381,13 +387,20 @@ export default function App() {
   const [slotExtraModes, setSlotExtraModes] = useState<Record<number, string[]>>({});
 
   const level = useMemo(() => parseFloat(((potential * mastery) / 10).toFixed(1)), [potential, mastery]);
+  // Exclusifs l'un de l'autre : cocher l'un décoche l'autre.
+  const [amplified, setAmplified] = useState(false);
+  const [deamplified, setDeamplified] = useState(false);
+  const copyLevel = useMemo(
+    () => level * (amplified ? AMPLIFIER_FACTOR : deamplified ? DEAMPLIFIER_FACTOR : 1),
+    [level, amplified, deamplified]
+  );
   const radarIdentities = useMemo(
     () => buildRadarIdentities(level, activeTab === 'alternative'),
     [level, activeTab]
   );
   const [boostState, setBoostState] = useState<Record<string, number>>({ power: 0, speed: 0, trick: 0, recovery: 0, defense: 0 });
 
-  const tierInfo = useMemo(() => getTierInfo(level), [level]);
+  const tierInfo = useMemo(() => getTierInfo(copyLevel), [copyLevel]);
   const slotsUsed = useMemo(() => slots.filter(s => s !== "").length, [slots]);
   
   const activeBoostsCount = useMemo(() => Object.values(boostState).filter(v => v > 0).length, [boostState]);
@@ -415,14 +428,14 @@ export default function App() {
   const telemachusBonus = useMemo(
     () =>
       activeTab === 'classic'
-        ? bonusStatsAtLevel(capacitesData.filter(c => c.nom_personnage === 'Telemachus'), level)
+        ? bonusStatsAtLevel(capacitesData.filter(c => c.nom_personnage === 'Telemachus'), copyLevel)
         : { power: 0, speed: 0, trick: 0, recovery: 0, defense: 0 },
-    [capacitesData, level, activeTab]
+    [capacitesData, copyLevel, activeTab]
   );
 
   const baseStatsInfo = useMemo(
-    () => computeMergedStatsInfo(equippedCaps, level, activeTab, telemachusBonus),
-    [equippedCaps, level, activeTab, telemachusBonus]
+    () => computeMergedStatsInfo(equippedCaps, copyLevel, activeTab, telemachusBonus),
+    [equippedCaps, copyLevel, activeTab, telemachusBonus]
   );
 
   // --- CALQUES DE MODES (style Phase Shift) ---
@@ -470,7 +483,7 @@ export default function App() {
           });
         });
 
-        const isolated = computeMergedStatsInfo(overrideCaps, level, activeTab, telemachusBonus);
+        const isolated = computeMergedStatsInfo(overrideCaps, copyLevel, activeTab, telemachusBonus);
         layers.push({
           id: `${index}-${cap.id}`,
           label: cap.mode_label || cap.nom_capacite,
@@ -487,12 +500,12 @@ export default function App() {
     });
 
     return layers;
-  }, [slots, slotExtraModes, tierInfo, capacitesData, level, activeTab, telemachusBonus]);
+  }, [slots, slotExtraModes, tierInfo, capacitesData, copyLevel, activeTab, telemachusBonus]);
 
   // --- LOGIQUE DES OPTIONS D'AMPLIFICATION ---
   const getBoostOptions = useCallback((statKey: StatKey): BoostOption[] => {
     const sourceLevel = baseStatsInfo[statKey].sourceLevel;
-    const isTelemachusStrong = sourceLevel <= level; 
+    const isTelemachusStrong = sourceLevel <= copyLevel;
 
     let options: BoostOption[] = [];
     if (isTelemachusStrong) {
@@ -505,15 +518,15 @@ export default function App() {
       if (mastery >= 8.5) options.push({ mult: 1.5, cost: 7.5, label: 'x1.5 (Élevé)' });
     }
     return options;
-  }, [baseStatsInfo, level, mastery]);
+  }, [baseStatsInfo, copyLevel, mastery]);
 
   // --- LOGIQUE DE RÉSERVE D'AURA ---
   const maxAura = useMemo(() => {
-    if (level >= 7.5) return level * 25;
-    if (level >= 7.0) return level * 20;
-    if (level >= 6.0) return level * 15;
-    return level * 10;
-  }, [level]);
+    if (copyLevel >= 7.5) return copyLevel * 25;
+    if (copyLevel >= 7.0) return copyLevel * 20;
+    if (copyLevel >= 6.0) return copyLevel * 15;
+    return copyLevel * 10;
+  }, [copyLevel]);
   
   const currentAuraDrain = useMemo(() => {
     let drain = slots.reduce((total, slotId) => {
@@ -553,13 +566,31 @@ export default function App() {
     return finalStats;
   }, [baseStatsInfo, boostState, getBoostOptions]);
 
+  // Même build calculé au niveau RÉEL (sans amplificateur/déamplificateur) : c'est la
+  // forme normale de l'export PNG, sur laquelle le build modifié (statsFinales) est
+  // superposé — comme dans graph-unordinary. Les boosts d'aura choisis gardent le même
+  // multiplicateur que sur le build modifié.
+  const unmodifiedStats = useMemo(() => {
+    if (copyLevel === level) return statsFinales;
+    const bonus =
+      activeTab === 'classic'
+        ? bonusStatsAtLevel(capacitesData.filter(c => c.nom_personnage === 'Telemachus'), level)
+        : { power: 0, speed: 0, trick: 0, recovery: 0, defense: 0 };
+    const info = computeMergedStatsInfo(equippedCaps, level, activeTab, bonus);
+    const result = {} as Record<StatKey, number>;
+    (Object.keys(info) as StatKey[]).forEach(key => {
+      result[key] = info[key].val * (statsFinales[key] / baseStatsInfo[key].val);
+    });
+    return result;
+  }, [copyLevel, level, statsFinales, baseStatsInfo, activeTab, capacitesData, equippedCaps]);
+
   // --- ALGORITHME DU NIVEAU EFFECTIF ESTIMÉ (Moyenne Extra + Bridage par Tiers) ---
   const estimatedEffectiveLevel = useMemo(() => {
     const { power, speed, trick, recovery, defense } = statsFinales;
 
     // 1. Dérivation des Extra Stats (Formules combinées)
-    const attackSpeed = power * speed / level;
-    const attackCharge = power * recovery / level;
+    const attackSpeed = power * speed / copyLevel;
+    const attackCharge = power * recovery / copyLevel;
     
     // 2. Somme totale incluant les 5 stats + les 2 extras
     const totalSum = power + speed + recovery + defense + attackSpeed + attackCharge;
@@ -612,7 +643,7 @@ export default function App() {
     let finalLevel = Math.min(maxLvl, Math.max(minLvl, rawLevel));
 
     return finalLevel.toFixed(1);
-  }, [statsFinales]);
+  }, [statsFinales, copyLevel]);
 
 
   // --- INTERACTIONS ---
@@ -710,7 +741,7 @@ export default function App() {
 
   // Réinitialisation lors du changement de niveau/slots
   useEffect(() => {
-    const currentTier = getTierInfo(level);
+    const currentTier = getTierInfo(copyLevel);
     if (slotsUsed > currentTier.slots) {
       const newSlots = [...slots];
       for (let i = currentTier.slots; i < 4; i++) {
@@ -729,7 +760,7 @@ export default function App() {
     if (activeModeDrawer !== null && activeModeDrawer >= currentTier.slots) {
       setActiveModeDrawer(null);
     }
-  }, [level, slotsUsed, activeTab]);
+  }, [copyLevel, slotsUsed, activeTab]);
 
   // --- PANNEAU "MODES" (variantes style Phase Shift) ---
   const drawerCap = (activeModeDrawer !== null && slots[activeModeDrawer])
@@ -866,6 +897,9 @@ export default function App() {
                 </label>
                 <div className="text-3xl font-black text-yellow-500 leading-none">
                   {level.toFixed(1)}
+                  {(amplified || deamplified) && (
+                    <span className="ml-1.5 text-lg text-red-500">({copyLevel.toFixed(1)})</span>
+                  )}
                 </div>
                 <span className={`mt-2 w-fit text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${tierInfo.badge}`}>
                   {tierInfo.name}
@@ -943,7 +977,7 @@ export default function App() {
               const slotValue = slots[index];
               const currentCap = slotValue ? capacitesData.find(c => c.id === parseInt(slotValue)) : null;
               const currentSlotDrain = currentCap ? getAuraCost(currentCap.niveau) : 0;
-              const levelDiff = currentCap ? (level - currentCap.niveau) : 0;
+              const levelDiff = currentCap ? (copyLevel - currentCap.niveau) : 0;
               const siblingModes = currentCap
                 ? capacitesData.filter(c => c.mode_group_key === currentCap.mode_group_key && c.copiable)
                 : [];
@@ -1059,6 +1093,31 @@ export default function App() {
             >
               Cap à 10
             </button>
+
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                onClick={() => { setAmplified(!amplified); setDeamplified(false); }}
+                className={`w-fit px-2 py-0.5 text-xs font-bold rounded-full border transition-colors ${
+                  amplified
+                    ? 'bg-amber-500 text-neutral-950 border-amber-500'
+                    : 'bg-neutral-950 text-amber-400 border-neutral-800 hover:border-amber-500/50'
+                }`}
+                title="Niveau de Telemachus x1.5 avant la copie"
+              >
+                Amplificateur ×1.5
+              </button>
+              <button
+                onClick={() => { setDeamplified(!deamplified); setAmplified(false); }}
+                className={`w-fit px-2 py-0.5 text-xs font-bold rounded-full border transition-colors ${
+                  deamplified
+                    ? 'bg-sky-500 text-neutral-950 border-sky-500'
+                    : 'bg-neutral-950 text-sky-400 border-neutral-800 hover:border-sky-500/50'
+                }`}
+                title="Niveau de Telemachus ÷2 avant la copie"
+              >
+                Déamplificateur ÷2
+              </button>
+            </div>
           </div>
 
           <div className="w-full flex flex-wrap items-center justify-between gap-2 md:w-auto md:justify-start md:absolute md:top-6 md:right-6 z-10">
@@ -1080,12 +1139,15 @@ export default function App() {
             </div>
             <button
               onClick={() => exportRadarPng(
-                statsFinales,
+                unmodifiedStats,
                 level,
                 radarIdentities[radarIdentityIndex],
                 capStatsAt10,
                 modeLayers.map(l => ({ label: `${l.nomCapacite} · ${l.label}`, stats: l.stats })),
-                activeTab === 'alternative'
+                activeTab === 'alternative',
+                amplified || deamplified
+                  ? { kind: amplified ? 'amplified' : 'deamplified', stats: statsFinales, level: copyLevel }
+                  : null
               )}
               className="flex items-center gap-2 px-3 py-1 bg-neutral-950 border border-neutral-800 rounded-lg shadow-sm hover:border-yellow-500/50 hover:text-yellow-500 text-neutral-400 transition-colors"
               title="Exporter le graphique en PNG"

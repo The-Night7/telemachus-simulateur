@@ -19,6 +19,15 @@ export interface RadarLayer {
 const LAYER_FILL = 'rgba(255, 215, 0, 0.45)';
 const LAYER_STROKE = '#ffd700';
 
+// Amplificateur / Déamplificateur (cf. graph-unordinary) : stats et niveau du build
+// modifié, superposés à la forme normale (calculée au niveau réel) plutôt que de la
+// remplacer.
+export interface RadarModifier {
+  kind: 'amplified' | 'deamplified';
+  stats: Record<StatKey, number>;
+  level: number;
+}
+
 // Réplique la fiche de stats unOrdinary (cf. template_graph.jpg à la racine du repo) :
 // case portrait + bloc Name/Ability/Level à gauche, pentagone de stats à droite.
 const KEYS: StatKey[] = ['power', 'speed', 'trick', 'recovery', 'defense'];
@@ -113,11 +122,53 @@ function drawIdentityLine(ctx: CanvasRenderingContext2D, label: string, value: s
   ctx.fillText(` ${value}`, x + labelWidth, y);
 }
 
+// Ligne du niveau uniquement : le niveau modifié (amplifié / déamplifié) est ajouté en
+// rouge entre parenthèses, ex: "Level: 5.6 (8.4)" — comme dans graph-unordinary.
+function drawLevelLine(
+  ctx: CanvasRenderingContext2D,
+  label: string,
+  value: string,
+  modifiedValue: string | undefined,
+  x: number,
+  y: number
+) {
+  drawIdentityLine(ctx, label, value, x, y);
+  if (!modifiedValue) return;
+  const fontSize = 30 * SCALE;
+  ctx.font = `700 ${fontSize}px ${CANDARA_STACK}`;
+  const labelWidth = ctx.measureText(label).width;
+  ctx.font = `400 ${fontSize}px ${CANDARA_STACK}`;
+  const valueWidth = ctx.measureText(` ${value}`).width;
+  ctx.fillStyle = '#dc2626';
+  ctx.font = `700 ${fontSize}px ${CANDARA_STACK}`;
+  ctx.fillText(` (${modifiedValue})`, x + labelWidth + valueWidth, y);
+}
+
+function drawStatsPolygon(
+  ctx: CanvasRenderingContext2D,
+  stats: Record<string, number>,
+  capAt10: boolean,
+  fill: string,
+  stroke: string | null
+) {
+  const points = KEYS.map((k, i) => vertex(capAt10 ? Math.min(stats[k] || 1, BASE_MAX) : stats[k] || 1, i));
+  ctx.beginPath();
+  points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+  ctx.closePath();
+  ctx.fillStyle = fill;
+  ctx.fill();
+  if (!stroke) return;
+  ctx.lineWidth = 2 * SCALE;
+  ctx.strokeStyle = stroke;
+  ctx.stroke();
+}
+
 function drawIdentityCard(
   ctx: CanvasRenderingContext2D,
   name: string,
   ability: string,
   level: string,
+  modifiedLevel: string | undefined,
   portrait: HTMLImageElement | null
 ) {
   ctx.lineWidth = 3 * SCALE;
@@ -136,7 +187,7 @@ function drawIdentityCard(
   const firstBaseline = LABEL_BOX.y + lineHeight * 0.95;
   drawIdentityLine(ctx, 'Name:', name, textX, firstBaseline);
   drawIdentityLine(ctx, 'Ability:', ability, textX, firstBaseline + lineHeight);
-  drawIdentityLine(ctx, 'Level:', level, textX, firstBaseline + lineHeight * 2);
+  drawLevelLine(ctx, 'Level:', level, modifiedLevel, textX, firstBaseline + lineHeight * 2);
 }
 
 function loadImage(src: string): Promise<HTMLImageElement | null> {
@@ -157,6 +208,7 @@ export async function exportRadarPng(
   // Système Shine-City : labels du pentagone en français (cf. LABELS_FR) au lieu des
   // noms de stats anglais d'origine unOrdinary utilisés partout ailleurs dans l'app.
   frenchLabels = false,
+  modifier: RadarModifier | null = null,
   filename = `${identity.name.toLowerCase()}-radar.png`
 ) {
   const LABELS = frenchLabels ? LABELS_FR : LABELS_EN;
@@ -180,7 +232,7 @@ export async function exportRadarPng(
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-  drawIdentityCard(ctx, identity.name, identity.ability, level.toFixed(1), portrait);
+  drawIdentityCard(ctx, identity.name, identity.ability, level.toFixed(1), modifier?.level.toFixed(1), portrait);
 
   // Pentagone de référence : toujours régulier, plafonné à 10 (le "gabarit" unOrdinary).
   const basePoints = KEYS.map((_, i) => vertex(BASE_MAX, i));
@@ -225,16 +277,18 @@ export async function exportRadarPng(
   // Masqué dès qu'un calque est actif (voir layers.length) — chaque calque EST déjà
   // un build complet, donc on ne veut pas une forme fusionnée en plus qui ferait
   // doublon — exactement comme john_unordinary.
+  // Amplifié : forme translucide sans contour, tracée SOUS la forme normale (elle-même
+  // translucide), donc le recouvrement ressort simplement plus foncé.
+  // Déamplifié : la forme normale devient un fantôme noir translucide et la forme
+  // déamplifiée prend le rendu normal (remplissage + contour) — cf. graph-unordinary.
   if (layers.length === 0) {
-    const points = KEYS.map((k, i) => vertex(capAt10 ? Math.min(stats[k] || 1, BASE_MAX) : (stats[k] || 1), i));
-    ctx.beginPath();
-    points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
-    ctx.closePath();
-    ctx.fillStyle = LAYER_FILL;
-    ctx.lineWidth = 2 * SCALE;
-    ctx.strokeStyle = LAYER_STROKE;
-    ctx.fill();
-    ctx.stroke();
+    if (modifier?.kind === 'deamplified') {
+      drawStatsPolygon(ctx, stats, capAt10, 'rgba(0, 0, 0, 0.2)', null);
+      drawStatsPolygon(ctx, modifier.stats, capAt10, LAYER_FILL, LAYER_STROKE);
+    } else {
+      if (modifier?.kind === 'amplified') drawStatsPolygon(ctx, modifier.stats, capAt10, LAYER_FILL, null);
+      drawStatsPolygon(ctx, stats, capAt10, LAYER_FILL, LAYER_STROKE);
+    }
   }
 
   // Calques de modes (style Phase Shift) : chaque capacité équipée qui a des

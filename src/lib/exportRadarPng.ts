@@ -16,8 +16,9 @@ export interface RadarLayer {
   stats: Record<string, number>;
 }
 
-const LAYER_FILL = 'rgba(255, 215, 0, 0.45)';
-const LAYER_STROKE = '#ffd700';
+// Graphique noir à l'export (le radar du site reste jaune).
+const LAYER_FILL = 'rgba(0, 0, 0, 0.4)';
+const LAYER_STROKE = '#000000';
 
 // Amplificateur / Déamplificateur (cf. graph-unordinary) : stats et niveau du build
 // modifié, superposés à la forme normale (calculée au niveau réel) plutôt que de la

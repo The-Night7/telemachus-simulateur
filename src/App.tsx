@@ -242,12 +242,18 @@ const RadarChart = ({
   baseStatsInfo,
   layers = [],
   capAt10 = false,
+  amplifiedStats = null,
+  deamplifiedStats = null,
 }: {
   stats: Record<StatKey, number>;
   boosts: Record<string, number>;
   baseStatsInfo: Record<StatKey, StatInfo>;
   layers?: { id: string; stats: Record<StatKey, number> }[];
   capAt10?: boolean;
+  // Amplificateur / Déamplificateur : build modifié superposé à la forme normale
+  // (stats = build au niveau réel), comme dans le simulateur de John.
+  amplifiedStats?: Record<StatKey, number> | null;
+  deamplifiedStats?: Record<StatKey, number> | null;
 }) => {
   const maxStat = 10;
   const size = 500;
@@ -267,7 +273,10 @@ const RadarChart = ({
   };
 
   const levels = [2, 4, 6, 8, 10];
-  const hasLayers = layers.length > 0;
+  // Comme dans graph-unordinary / john_unordinary, le déamplificateur prend le dessus sur
+  // les calques : la forme normale devient un fantôme et la version déamplifiée reprend son style.
+  const hasLayers = layers.length > 0 && !deamplifiedStats;
+  const mainStats = deamplifiedStats || stats;
 
   return (
     <div className="relative w-full aspect-square max-w-[450px] mx-auto bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-neutral-800 to-neutral-950 rounded-full p-4 shadow-2xl border border-neutral-800">
@@ -286,8 +295,18 @@ const RadarChart = ({
             calque EST déjà un build complet (toutes les capacités équipées, cf.
             modeLayers dans App), donc on ne veut pas une forme fusionnée en plus qui
             ferait doublon — exactement comme john_unordinary. */}
+        {/* Amplificateur : aperçu translucide sans contour, SOUS la forme normale. */}
+        {amplifiedStats && (
+          <polygon points={getPoints(amplifiedStats, capAt10)} fill="rgba(255, 215, 0, 0.25)" stroke="none" className="transition-all duration-500 ease-in-out" />
+        )}
+
+        {/* Déamplificateur : la forme d'origine s'efface en fantôme. */}
+        {deamplifiedStats && (
+          <polygon points={getPoints(stats, capAt10)} fill="rgba(255, 255, 255, 0.12)" stroke="none" className="transition-all duration-500 ease-in-out" />
+        )}
+
         {!hasLayers && (
-          <polygon points={getPoints(stats, capAt10)} fill="rgba(255, 215, 0, 0.3)" stroke="#ffd700" strokeWidth="3" className="transition-all duration-500 ease-in-out drop-shadow-[0_0_10px_rgba(255,215,0,0.5)]" />
+          <polygon points={getPoints(mainStats, capAt10)} fill="rgba(255, 215, 0, 0.3)" stroke="#ffd700" strokeWidth="3" className="transition-all duration-500 ease-in-out drop-shadow-[0_0_10px_rgba(255,215,0,0.5)]" />
         )}
 
         {/* Calques de modes (style Phase Shift) : chaque capacité équipée qui a des
@@ -309,7 +328,7 @@ const RadarChart = ({
         {/* Nodes : marquent les sommets de l'Aura Shape, donc masqués avec elle et
             plafonnés comme elle (capAt10) — seuls Aura Shape/Nodes respectent l'option. */}
         {!hasLayers && keys.map((key, i) => {
-          const rawVal = stats[key] || 1;
+          const rawVal = mainStats[key] || 1;
           const val = capAt10 ? Math.min(rawVal, maxStat) : rawVal;
           const r = (val / maxStat) * radius;
           const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
@@ -374,11 +393,8 @@ export default function App() {
   const [capStatsAt10, setCapStatsAt10] = useState(false);
   // Emplacement dont le panneau "Modes" (variantes style Phase Shift) est ouvert.
   const [activeModeDrawer, setActiveModeDrawer] = useState<number | null>(null);
-  // Volet gauche des descriptions : ouvert par défaut sur grand écran, replié sur
-  // mobile où il recouvre le simulateur.
-  const [descPanelOpen, setDescPanelOpen] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches
-  );
+  // Volet gauche des descriptions : replié par défaut.
+  const [descPanelOpen, setDescPanelOpen] = useState(false);
   // Modes additionnels choisis par emplacement, pour les capacités qui partagent une
   // mode_group_key (ex: Phase Shift (Def)/(Off) chez Zeke) — le mode choisi dans le
   // <select> du slot reste le mode "principal", extraIds ajoute d'autres modes du même
@@ -931,6 +947,30 @@ export default function App() {
                 />
               </div>
             </div>
+            <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-neutral-800">
+              <button
+                onClick={() => { setAmplified(!amplified); setDeamplified(false); }}
+                className={`w-fit px-2 py-0.5 text-xs font-bold rounded-full border transition-colors ${
+                  amplified
+                    ? 'bg-amber-500 text-neutral-950 border-amber-500'
+                    : 'bg-neutral-950 text-amber-400 border-neutral-800 hover:border-amber-500/50'
+                }`}
+                title="Niveau de Telemachus x1.5 avant la copie"
+              >
+                Amplificateur ×1.5
+              </button>
+              <button
+                onClick={() => { setDeamplified(!deamplified); setAmplified(false); }}
+                className={`w-fit px-2 py-0.5 text-xs font-bold rounded-full border transition-colors ${
+                  deamplified
+                    ? 'bg-sky-500 text-neutral-950 border-sky-500'
+                    : 'bg-neutral-950 text-sky-400 border-neutral-800 hover:border-sky-500/50'
+                }`}
+                title="Niveau de Telemachus ÷2 avant la copie"
+              >
+                Déamplificateur ÷2
+              </button>
+            </div>
           </div>
 
           <div className="bg-neutral-900 border border-neutral-800 p-4 sm:p-6 rounded-2xl shadow-xl">
@@ -1093,31 +1133,6 @@ export default function App() {
             >
               Cap à 10
             </button>
-
-            <div className="flex flex-wrap gap-1.5">
-              <button
-                onClick={() => { setAmplified(!amplified); setDeamplified(false); }}
-                className={`w-fit px-2 py-0.5 text-xs font-bold rounded-full border transition-colors ${
-                  amplified
-                    ? 'bg-amber-500 text-neutral-950 border-amber-500'
-                    : 'bg-neutral-950 text-amber-400 border-neutral-800 hover:border-amber-500/50'
-                }`}
-                title="Niveau de Telemachus x1.5 avant la copie"
-              >
-                Amplificateur ×1.5
-              </button>
-              <button
-                onClick={() => { setDeamplified(!deamplified); setAmplified(false); }}
-                className={`w-fit px-2 py-0.5 text-xs font-bold rounded-full border transition-colors ${
-                  deamplified
-                    ? 'bg-sky-500 text-neutral-950 border-sky-500'
-                    : 'bg-neutral-950 text-sky-400 border-neutral-800 hover:border-sky-500/50'
-                }`}
-                title="Niveau de Telemachus ÷2 avant la copie"
-              >
-                Déamplificateur ÷2
-              </button>
-            </div>
           </div>
 
           <div className="w-full flex flex-wrap items-center justify-between gap-2 md:w-auto md:justify-start md:absolute md:top-6 md:right-6 z-10">
@@ -1158,7 +1173,15 @@ export default function App() {
           </div>
 
           <div className="w-full mb-2 mt-2 md:mt-6">
-            <RadarChart stats={statsFinales} boosts={boostState} baseStatsInfo={baseStatsInfo} layers={modeLayers} capAt10={capStatsAt10} />
+            <RadarChart
+              stats={unmodifiedStats}
+              boosts={boostState}
+              baseStatsInfo={baseStatsInfo}
+              layers={modeLayers}
+              capAt10={capStatsAt10}
+              amplifiedStats={amplified ? statsFinales : null}
+              deamplifiedStats={deamplified ? statsFinales : null}
+            />
           </div>
 
           {/* Légende des calques de modes actifs (style Phase Shift) : toutes les formes

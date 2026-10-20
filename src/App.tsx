@@ -939,7 +939,7 @@ export default function App() {
                 <div className="text-3xl font-black text-yellow-500 leading-none">
                   {level.toFixed(1)}
                   {(amplified || deamplified) && (
-                    <span className="ml-1.5 text-lg text-red-500">({copyLevel.toFixed(1)})</span>
+                    <span className={`ml-1.5 text-lg ${deamplified ? 'text-blue-500' : 'text-red-500'}`}>({copyLevel.toFixed(1)})</span>
                   )}
                 </div>
                 <span className={`mt-2 w-fit text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${tierInfo.badge}`}>
@@ -977,8 +977,8 @@ export default function App() {
                 onClick={() => { setAmplified(!amplified); setDeamplified(false); }}
                 className={`w-fit px-2 py-0.5 text-xs font-bold rounded-full border transition-colors ${
                   amplified
-                    ? 'bg-amber-500 text-neutral-950 border-amber-500'
-                    : 'bg-neutral-950 text-amber-400 border-neutral-800 hover:border-amber-500/50'
+                    ? 'bg-red-500 text-neutral-950 border-red-500'
+                    : 'bg-neutral-950 text-red-400 border-neutral-800 hover:border-red-500/50'
                 }`}
                 title="Niveau de Telemachus x1.5 avant la copie"
               >
@@ -988,8 +988,8 @@ export default function App() {
                 onClick={() => { setDeamplified(!deamplified); setAmplified(false); }}
                 className={`w-fit px-2 py-0.5 text-xs font-bold rounded-full border transition-colors ${
                   deamplified
-                    ? 'bg-sky-500 text-neutral-950 border-sky-500'
-                    : 'bg-neutral-950 text-sky-400 border-neutral-800 hover:border-sky-500/50'
+                    ? 'bg-blue-500 text-neutral-950 border-blue-500'
+                    : 'bg-neutral-950 text-blue-400 border-neutral-800 hover:border-blue-500/50'
                 }`}
                 title="Niveau de Telemachus ÷2 avant la copie"
               >

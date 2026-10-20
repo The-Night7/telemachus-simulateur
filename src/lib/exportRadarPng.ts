@@ -126,13 +126,16 @@ function drawIdentityLine(ctx: CanvasRenderingContext2D, label: string, value: s
   ctx.fillText(` ${value}`, x + labelWidth, y);
 }
 
-// Ligne du niveau uniquement : le niveau modifié (amplifié / déamplifié) est ajouté en
-// rouge entre parenthèses, ex: "Level: 5.6 (8.4)" — comme dans graph-unordinary.
+// Ligne du niveau uniquement : le niveau modifié est ajouté entre parenthèses, en rouge
+// (amplifié) ou en bleu (déamplifié), ex: "Level: 5.6 (8.4)" — comme dans graph-unordinary.
+const AMPLIFIED_COLOR = '#dc2626';
+const DEAMPLIFIED_COLOR = '#2563eb';
 function drawLevelLine(
   ctx: CanvasRenderingContext2D,
   label: string,
   value: string,
   modifiedValue: string | undefined,
+  modifiedColor: string,
   x: number,
   y: number
 ) {
@@ -143,7 +146,7 @@ function drawLevelLine(
   const labelWidth = ctx.measureText(label).width;
   ctx.font = `400 ${fontSize}px ${CANDARA_STACK}`;
   const valueWidth = ctx.measureText(` ${value}`).width;
-  ctx.fillStyle = '#dc2626';
+  ctx.fillStyle = modifiedColor;
   ctx.font = `700 ${fontSize}px ${CANDARA_STACK}`;
   ctx.fillText(` (${modifiedValue})`, x + labelWidth + valueWidth, y);
 }
@@ -173,6 +176,7 @@ function drawIdentityCard(
   ability: string,
   level: string,
   modifiedLevel: string | undefined,
+  modifiedColor: string,
   portrait: HTMLImageElement | null
 ) {
   ctx.lineWidth = 3 * SCALE;
@@ -191,7 +195,7 @@ function drawIdentityCard(
   const firstBaseline = LABEL_BOX.y + lineHeight * 0.95;
   drawIdentityLine(ctx, 'Name:', name, textX, firstBaseline);
   drawIdentityLine(ctx, 'Ability:', ability, textX, firstBaseline + lineHeight);
-  drawLevelLine(ctx, 'Level:', level, modifiedLevel, textX, firstBaseline + lineHeight * 2);
+  drawLevelLine(ctx, 'Level:', level, modifiedLevel, modifiedColor, textX, firstBaseline + lineHeight * 2);
 }
 
 function loadImage(src: string): Promise<HTMLImageElement | null> {
@@ -236,7 +240,15 @@ export async function exportRadarPng(
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-  drawIdentityCard(ctx, identity.name, identity.ability, level.toFixed(1), modifier?.level.toFixed(1), portrait);
+  drawIdentityCard(
+    ctx,
+    identity.name,
+    identity.ability,
+    level.toFixed(1),
+    modifier?.level.toFixed(1),
+    modifier?.kind === 'deamplified' ? DEAMPLIFIED_COLOR : AMPLIFIED_COLOR,
+    portrait
+  );
 
   // Pentagone de référence : toujours régulier, plafonné à 10 (le "gabarit" unOrdinary).
   const basePoints = KEYS.map((_, i) => vertex(BASE_MAX, i));

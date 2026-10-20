@@ -13,7 +13,10 @@ export interface RadarIdentity {
 // pour l'équivalent SVG.
 export interface RadarLayer {
   label: string;
+  // Calque au niveau réel ; modifiedStats = même calque au niveau amplifié /
+  // déamplifié (cf. RadarModifier), absent sans modificateur.
   stats: Record<string, number>;
+  modifiedStats?: Record<string, number> | null;
 }
 
 // Graphique noir à l'export (le radar du site reste jaune).
@@ -297,19 +300,20 @@ export async function exportRadarPng(
   // normale — même remplissage, même contour — pour rester cohérent ; c'est la
   // superposition de plusieurs formes identiques qui les distingue (recouvrement
   // plus dense), pas une couleur ou une opacité différente (cf. john_unordinary).
-  layers.forEach((layer) => {
-    const layerPoints = KEYS.map((k, i) =>
-      vertex(capAt10 ? Math.min(layer.stats[k] || 1, BASE_MAX) : layer.stats[k] || 1, i)
+  // Amplificateur / Déamplificateur appliqué INDIVIDUELLEMENT à chaque calque, avec le
+  // même rendu que la forme principale ci-dessus. Tous les fonds (aperçus amplifiés /
+  // fantômes déamplifiés) d'abord, puis les formes avec contour par-dessus.
+  if (modifier?.kind === 'deamplified') {
+    layers.forEach((layer) => drawStatsPolygon(ctx, layer.stats, capAt10, 'rgba(0, 0, 0, 0.2)', null));
+    layers.forEach((layer) =>
+      drawStatsPolygon(ctx, layer.modifiedStats || layer.stats, capAt10, LAYER_FILL, LAYER_STROKE)
     );
-    ctx.beginPath();
-    layerPoints.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
-    ctx.closePath();
-    ctx.fillStyle = LAYER_FILL;
-    ctx.lineWidth = 2 * SCALE;
-    ctx.strokeStyle = LAYER_STROKE;
-    ctx.fill();
-    ctx.stroke();
-  });
+  } else {
+    if (modifier?.kind === 'amplified') {
+      layers.forEach((layer) => layer.modifiedStats && drawStatsPolygon(ctx, layer.modifiedStats, capAt10, LAYER_FILL, null));
+    }
+    layers.forEach((layer) => drawStatsPolygon(ctx, layer.stats, capAt10, LAYER_FILL, LAYER_STROKE));
+  }
 
   // Ajustements fins par label : recovery/trick un peu plus loin du bord du pentagone,
   // defense remontée pour ne pas déborder sur le graphique.

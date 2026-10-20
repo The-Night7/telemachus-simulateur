@@ -248,7 +248,7 @@ const RadarChart = ({
   stats: Record<StatKey, number>;
   boosts: Record<string, number>;
   baseStatsInfo: Record<StatKey, StatInfo>;
-  layers?: { id: string; stats: Record<StatKey, number> }[];
+  layers?: { id: string; stats: Record<StatKey, number>; modifiedStats?: Record<StatKey, number> | null }[];
   capAt10?: boolean;
   // Amplificateur / Déamplificateur : build modifié superposé à la forme normale
   // (stats = build au niveau réel), comme dans le simulateur de John.
@@ -273,9 +273,9 @@ const RadarChart = ({
   };
 
   const levels = [2, 4, 6, 8, 10];
-  // Comme dans graph-unordinary / john_unordinary, le déamplificateur prend le dessus sur
-  // les calques : la forme normale devient un fantôme et la version déamplifiée reprend son style.
-  const hasLayers = layers.length > 0 && !deamplifiedStats;
+  // Avec des calques, l'amplificateur / déamplificateur s'applique individuellement à
+  // chaque calque (cf. plus bas) et jamais à la forme fusionnée, masquée.
+  const hasLayers = layers.length > 0;
   const mainStats = deamplifiedStats || stats;
 
   return (
@@ -296,12 +296,12 @@ const RadarChart = ({
             modeLayers dans App), donc on ne veut pas une forme fusionnée en plus qui
             ferait doublon — exactement comme john_unordinary. */}
         {/* Amplificateur : aperçu translucide sans contour, SOUS la forme normale. */}
-        {amplifiedStats && (
+        {!hasLayers && amplifiedStats && (
           <polygon points={getPoints(amplifiedStats, capAt10)} fill="rgba(255, 215, 0, 0.25)" stroke="none" className="transition-all duration-500 ease-in-out" />
         )}
 
         {/* Déamplificateur : la forme d'origine s'efface en fantôme. */}
-        {deamplifiedStats && (
+        {!hasLayers && deamplifiedStats && (
           <polygon points={getPoints(stats, capAt10)} fill="rgba(255, 255, 255, 0.12)" stroke="none" className="transition-all duration-500 ease-in-out" />
         )}
 
@@ -313,11 +313,19 @@ const RadarChart = ({
             variantes de mode est tracée avec EXACTEMENT le même style que l'Aura Shape
             normale — même remplissage, même contour — pour rester cohérent ; c'est la
             superposition de plusieurs formes identiques qui les distingue (recouvrement
-            plus dense), pas une couleur ou une opacité différente (cf. john_unordinary). */}
+            plus dense), pas une couleur ou une opacité différente (cf. john_unordinary).
+            Amplificateur / Déamplificateur appliqué individuellement à chaque calque, avec
+            le même rendu que la forme principale : tous les fonds d'abord, puis les formes. */}
+        {amplifiedStats && layers.map(layer => layer.modifiedStats && (
+          <polygon key={`layer-amp-${layer.id}`} points={getPoints(layer.modifiedStats, capAt10)} fill="rgba(255, 215, 0, 0.25)" stroke="none" className="transition-all duration-500 ease-in-out" />
+        ))}
+        {deamplifiedStats && layers.map(layer => (
+          <polygon key={`layer-ghost-${layer.id}`} points={getPoints(layer.stats, capAt10)} fill="rgba(255, 255, 255, 0.12)" stroke="none" className="transition-all duration-500 ease-in-out" />
+        ))}
         {layers.map(layer => (
           <polygon
             key={`layer-${layer.id}`}
-            points={getPoints(layer.stats, capAt10)}
+            points={getPoints((deamplifiedStats && layer.modifiedStats) || layer.stats, capAt10)}
             fill="rgba(255, 215, 0, 0.3)"
             stroke="#ffd700"
             strokeWidth="3"
@@ -469,8 +477,32 @@ export default function App() {
   // Shape fusionnée normale dès qu'au moins un calque existe (cf. RadarChart >
   // hasLayers). N'affecte jamais baseStatsInfo/statsFinales eux-mêmes, qui restent la
   // fusion de TOUS les modes actifs de TOUS les emplacements (le "vrai" build).
+  // Avec amplificateur / déamplificateur, chaque calque est calculé deux fois : au
+  // niveau réel (stats, forme normale) et au niveau de copie (modifiedStats), pour lui
+  // appliquer individuellement le même rendu amp/désamp que la forme principale.
+  const realTelemachusBonus = useMemo(
+    () =>
+      activeTab === 'classic'
+        ? bonusStatsAtLevel(capacitesData.filter(c => c.nom_personnage === 'Telemachus'), level)
+        : { power: 0, speed: 0, trick: 0, recovery: 0, defense: 0 },
+    [capacitesData, level, activeTab]
+  );
+
   const modeLayers = useMemo(() => {
-    const layers: { id: string; label: string; nomCapacite: string; stats: Record<StatKey, number> }[] = [];
+    const layers: {
+      id: string;
+      label: string;
+      nomCapacite: string;
+      stats: Record<StatKey, number>;
+      modifiedStats: Record<StatKey, number> | null;
+    }[] = [];
+    const toStats = (info: Record<StatKey, StatInfo>): Record<StatKey, number> => ({
+      power: info.power.val,
+      speed: info.speed.val,
+      trick: info.trick.val,
+      recovery: info.recovery.val,
+      defense: info.defense.val,
+    });
 
     slots.forEach((slotId, index) => {
       if (index >= tierInfo.slots || !slotId) return;
@@ -499,24 +531,21 @@ export default function App() {
           });
         });
 
-        const isolated = computeMergedStatsInfo(overrideCaps, copyLevel, activeTab, telemachusBonus);
         layers.push({
           id: `${index}-${cap.id}`,
           label: cap.mode_label || cap.nom_capacite,
           nomCapacite: cap.nom_capacite_base,
-          stats: {
-            power: isolated.power.val,
-            speed: isolated.speed.val,
-            trick: isolated.trick.val,
-            recovery: isolated.recovery.val,
-            defense: isolated.defense.val,
-          },
+          stats: toStats(computeMergedStatsInfo(overrideCaps, level, activeTab, realTelemachusBonus)),
+          modifiedStats:
+            copyLevel === level
+              ? null
+              : toStats(computeMergedStatsInfo(overrideCaps, copyLevel, activeTab, telemachusBonus)),
         });
       });
     });
 
     return layers;
-  }, [slots, slotExtraModes, tierInfo, capacitesData, copyLevel, activeTab, telemachusBonus]);
+  }, [slots, slotExtraModes, tierInfo, capacitesData, level, copyLevel, activeTab, telemachusBonus, realTelemachusBonus]);
 
   // --- LOGIQUE DES OPTIONS D'AMPLIFICATION ---
   const getBoostOptions = useCallback((statKey: StatKey): BoostOption[] => {
@@ -588,17 +617,13 @@ export default function App() {
   // multiplicateur que sur le build modifié.
   const unmodifiedStats = useMemo(() => {
     if (copyLevel === level) return statsFinales;
-    const bonus =
-      activeTab === 'classic'
-        ? bonusStatsAtLevel(capacitesData.filter(c => c.nom_personnage === 'Telemachus'), level)
-        : { power: 0, speed: 0, trick: 0, recovery: 0, defense: 0 };
-    const info = computeMergedStatsInfo(equippedCaps, level, activeTab, bonus);
+    const info = computeMergedStatsInfo(equippedCaps, level, activeTab, realTelemachusBonus);
     const result = {} as Record<StatKey, number>;
     (Object.keys(info) as StatKey[]).forEach(key => {
       result[key] = info[key].val * (statsFinales[key] / baseStatsInfo[key].val);
     });
     return result;
-  }, [copyLevel, level, statsFinales, baseStatsInfo, activeTab, capacitesData, equippedCaps]);
+  }, [copyLevel, level, statsFinales, baseStatsInfo, activeTab, realTelemachusBonus, equippedCaps]);
 
   // --- ALGORITHME DU NIVEAU EFFECTIF ESTIMÉ (Moyenne Extra + Bridage par Tiers) ---
   const estimatedEffectiveLevel = useMemo(() => {
@@ -1158,7 +1183,7 @@ export default function App() {
                 level,
                 radarIdentities[radarIdentityIndex],
                 capStatsAt10,
-                modeLayers.map(l => ({ label: `${l.nomCapacite} · ${l.label}`, stats: l.stats })),
+                modeLayers.map(l => ({ label: `${l.nomCapacite} · ${l.label}`, stats: l.stats, modifiedStats: l.modifiedStats })),
                 activeTab === 'alternative',
                 amplified || deamplified
                   ? { kind: amplified ? 'amplified' : 'deamplified', stats: statsFinales, level: copyLevel }

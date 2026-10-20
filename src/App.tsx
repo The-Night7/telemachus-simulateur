@@ -67,6 +67,22 @@ const statConfig: { key: StatKey, label: string, Icon: React.ElementType, color:
 const AMPLIFIER_FACTOR = 1.5;
 const DEAMPLIFIER_FACTOR = 0.5;
 
+// Cible copiée amplifiée / déamplifiée, à choisir avant la copie. Amp ne change rien : la
+// copie se fait depuis le niveau d'origine. Déamp : on copie les stats déamp, soit le
+// niveau ET les stats de base de la capacité ÷2 (les ratios stat/niveau restent
+// identiques). Tout ce qui dépend du niveau de la capacité suit donc (règle de copie,
+// autoboost, coût d'aura, écart de niveau).
+type TargetModifier = 'amp' | 'deamp';
+
+const applyTargetModifier = (cap: Capacite, modifier: TargetModifier | undefined): Capacite => {
+  if (modifier !== 'deamp') return cap;
+  const stats_de_base = {} as Record<StatKey, number>;
+  (Object.keys(cap.stats_de_base) as StatKey[]).forEach(key => {
+    stats_de_base[key] = cap.stats_de_base[key] * DEAMPLIFIER_FACTOR;
+  });
+  return { ...cap, niveau: cap.niveau * DEAMPLIFIER_FACTOR, stats_de_base };
+};
+
 const getTierInfo = (level: number) => {
   if (level < 2.0) return { name: "Low-Tier", slots: 1, color: "text-neutral-400", badge: "text-neutral-400 bg-neutral-400/10 border-neutral-400/30" };
   if (level < 4.0) return { name: "Mid-Tier", slots: 2, color: "text-green-400", badge: "text-green-400 bg-green-400/10 border-green-400/30" };
@@ -409,6 +425,13 @@ export default function App() {
   // groupe qui restent actifs EN MÊME TEMPS (fusionnés dans le build + calques sur le
   // radar), exactement comme john_unordinary.
   const [slotExtraModes, setSlotExtraModes] = useState<Record<number, string[]>>({});
+  // Amplificateur / déamplificateur de la personne copiée, par emplacement (s'applique
+  // au pick principal et à ses modes additionnels).
+  const [slotTargetModifiers, setSlotTargetModifiers] = useState<Record<number, TargetModifier>>({});
+  const findSlotCap = (index: number, id: string): Capacite | undefined => {
+    const cap = capacitesData.find(c => c.id === parseInt(id));
+    return cap && applyTargetModifier(cap, slotTargetModifiers[index]);
+  };
 
   const level = useMemo(() => parseFloat(((potential * mastery) / 10).toFixed(1)), [potential, mastery]);
   // Exclusifs l'un de l'autre : cocher l'un décoche l'autre.
@@ -435,16 +458,16 @@ export default function App() {
     const list: Capacite[] = [];
     slots.forEach((id, index) => {
       if (index >= tierInfo.slots || !id) return;
-      const principal = capacitesData.find(c => c.id === parseInt(id));
+      const principal = findSlotCap(index, id);
       if (!principal) return;
       list.push(principal);
       (slotExtraModes[index] || []).forEach(extraId => {
-        const extra = capacitesData.find(c => c.id === parseInt(extraId));
+        const extra = findSlotCap(index, extraId);
         if (extra) list.push(extra);
       });
     });
     return list;
-  }, [slots, slotExtraModes, tierInfo, capacitesData]);
+  }, [slots, slotExtraModes, slotTargetModifiers, tierInfo, capacitesData]);
 
   // --- MOTEUR DE FUSION ET IDENTIFICATION DES STATS FORTES/FAIBLES (AVEC POOL DE REPARTITION) ---
   // Bonus en vigueur au niveau actuel, d'après les lignes "Telemachus" du gsheet.
@@ -513,7 +536,7 @@ export default function App() {
       if (activeIds.length <= 1) return;
 
       activeIds.forEach(id => {
-        const cap = capacitesData.find(c => c.id === parseInt(id));
+        const cap = findSlotCap(index, id);
         if (!cap) return;
 
         const overrideCaps: Capacite[] = [];
@@ -523,10 +546,10 @@ export default function App() {
             overrideCaps.push(cap);
             return;
           }
-          const p = capacitesData.find(c => c.id === parseInt(sid));
+          const p = findSlotCap(i, sid);
           if (p) overrideCaps.push(p);
           (slotExtraModes[i] || []).forEach(extraId => {
-            const extra = capacitesData.find(c => c.id === parseInt(extraId));
+            const extra = findSlotCap(i, extraId);
             if (extra) overrideCaps.push(extra);
           });
         });
@@ -545,7 +568,7 @@ export default function App() {
     });
 
     return layers;
-  }, [slots, slotExtraModes, tierInfo, capacitesData, level, copyLevel, activeTab, telemachusBonus, realTelemachusBonus]);
+  }, [slots, slotExtraModes, slotTargetModifiers, tierInfo, capacitesData, level, copyLevel, activeTab, telemachusBonus, realTelemachusBonus]);
 
   // --- LOGIQUE DES OPTIONS D'AMPLIFICATION ---
   const getBoostOptions = useCallback((statKey: StatKey): BoostOption[] => {
@@ -574,9 +597,9 @@ export default function App() {
   }, [copyLevel]);
   
   const currentAuraDrain = useMemo(() => {
-    let drain = slots.reduce((total, slotId) => {
+    let drain = slots.reduce((total, slotId, index) => {
       if (!slotId) return total;
-      const cap = capacitesData.find(c => c.id === parseInt(slotId));
+      const cap = findSlotCap(index, slotId);
       return total + (cap ? getAuraCost(cap.niveau) : 0);
     }, 0);
     
@@ -589,7 +612,7 @@ export default function App() {
     });
 
     return parseFloat(drain.toFixed(1));
-  }, [slots, boostState, getBoostOptions]);
+  }, [slots, slotTargetModifiers, boostState, getBoostOptions]);
 
   const auraRemaining = parseFloat((maxAura - currentAuraDrain).toFixed(1));
   const auraPercentage = Math.min(100, (currentAuraDrain / maxAura) * 100);
@@ -697,21 +720,45 @@ export default function App() {
     });
   };
 
+  const setSlotTargetModifier = (index: number, modifier: TargetModifier | undefined) => {
+    setSlotTargetModifiers(prev => {
+      const next = { ...prev };
+      if (modifier) next[index] = modifier;
+      else delete next[index];
+      return next;
+    });
+  };
+
+  // Bascule amp / déamp de la personne copiée (exclusifs), refusée si le coût d'aura
+  // de la capacité modifiée dépasse la réserve.
+  const toggleSlotTargetModifier = (index: number, modifier: TargetModifier) => {
+    const slotId = slots[index];
+    const nextModifier = slotTargetModifiers[index] === modifier ? undefined : modifier;
+    const base = slotId ? capacitesData.find(c => c.id === parseInt(slotId)) : null;
+    if (base && nextModifier) {
+      const currentDrainInThisSlot = getAuraCost(applyTargetModifier(base, slotTargetModifiers[index]).niveau);
+      const newDrain = getAuraCost(applyTargetModifier(base, nextModifier).niveau);
+      if (currentAuraDrain - currentDrainInThisSlot + newDrain > maxAura) return;
+    }
+    setSlotTargetModifier(index, nextModifier);
+  };
+
   const updateSlot = (index: number, value: string) => {
     if (!value) {
       const newSlots = [...slots];
       newSlots[index] = "";
       setSlots(newSlots);
       clearSlotExtraModes(index);
+      setSlotTargetModifier(index, undefined);
       if (activeModeDrawer === index) setActiveModeDrawer(null);
       return;
     }
 
-    const cap = capacitesData.find(c => c.id === parseInt(value));
+    const cap = findSlotCap(index, value);
     if (!cap) return;
 
     const currentSlotVal = slots[index];
-    const currentCap = currentSlotVal ? capacitesData.find(c => c.id === parseInt(currentSlotVal)) : null;
+    const currentCap = currentSlotVal ? findSlotCap(index, currentSlotVal) : null;
 
     const currentDrainInThisSlot = currentCap ? getAuraCost(currentCap.niveau) : 0;
     const newDrain = getAuraCost(cap.niveau);
@@ -791,6 +838,14 @@ export default function App() {
       setSlots(newSlots);
       setSlotExtraModes(prev => {
         const next: Record<number, string[]> = {};
+        Object.keys(prev).forEach(k => {
+          const idx = Number(k);
+          if (idx < currentTier.slots) next[idx] = prev[idx];
+        });
+        return next;
+      });
+      setSlotTargetModifiers(prev => {
+        const next: Record<number, TargetModifier> = {};
         Object.keys(prev).forEach(k => {
           const idx = Number(k);
           if (idx < currentTier.slots) next[idx] = prev[idx];
@@ -1040,7 +1095,8 @@ export default function App() {
             {[0, 1, 2, 3].map((index) => {
               const isLocked = index >= tierInfo.slots;
               const slotValue = slots[index];
-              const currentCap = slotValue ? capacitesData.find(c => c.id === parseInt(slotValue)) : null;
+              const targetModifier = slotTargetModifiers[index];
+              const currentCap = slotValue ? findSlotCap(index, slotValue) : null;
               const currentSlotDrain = currentCap ? getAuraCost(currentCap.niveau) : 0;
               const levelDiff = currentCap ? (copyLevel - currentCap.niveau) : 0;
               const siblingModes = currentCap
@@ -1058,7 +1114,8 @@ export default function App() {
 
               return (
                 <div key={index} className="group">
-                  <div className="relative">
+                  <div className="flex items-center gap-2">
+                  <div className="relative flex-1 min-w-0">
                   <select
                     value={slotValue}
                     onChange={(e) => updateSlot(index, e.target.value)}
@@ -1070,7 +1127,7 @@ export default function App() {
                   >
                     <option value="">-- Emplacement Vide --</option>
                     {!isLocked && capacitesData.filter(cap => cap.copiable).map(cap => {
-                      const cost = getAuraCost(cap.niveau);
+                      const cost = getAuraCost(applyTargetModifier(cap, targetModifier).niveau);
                       const isSelf = slotValue === cap.id.toString();
                       const alreadyEquipped = usedElsewhereIds.has(cap.id.toString()) && !isSelf;
                       const isTooExpensive = (currentAuraDrain - currentSlotDrain + cost) > maxAura && !isSelf;
@@ -1108,6 +1165,37 @@ export default function App() {
                     <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-500 pointer-events-none" size={20} />
                   )}
                   </div>
+
+                  {!isLocked && (
+                    <div className="flex shrink-0 gap-1">
+                      <button
+                        type="button"
+                        onClick={() => toggleSlotTargetModifier(index, 'amp')}
+                        className={`w-9 h-9 text-xs font-bold rounded-lg border transition-colors ${
+                          targetModifier === 'amp'
+                            ? 'bg-red-500 text-neutral-950 border-red-500'
+                            : 'bg-neutral-950 text-red-400 border-neutral-800 hover:border-red-500/50'
+                        }`}
+                        title="La personne copiée est amplifiée : copie depuis le niveau d'origine"
+                      >
+                        A
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleSlotTargetModifier(index, 'deamp')}
+                        className={`w-9 h-9 text-xs font-bold rounded-lg border transition-colors ${
+                          targetModifier === 'deamp'
+                            ? 'bg-blue-500 text-neutral-950 border-blue-500'
+                            : 'bg-neutral-950 text-blue-400 border-neutral-800 hover:border-blue-500/50'
+                        }`}
+                        title="La personne copiée est déamplifiée : copie de ses stats déamp (niveau et stats ÷2)"
+                      >
+                        D
+                      </button>
+                    </div>
+                  )}
+                  </div>
+
 
                   {!isLocked && siblingModes.length > 1 && (
                     <button

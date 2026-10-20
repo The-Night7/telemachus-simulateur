@@ -1167,14 +1167,12 @@ export default function App() {
                   </div>
 
                   {!isLocked && (
-                    <div className="flex shrink-0 self-center gap-0.5">
+                    <div className="flex flex-col shrink-0 self-center -ml-1">
                       <button
                         type="button"
                         onClick={() => toggleSlotTargetModifier(index, 'amp')}
-                        className={`w-6 h-6 text-[10px] font-bold rounded-md border transition-colors ${
-                          targetModifier === 'amp'
-                            ? 'bg-red-500/15 text-red-400 border-red-500/40'
-                            : 'bg-transparent text-neutral-600 border-transparent hover:text-red-400'
+                        className={`px-0.5 text-[9px] font-bold leading-none transition-colors ${
+                          targetModifier === 'amp' ? 'text-red-500' : 'text-neutral-700 hover:text-red-400'
                         }`}
                         title="La personne copiée est amplifiée : copie depuis le niveau d'origine"
                       >
@@ -1183,10 +1181,8 @@ export default function App() {
                       <button
                         type="button"
                         onClick={() => toggleSlotTargetModifier(index, 'deamp')}
-                        className={`w-6 h-6 text-[10px] font-bold rounded-md border transition-colors ${
-                          targetModifier === 'deamp'
-                            ? 'bg-blue-500/15 text-blue-400 border-blue-500/40'
-                            : 'bg-transparent text-neutral-600 border-transparent hover:text-blue-400'
+                        className={`px-0.5 text-[9px] font-bold leading-none transition-colors ${
+                          targetModifier === 'deamp' ? 'text-blue-500' : 'text-neutral-700 hover:text-blue-400'
                         }`}
                         title="La personne copiée est déamplifiée : copie de ses stats déamp (niveau et stats ÷2)"
                       >

@@ -437,9 +437,18 @@ export default function App() {
   // Exclusifs l'un de l'autre : cocher l'un décoche l'autre.
   const [amplified, setAmplified] = useState(false);
   const [deamplified, setDeamplified] = useState(false);
+  // Taux personnalisé (cf. graph-unordinary) : remplace les facteurs fixes tant qu'il est
+  // actif — amp ×(1 + taux), désamp ×(1 − taux).
+  const [customRateOn, setCustomRateOn] = useState(false);
+  const [customRateMode, setCustomRateMode] = useState<'amp' | 'deamp'>('amp');
+  const [customRate, setCustomRate] = useState(0.5);
+  const ampOn = customRateOn ? customRateMode === 'amp' : amplified;
+  const deampOn = customRateOn ? customRateMode === 'deamp' : deamplified;
+  const ampFactor = customRateOn ? 1 + customRate : AMPLIFIER_FACTOR;
+  const deampFactor = customRateOn ? 1 - customRate : DEAMPLIFIER_FACTOR;
   const copyLevel = useMemo(
-    () => level * (amplified ? AMPLIFIER_FACTOR : deamplified ? DEAMPLIFIER_FACTOR : 1),
-    [level, amplified, deamplified]
+    () => level * (ampOn ? ampFactor : deampOn ? deampFactor : 1),
+    [level, ampOn, deampOn, ampFactor, deampFactor]
   );
   const radarIdentities = useMemo(
     () => buildRadarIdentities(level, activeTab === 'alternative'),
@@ -993,8 +1002,8 @@ export default function App() {
                 </label>
                 <div className="text-3xl font-black text-yellow-500 leading-none">
                   {level.toFixed(1)}
-                  {(amplified || deamplified) && (
-                    <span className={`ml-1.5 text-lg ${deamplified ? 'text-blue-500' : 'text-red-500'}`}>({copyLevel.toFixed(1)})</span>
+                  {(ampOn || deampOn) && (
+                    <span className={`ml-1.5 text-lg ${deampOn ? 'text-blue-500' : 'text-red-500'}`}>({copyLevel.toFixed(1)})</span>
                   )}
                 </div>
                 <span className={`mt-2 w-fit text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${tierInfo.badge}`}>
@@ -1030,26 +1039,65 @@ export default function App() {
             <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-neutral-800">
               <button
                 onClick={() => { setAmplified(!amplified); setDeamplified(false); }}
+                disabled={customRateOn}
                 className={`w-fit px-2 py-0.5 text-xs font-bold rounded-full border transition-colors ${
                   amplified
                     ? 'bg-red-500 text-neutral-950 border-red-500'
                     : 'bg-neutral-950 text-red-400 border-neutral-800 hover:border-red-500/50'
-                }`}
+                } ${customRateOn ? 'opacity-40 pointer-events-none' : ''}`}
                 title="Niveau de Telemachus x1.5 avant la copie"
               >
                 Amplificateur ×1.5
               </button>
               <button
                 onClick={() => { setDeamplified(!deamplified); setAmplified(false); }}
+                disabled={customRateOn}
                 className={`w-fit px-2 py-0.5 text-xs font-bold rounded-full border transition-colors ${
                   deamplified
                     ? 'bg-blue-500 text-neutral-950 border-blue-500'
                     : 'bg-neutral-950 text-blue-400 border-neutral-800 hover:border-blue-500/50'
-                }`}
+                } ${customRateOn ? 'opacity-40 pointer-events-none' : ''}`}
                 title="Niveau de Telemachus ÷2 avant la copie"
               >
                 Déamplificateur ÷2
               </button>
+              <button
+                onClick={() => setCustomRateOn(!customRateOn)}
+                className={`w-fit px-2 py-0.5 text-xs font-bold rounded-full border transition-colors ${
+                  customRateOn
+                    ? 'bg-violet-500 text-neutral-950 border-violet-500'
+                    : 'bg-neutral-950 text-violet-400 border-neutral-800 hover:border-violet-500/50'
+                }`}
+                title="Amplifie (×(1 + taux)) ou déamplifie (×(1 − taux)) le niveau de Telemachus d'un taux choisi au curseur — remplace l'amplificateur et le déamplificateur fixes tant qu'il est actif."
+              >
+                Taux personnalisé
+              </button>
+              {customRateOn && (
+                <div className="flex items-center gap-2 rounded-full border border-violet-500/40 bg-neutral-950 pl-1 pr-3 py-0.5">
+                  <select
+                    value={customRateMode}
+                    onChange={(e) => setCustomRateMode(e.target.value as 'amp' | 'deamp')}
+                    className={`rounded-full bg-neutral-900 px-2 py-0.5 text-xs font-bold focus:outline-none ${
+                      customRateMode === 'amp' ? 'text-red-400' : 'text-blue-400'
+                    }`}
+                  >
+                    <option value="amp">Amp</option>
+                    <option value="deamp">Déamp</option>
+                  </select>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={customRate}
+                    onChange={(e) => setCustomRate(Number(e.target.value))}
+                    className="w-24 accent-violet-500"
+                  />
+                  <span className="text-xs font-bold text-violet-400 tabular-nums whitespace-nowrap">
+                    {Math.round(customRate * 100)} % · ×{(customRateMode === 'amp' ? 1 + customRate : 1 - customRate).toFixed(2)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1269,8 +1317,8 @@ export default function App() {
                 capStatsAt10,
                 modeLayers.map(l => ({ label: `${l.nomCapacite} · ${l.label}`, stats: l.stats, modifiedStats: l.modifiedStats })),
                 activeTab === 'alternative',
-                amplified || deamplified
-                  ? { kind: amplified ? 'amplified' : 'deamplified', stats: statsFinales, level: copyLevel }
+                ampOn || deampOn
+                  ? { kind: ampOn ? 'amplified' : 'deamplified', stats: statsFinales, level: copyLevel }
                   : null
               )}
               className="flex items-center gap-2 px-3 py-1 bg-neutral-950 border border-neutral-800 rounded-lg shadow-sm hover:border-yellow-500/50 hover:text-yellow-500 text-neutral-400 transition-colors"
@@ -1288,8 +1336,8 @@ export default function App() {
               baseStatsInfo={baseStatsInfo}
               layers={modeLayers}
               capAt10={capStatsAt10}
-              amplifiedStats={amplified ? statsFinales : null}
-              deamplifiedStats={deamplified ? statsFinales : null}
+              amplifiedStats={ampOn ? statsFinales : null}
+              deamplifiedStats={deampOn ? statsFinales : null}
             />
           </div>
 

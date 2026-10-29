@@ -217,6 +217,8 @@ export async function exportRadarPng(
   // noms de stats anglais d'origine unOrdinary utilisés partout ailleurs dans l'app.
   frenchLabels = false,
   modifier: RadarModifier | null = null,
+  // Masque le niveau sur la fiche exportée (affiché "?.?", y compris le niveau modifié).
+  hideLevel = false,
   filename = `${identity.name.toLowerCase()}-radar.png`
 ) {
   const LABELS = frenchLabels ? LABELS_FR : LABELS_EN;
@@ -244,8 +246,8 @@ export async function exportRadarPng(
     ctx,
     identity.name,
     identity.ability,
-    level.toFixed(1),
-    modifier?.level.toFixed(1),
+    hideLevel ? '?.?' : level.toFixed(1),
+    modifier ? (hideLevel ? '?.?' : modifier.level.toFixed(1)) : undefined,
     modifier?.kind === 'deamplified' ? DEAMPLIFIED_COLOR : AMPLIFIED_COLOR,
     portrait
   );

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Shield, Zap, Swords, Brain, Heart, ChevronDown, Layers, Lock, Battery, ChevronsUp, Sparkles, Target, Download, RefreshCw, X, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Shield, Zap, Swords, Brain, Heart, ChevronDown, Layers, Lock, Battery, ChevronsUp, Sparkles, Target, Download, RefreshCw, Eye, EyeOff, X, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useCapacites } from './lib/useCapacites';
 import { bonusStatsAtLevel, type Capacite } from './lib/capacitesSource';
 import { exportRadarPng, type RadarIdentity } from './lib/exportRadarPng';
@@ -415,6 +415,7 @@ export default function App() {
   // Plafonne la FORME du graphique radar à 10 (les valeurs réelles restent affichées
   // normalement dans la grille de stats en dessous et dans les labels du radar).
   const [capStatsAt10, setCapStatsAt10] = useState(false);
+  const [hideExportLevel, setHideExportLevel] = useState(false);
   // Emplacement dont le panneau "Modes" (variantes style Phase Shift) est ouvert.
   const [activeModeDrawer, setActiveModeDrawer] = useState<number | null>(null);
   // Volet gauche des descriptions : replié par défaut.
@@ -1309,6 +1310,7 @@ export default function App() {
                 </button>
               ))}
             </div>
+            <div className="flex bg-neutral-950 border border-neutral-800 rounded-lg shadow-sm">
             <button
               onClick={() => exportRadarPng(
                 unmodifiedStats,
@@ -1319,14 +1321,25 @@ export default function App() {
                 activeTab === 'alternative',
                 ampOn || deampOn
                   ? { kind: ampOn ? 'amplified' : 'deamplified', stats: statsFinales, level: copyLevel }
-                  : null
+                  : null,
+                hideExportLevel
               )}
-              className="flex items-center gap-2 px-3 py-1 bg-neutral-950 border border-neutral-800 rounded-lg shadow-sm hover:border-yellow-500/50 hover:text-yellow-500 text-neutral-400 transition-colors"
+              className="flex items-center gap-2 px-3 py-1 rounded-l-lg hover:text-yellow-500 text-neutral-400 transition-colors"
               title="Exporter le graphique en PNG"
             >
               <Download size={14} />
               <span className="text-xs font-bold uppercase tracking-wide">Exporter PNG</span>
             </button>
+            <button
+              onClick={() => setHideExportLevel(!hideExportLevel)}
+              className={`px-2 border-l border-neutral-800 rounded-r-lg transition-colors ${
+                hideExportLevel ? 'text-yellow-400' : 'text-neutral-500 hover:text-neutral-200'
+              }`}
+              title={hideExportLevel ? 'Niveau masqué sur le PNG (?.?)' : 'Niveau visible sur le PNG'}
+            >
+              {hideExportLevel ? <EyeOff size={14} /> : <Eye size={14} />}
+            </button>
+            </div>
           </div>
 
           <div className="w-full mb-2 mt-2 md:mt-6">

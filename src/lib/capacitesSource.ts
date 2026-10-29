@@ -7,8 +7,8 @@ const SHEET_ID = '1APDJ55nkI1Be6pC_bazGjsDRYzLF67AzHOL6M302GNs';
 const SHEET_GID = '38554490';
 export const CAPACITES_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
 
-const STAT_KEYS = ['power', 'speed', 'trick', 'recovery', 'defense'] as const;
-type StatKey = (typeof STAT_KEYS)[number];
+export const STAT_KEYS = ['power', 'speed', 'trick', 'recovery', 'defense'] as const;
+export type StatKey = (typeof STAT_KEYS)[number];
 
 // Cf. scripts/generate_capacites.py: stat auto-boostée par défaut à partir de
 // la colonne "Nature" quand aucun override n'est renseigné.

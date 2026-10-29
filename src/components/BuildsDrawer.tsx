@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Check, Download, FolderOpen, GitCompare, Link2, Pencil, Save, Trash2, Upload, X } from 'lucide-react';
+import { Check, Download, FolderOpen, GitCompare, Image, Images, Link2, Pencil, Save, Trash2, Upload, X } from 'lucide-react';
 import { compareColor } from '../lib/compareColors';
 import type { SavedBuild } from '../lib/buildStorage';
 import { computeLevel } from '../lib/simulation';
@@ -49,6 +49,9 @@ export function BuildsDrawer({
   onRename,
   onDelete,
   onExport,
+  onExportAllPng,
+  onExportComparePng,
+  pngBusy,
   onImport,
   onClose,
 }: {
@@ -64,6 +67,9 @@ export function BuildsDrawer({
   onRename: (id: string, name: string) => void;
   onDelete: (id: string) => void;
   onExport: () => void;
+  onExportAllPng: () => void;
+  onExportComparePng: () => void;
+  pngBusy: boolean;
   onImport: (file: File) => void;
   onClose: () => void;
 }) {
@@ -129,7 +135,7 @@ export function BuildsDrawer({
           title="Télécharger tous les builds enregistrés dans un fichier JSON"
         >
           <Download size={12} />
-          Exporter tout
+          Exporter (.json)
         </button>
         <button
           type="button"
@@ -138,7 +144,7 @@ export function BuildsDrawer({
           title="Ajouter les builds d'un fichier JSON exporté (les builds existants sont conservés)"
         >
           <Upload size={12} />
-          Importer
+          Importer (.json)
         </button>
         <input
           ref={fileInputRef}
@@ -151,6 +157,34 @@ export function BuildsDrawer({
             e.target.value = '';
           }}
         />
+      </div>
+
+      <p className="mt-4 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-500">Graphiques PNG</p>
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={onExportAllPng}
+          disabled={builds.length === 0 || pngBusy}
+          className={`${actionClass} justify-center whitespace-nowrap py-1.5 border-neutral-700 text-neutral-300 hover:border-yellow-500/60 hover:text-yellow-400 disabled:opacity-30 disabled:pointer-events-none`}
+          title="Un zip avec la fiche radar de chaque build enregistré, au niveau affiché"
+        >
+          <Images size={12} />
+          {pngBusy ? 'Génération…' : 'Tout (.zip)'}
+        </button>
+        <button
+          type="button"
+          onClick={onExportComparePng}
+          disabled={compareIds.length === 0}
+          className={`${actionClass} justify-center whitespace-nowrap py-1.5 border-neutral-700 text-neutral-300 hover:border-yellow-500/60 hover:text-yellow-400 disabled:opacity-30 disabled:pointer-events-none`}
+          title={
+            compareIds.length === 0
+              ? 'Cochez « Comparer » sur des builds pour exporter leur superposition'
+              : 'Une fiche radar : le build actuel et les builds comparés superposés'
+          }
+        >
+          <Image size={12} />
+          Comparaison{compareIds.length > 0 ? ` (${compareIds.length})` : ''}
+        </button>
       </div>
 
       {builds.length > 1 && (

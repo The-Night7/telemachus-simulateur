@@ -2,8 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Download, Eye, EyeOff, FolderOpen, Redo2, RefreshCw, RotateCcw, Share2, Sparkles, Target, Undo2, X } from 'lucide-react';
 import { useCapacites } from './lib/useCapacites';
 import { useBuild } from './lib/useBuild';
-import { exportRadarPng, type RadarIdentity } from './lib/exportRadarPng';
-import { simulateBuild, STAT_KEYS, type BuildState, type StatKey, type SystemTab, type TargetModifier } from './lib/simulation';
+import { downloadBlob, exportRadarPng, renderRadarPng, type RadarIdentity, type RadarSheet } from './lib/exportRadarPng';
+import { createZip, uniqueFileNames, type ZipEntry } from './lib/zip';
+import { simulateBuild, STAT_KEYS, type BuildState, type Simulation, type StatKey, type SystemTab, type TargetModifier } from './lib/simulation';
 import { cycleBoost, normalizeBuild, resetBuild, switchTab, toggleExtraMode, toggleTargetModifier, updateSlot } from './lib/buildActions';
 import {
   buildShareUrl,
@@ -29,7 +30,7 @@ import { ModesDrawer } from './components/ModesDrawer';
 import { BuildsDrawer } from './components/BuildsDrawer';
 import { DescriptionsPanel } from './components/DescriptionsPanel';
 import { CompareTable, type CompareRow } from './components/CompareTable';
-import { compareColor } from './lib/compareColors';
+import { COMPARE_COLORS, compareColor, exportCompareColor } from './lib/compareColors';
 import tpPortrait from './assets/tp-pp.png';
 import telemachusHighTierPortrait from './assets/telemachus.jpg';
 import arlequinPortrait from './assets/arlequin.webp';
@@ -188,6 +189,66 @@ export default function App() {
     setToast({
       message: `« ${saved.name} » chargé au niveau ${check.level.toFixed(1)}${warnings.length ? ` — ${warnings.join(', ')}` : ''}. Ctrl+Z pour annuler.`,
     });
+  };
+
+  // --- EXPORTS PNG (fiche radar) ---
+  // Fiche d'un build simulé : identité choisie (portrait selon SON niveau, nom de la
+  // capacité selon SON système), calques de modes et amplificateur compris.
+  const sheetFor = (s: Simulation, tab: SystemTab, extra: Partial<RadarSheet> = {}): RadarSheet => ({
+    stats: s.unmodifiedStats,
+    level: s.level,
+    identity: buildRadarIdentities(s.level, tab === 'alternative')[identityIndex],
+    capAt10: prefs.capAt10,
+    layers: s.modeLayers.map(l => ({ label: `${l.nomCapacite} · ${l.label}`, stats: l.stats, modifiedStats: l.modifiedStats })),
+    frenchLabels: tab === 'alternative',
+    modifier: s.ampOn || s.deampOn
+      ? { kind: s.ampOn ? 'amplified' : 'deamplified', stats: s.statsFinales, level: s.copyLevel }
+      : null,
+    hideLevel: prefs.hideExportLevel,
+    ...extra,
+  });
+
+  const today = () => new Date().toISOString().slice(0, 10);
+  const [pngBusy, setPngBusy] = useState(false);
+
+  // Un zip contenant la fiche de chaque build enregistré, au niveau affiché.
+  const handleExportAllPng = async () => {
+    if (pngBusy || savedBuilds.length === 0) return;
+    setPngBusy(true);
+    setToast({ message: `Génération de ${savedBuilds.length} graphique${savedBuilds.length > 1 ? 's' : ''}…` });
+    try {
+      const restored = savedBuilds.flatMap(saved => {
+        const b = restoreAtDisplayedLevel(saved);
+        return b ? [{ saved, build: normalizeBuild(b) }] : [];
+      });
+      const names = uniqueFileNames(restored.map(r => r.saved.name), 'png');
+      const entries: ZipEntry[] = [];
+      for (const [i, { build: b }] of restored.entries()) {
+        const blob = await renderRadarPng(sheetFor(simulateBuild(b, capacites), b.tab));
+        if (blob) entries.push({ name: names[i], data: new Uint8Array(await blob.arrayBuffer()) });
+      }
+      downloadBlob(createZip(entries), `telemachus-graphs-${today()}.zip`);
+      setToast({ message: `${entries.length} graphique${entries.length > 1 ? 's' : ''} exporté${entries.length > 1 ? 's' : ''} dans le zip.` });
+    } finally {
+      setPngBusy(false);
+    }
+  };
+
+  // Une seule fiche : le build actuel avec les builds comparés superposés en pointillés.
+  const handleExportComparePng = () => {
+    if (compared.length === 0) return;
+    const identity = radarIdentities[identityIndex];
+    exportRadarPng(
+      sheetFor(sim, build.tab, {
+        compares: compared.map(c => ({
+          label: c.name,
+          stats: c.sim.statsFinales,
+          color: exportCompareColor(COMPARE_COLORS.indexOf(c.color)),
+        })),
+        currentLabel: 'Build actuel',
+      }),
+      `${identity.name.toLowerCase()}-comparaison-${today()}.png`
+    );
   };
 
   const handleExportBuilds = () => {
@@ -398,18 +459,7 @@ export default function App() {
             </div>
             <div className="flex bg-neutral-950 border border-neutral-800 rounded-lg shadow-sm">
               <button
-                onClick={() => exportRadarPng(
-                  sim.unmodifiedStats,
-                  sim.level,
-                  radarIdentities[identityIndex],
-                  prefs.capAt10,
-                  sim.modeLayers.map(l => ({ label: `${l.nomCapacite} · ${l.label}`, stats: l.stats, modifiedStats: l.modifiedStats })),
-                  build.tab === 'alternative',
-                  sim.ampOn || sim.deampOn
-                    ? { kind: sim.ampOn ? 'amplified' : 'deamplified', stats: sim.statsFinales, level: sim.copyLevel }
-                    : null,
-                  prefs.hideExportLevel
-                )}
+                onClick={() => exportRadarPng(sheetFor(sim, build.tab))}
                 className="flex items-center gap-2 px-3 py-1 rounded-l-lg hover:text-yellow-500 text-neutral-400 transition-colors"
                 title="Exporter le graphique en PNG"
               >
@@ -502,6 +552,7 @@ export default function App() {
             rows={compared}
             onRemove={removeCompare}
             onClear={() => setCompareIds([])}
+            onExportPng={handleExportComparePng}
           />
         </div>
       )}
@@ -538,6 +589,9 @@ export default function App() {
             removeCompare(id);
           }}
           onExport={handleExportBuilds}
+          onExportAllPng={handleExportAllPng}
+          onExportComparePng={handleExportComparePng}
+          pngBusy={pngBusy}
           onImport={handleImportBuilds}
           onClose={closeBuilds}
         />

@@ -32,6 +32,14 @@ export interface RadarModifier {
   level: number;
 }
 
+// Build enregistré superposé à la fiche (export "comparaison") : contour pointillé
+// coloré, nommé dans la légende en haut à droite.
+export interface RadarCompare {
+  label: string;
+  stats: Record<StatKey, number>;
+  color: string;
+}
+
 // Réplique la fiche de stats unOrdinary (cf. template_graph.jpg à la racine du repo) :
 // case portrait + bloc Name/Ability/Level à gauche, pentagone de stats à droite.
 const KEYS: StatKey[] = ['power', 'speed', 'trick', 'recovery', 'defense'];
@@ -170,6 +178,52 @@ function drawStatsPolygon(
   ctx.stroke();
 }
 
+function drawComparePolygon(ctx: CanvasRenderingContext2D, stats: Record<string, number>, capAt10: boolean, color: string) {
+  const points = KEYS.map((k, i) => vertex(capAt10 ? Math.min(stats[k] || 1, BASE_MAX) : stats[k] || 1, i));
+  ctx.beginPath();
+  points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+  ctx.closePath();
+  ctx.save();
+  ctx.globalAlpha = 0.08;
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.restore();
+  ctx.setLineDash([10 * SCALE, 7 * SCALE]);
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = 3 * SCALE;
+  ctx.strokeStyle = color;
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+// Légende de la comparaison, alignée à droite dans le coin haut droit (zone libre de la
+// fiche, au-dessus du label Speed) : le build de la fiche en trait plein, puis chaque
+// build comparé en pointillé de sa couleur.
+function drawCompareLegend(ctx: CanvasRenderingContext2D, currentLabel: string, compares: RadarCompare[]) {
+  const right = CANVAS_W - 30 * SCALE;
+  const lineH = 30 * SCALE;
+  const swatch = 34 * SCALE;
+  ctx.font = `700 ${20 * SCALE}px "Noto Sans", "Segoe UI", sans-serif`;
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  const entries = [{ label: currentLabel, color: LAYER_STROKE, dashed: false }, ...compares.map(c => ({ ...c, dashed: true }))];
+  entries.forEach((entry, i) => {
+    const y = 34 * SCALE + i * lineH;
+    const label = entry.label.length > 32 ? `${entry.label.slice(0, 31)}…` : entry.label;
+    ctx.fillStyle = entry.color;
+    ctx.fillText(label, right, y);
+    const textW = ctx.measureText(label).width;
+    ctx.beginPath();
+    ctx.setLineDash(entry.dashed ? [7 * SCALE, 5 * SCALE] : []);
+    ctx.lineWidth = 3 * SCALE;
+    ctx.strokeStyle = entry.color;
+    ctx.moveTo(right - textW - 12 * SCALE - swatch, y);
+    ctx.lineTo(right - textW - 12 * SCALE, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  });
+}
+
 function drawIdentityCard(
   ctx: CanvasRenderingContext2D,
   name: string,
@@ -207,26 +261,44 @@ function loadImage(src: string): Promise<HTMLImageElement | null> {
   });
 }
 
-export async function exportRadarPng(
-  stats: Record<StatKey, number>,
-  level: number,
-  identity: RadarIdentity,
-  capAt10 = false,
-  layers: RadarLayer[] = [],
+// Tout ce qui définit une fiche radar exportée.
+export interface RadarSheet {
+  stats: Record<StatKey, number>;
+  level: number;
+  identity: RadarIdentity;
+  capAt10?: boolean;
+  layers?: RadarLayer[];
   // Système Shine-City : labels du pentagone en français (cf. LABELS_FR) au lieu des
   // noms de stats anglais d'origine unOrdinary utilisés partout ailleurs dans l'app.
-  frenchLabels = false,
-  modifier: RadarModifier | null = null,
+  frenchLabels?: boolean;
+  modifier?: RadarModifier | null;
   // Masque le niveau sur la fiche exportée (affiché "?.?", y compris le niveau modifié).
+  hideLevel?: boolean;
+  // Builds comparés superposés (export "comparaison"), avec légende ; vide sinon.
+  compares?: RadarCompare[];
+  // Nom du build de la fiche dans la légende de comparaison.
+  currentLabel?: string;
+}
+
+// Dessine la fiche et renvoie le PNG (null si le canvas est indisponible).
+export async function renderRadarPng({
+  stats,
+  level,
+  identity,
+  capAt10 = false,
+  layers = [],
+  frenchLabels = false,
+  modifier = null,
   hideLevel = false,
-  filename = `${identity.name.toLowerCase()}-radar.png`
-) {
+  compares = [],
+  currentLabel = 'Build actuel',
+}: RadarSheet): Promise<Blob | null> {
   const LABELS = frenchLabels ? LABELS_FR : LABELS_EN;
   const canvas = document.createElement('canvas');
   canvas.width = CANVAS_W;
   canvas.height = CANVAS_H;
   const ctx = canvas.getContext('2d');
-  if (!ctx) return;
+  if (!ctx) return null;
 
   // Attendre le chargement des polices web (Noto Sans pour les labels du radar,
   // Candara auto-hébergée pour la carte d'identité) avant de dessiner — sinon le
@@ -329,6 +401,9 @@ export async function exportRadarPng(
     layers.forEach((layer) => drawStatsPolygon(ctx, layer.stats, capAt10, LAYER_FILL, LAYER_STROKE));
   }
 
+  compares.forEach(c => drawComparePolygon(ctx, c.stats, capAt10, c.color));
+  if (compares.length > 0) drawCompareLegend(ctx, currentLabel, compares);
+
   // Ajustements fins par label : recovery/trick un peu plus loin du bord du pentagone,
   // defense remontée pour ne pas déborder sur le graphique.
   const LABEL_RADIUS_EXTRA: Partial<Record<StatKey, number>> = {
@@ -362,15 +437,22 @@ export async function exportRadarPng(
     }
   });
 
-  canvas.toBlob((blob) => {
-    if (!blob) return;
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }, 'image/png');
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+}
+
+export function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  // Révocation différée : certains navigateurs lisent encore l'URL juste après le clic.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+export async function exportRadarPng(sheet: RadarSheet, filename = `${sheet.identity.name.toLowerCase()}-radar.png`) {
+  const blob = await renderRadarPng(sheet);
+  if (blob) downloadBlob(blob, filename);
 }

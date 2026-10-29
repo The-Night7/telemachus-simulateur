@@ -1,4 +1,4 @@
-import { GitCompare, X } from 'lucide-react';
+import { Download, GitCompare, X } from 'lucide-react';
 import { STAT_KEYS, type Simulation, type StatKey } from '../lib/simulation';
 
 export interface CompareRow {
@@ -24,11 +24,13 @@ export function CompareTable({
   rows,
   onRemove,
   onClear,
+  onExportPng,
 }: {
   current: CompareRow;
   rows: CompareRow[];
   onRemove: (id: string) => void;
   onClear: () => void;
+  onExportPng: () => void;
 }) {
   const all = [current, ...rows];
   const best = (value: (row: CompareRow) => number) => Math.max(...all.map(value));
@@ -44,12 +46,22 @@ export function CompareTable({
           <GitCompare size={18} />
           Comparaison ({all.length} builds)
         </h2>
-        <button
-          onClick={onClear}
-          className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 hover:text-neutral-200 transition-colors"
-        >
-          Tout retirer
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onExportPng}
+            title="Exporter le graphique de la comparaison en PNG"
+            className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-neutral-400 hover:text-yellow-400 transition-colors"
+          >
+            <Download size={12} />
+            PNG
+          </button>
+          <button
+            onClick={onClear}
+            className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 hover:text-neutral-200 transition-colors"
+          >
+            Tout retirer
+          </button>
+        </div>
       </div>
       <p className="text-[11px] text-neutral-500 mb-3">
         Tous les builds sont simulés au niveau affiché ({current.sim.level.toFixed(1)}). En gras : la meilleure valeur de chaque colonne.

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Download, Eye, EyeOff, FolderOpen, GitCompare, Redo2, RefreshCw, RotateCcw, Share2, Sparkles, Target, Undo2, X } from 'lucide-react';
+import { Download, Eye, EyeOff, FolderOpen, Redo2, RefreshCw, RotateCcw, Share2, Sparkles, Target, Undo2, X } from 'lucide-react';
 import { useCapacites } from './lib/useCapacites';
 import { useBuild } from './lib/useBuild';
 import { exportRadarPng, type RadarIdentity } from './lib/exportRadarPng';
@@ -28,6 +28,8 @@ import { StatGrid } from './components/StatGrid';
 import { ModesDrawer } from './components/ModesDrawer';
 import { BuildsDrawer } from './components/BuildsDrawer';
 import { DescriptionsPanel } from './components/DescriptionsPanel';
+import { CompareTable, type CompareRow } from './components/CompareTable';
+import { compareColor } from './lib/compareColors';
 import tpPortrait from './assets/tp-pp.png';
 import telemachusHighTierPortrait from './assets/telemachus.jpg';
 import arlequinPortrait from './assets/arlequin.webp';
@@ -72,7 +74,9 @@ export default function App() {
 
   const [savedBuilds, setSavedBuilds] = useState<SavedBuild[]>(loadSavedBuilds);
   useEffect(() => storeSavedBuilds(savedBuilds), [savedBuilds]);
-  const [compareId, setCompareId] = useState<string | null>(null);
+  // Builds enregistrés comparés, dans l'ordre de sélection (qui fixe leur couleur).
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+  const removeCompare = useCallback((id: string) => setCompareIds(prev => prev.filter(x => x !== id)), []);
 
   // Emplacement dont le panneau "Modes" (variantes style Phase Shift) est ouvert.
   const [activeModeDrawer, setActiveModeDrawer] = useState<number | null>(null);
@@ -120,14 +124,16 @@ export default function App() {
     [capacites, build.potential, build.mastery]
   );
 
-  // --- BUILD COMPARÉ ---
-  const compared = useMemo(() => {
-    const saved = compareId ? savedBuilds.find(b => b.id === compareId) : null;
-    if (!saved || capacites.length === 0) return null;
-    const restored = restoreAtDisplayedLevel(saved);
-    if (!restored) return null;
-    return { saved, sim: simulateBuild(normalizeBuild(restored), capacites) };
-  }, [compareId, savedBuilds, capacites, restoreAtDisplayedLevel]);
+  // --- BUILDS COMPARÉS ---
+  const compared = useMemo((): CompareRow[] => {
+    if (capacites.length === 0) return [];
+    return compareIds.flatMap((id, index) => {
+      const saved = savedBuilds.find(b => b.id === id);
+      const restored = saved && restoreAtDisplayedLevel(saved);
+      if (!saved || !restored) return [];
+      return [{ id, name: saved.name, color: compareColor(index), sim: simulateBuild(normalizeBuild(restored), capacites) }];
+    });
+  }, [compareIds, savedBuilds, capacites, restoreAtDisplayedLevel]);
 
   const activeBoostsCount = STAT_KEYS.filter(k => build.boosts[k] > 0 && sim.boostOptions[k][build.boosts[k] - 1]).length;
 
@@ -169,7 +175,7 @@ export default function App() {
     const restored = saved && restoreAtDisplayedLevel(saved);
     if (!restored) return;
     commit(restored);
-    if (compareId === id) setCompareId(null);
+    removeCompare(id);
     setBuildsOpen(false);
     // À ce niveau, le tier peut avoir moins d'emplacements ou la réserve d'aura être
     // plus petite que pour le build d'origine : on le signale plutôt que de le taire.
@@ -431,7 +437,7 @@ export default function App() {
               capAt10={prefs.capAt10}
               amplifiedStats={sim.ampOn ? sim.statsFinales : null}
               deamplifiedStats={sim.deampOn ? sim.statsFinales : null}
-              compareStats={compared?.sim.statsFinales ?? null}
+              compares={compared.map(c => ({ id: c.id, stats: c.sim.statsFinales, color: c.color }))}
             />
           </div>
 
@@ -453,15 +459,22 @@ export default function App() {
           )}
 
           <div className="w-full flex flex-wrap items-center justify-center sm:justify-between gap-2 mb-3 sm:px-2">
-            {compared ? (
-              <div className="flex items-center gap-2 text-[12px] text-cyan-300 bg-cyan-400/10 border border-cyan-400/30 rounded-full pl-2.5 pr-1 py-0.5 max-w-full">
-                <GitCompare size={12} className="shrink-0" />
-                <span className="truncate">
-                  vs <span className="font-bold">{compared.saved.name}</span> · Niv eff. {compared.sim.effectiveLevel}
-                </span>
-                <button onClick={() => setCompareId(null)} aria-label="Arrêter la comparaison" className="p-0.5 rounded-full hover:bg-cyan-400/20">
-                  <X size={12} />
-                </button>
+            {compared.length > 0 ? (
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 min-w-0">
+                {compared.map(c => (
+                  <span
+                    key={c.id}
+                    className="flex items-center gap-1.5 text-[12px] rounded-full pl-2.5 pr-1 py-0.5 max-w-full border"
+                    style={{ color: c.color, borderColor: `${c.color}66`, backgroundColor: `${c.color}14` }}
+                  >
+                    <span className="shrink-0 w-3 border-t-2 border-dashed" style={{ borderColor: c.color }} />
+                    <span className="truncate max-w-[10rem] font-bold">{c.name}</span>
+                    {compared.length === 1 && <span className="shrink-0 opacity-80">· Niv eff. {c.sim.effectiveLevel}</span>}
+                    <button onClick={() => removeCompare(c.id)} aria-label={`Retirer ${c.name} de la comparaison`} className="p-0.5 rounded-full hover:bg-white/10">
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
               </div>
             ) : (
               <span />
@@ -473,9 +486,25 @@ export default function App() {
             </div>
           </div>
 
-          <StatGrid build={build} sim={sim} onBoost={handleBoost} compareStats={compared?.sim.statsFinales ?? null} />
+          <StatGrid
+            build={build}
+            sim={sim}
+            onBoost={handleBoost}
+            compareStats={compared.length === 1 ? compared[0].sim.statsFinales : null}
+          />
         </div>
       </div>
+
+      {compared.length > 0 && (
+        <div className="max-w-6xl mx-auto mt-6 lg:mt-10">
+          <CompareTable
+            current={{ id: '__current__', name: 'Build actuel', color: '#ffd700', sim }}
+            rows={compared}
+            onRemove={removeCompare}
+            onClear={() => setCompareIds([])}
+          />
+        </div>
+      )}
 
       {activeModeDrawer !== null && drawerCap && (
         <ModesDrawer
@@ -490,16 +519,15 @@ export default function App() {
       {buildsOpen && (
         <BuildsDrawer
           builds={savedBuilds}
-          compareId={compareId}
+          compareIds={compareIds}
           onSave={name => {
             addSavedBuild(name, toPortable(build, capacites));
             setToast({ message: `« ${name} » enregistré.` });
           }}
           onLoad={handleLoadSaved}
-          onCompare={id => {
-            setCompareId(id);
-            if (id) setBuildsOpen(false);
-          }}
+          onToggleCompare={id => setCompareIds(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]))}
+          onCompareAll={() => setCompareIds(prev => [...prev, ...savedBuilds.map(b => b.id).filter(id => !prev.includes(id))])}
+          onClearCompare={() => setCompareIds([])}
           onShare={id => {
             const saved = savedBuilds.find(b => b.id === id);
             if (saved) copyLink(saved.build);
@@ -507,7 +535,7 @@ export default function App() {
           onRename={(id, name) => setSavedBuilds(prev => prev.map(b => (b.id === id ? { ...b, name } : b)))}
           onDelete={id => {
             setSavedBuilds(prev => prev.filter(b => b.id !== id));
-            if (compareId === id) setCompareId(null);
+            removeCompare(id);
           }}
           onExport={handleExportBuilds}
           onImport={handleImportBuilds}

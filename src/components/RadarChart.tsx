@@ -9,7 +9,7 @@ export const RadarChart = ({
   capAt10 = false,
   amplifiedStats = null,
   deamplifiedStats = null,
-  compareStats = null,
+  compares = [],
 }: {
   stats: Stats;
   boosts: Stats;
@@ -20,8 +20,9 @@ export const RadarChart = ({
   // (stats = build au niveau réel), comme dans le simulateur de John.
   amplifiedStats?: Stats | null;
   deamplifiedStats?: Stats | null;
-  // Build enregistré à comparer : contour pointillé cyan par-dessus le build courant.
-  compareStats?: Stats | null;
+  // Builds enregistrés à comparer : un contour pointillé coloré chacun, par-dessus le
+  // build courant.
+  compares?: { id: string; stats: Stats; color: string }[];
 }) => {
   const maxStat = 10;
   const size = 500;
@@ -101,17 +102,19 @@ export const RadarChart = ({
           />
         ))}
 
-        {compareStats && (
+        {compares.map(c => (
           <polygon
-            points={getPoints(compareStats, capAt10)}
-            fill="rgba(34, 211, 238, 0.06)"
-            stroke="#22d3ee"
+            key={`compare-${c.id}`}
+            points={getPoints(c.stats, capAt10)}
+            fill={c.color}
+            fillOpacity={compares.length > 1 ? 0.03 : 0.06}
+            stroke={c.color}
             strokeWidth="2.5"
             strokeDasharray="7 5"
             strokeLinejoin="round"
             className="transition-all duration-500 ease-in-out"
           />
-        )}
+        ))}
 
         {/* Nodes : marquent les sommets de l'Aura Shape, donc masqués avec elle et
             plafonnés comme elle (capAt10) — seuls Aura Shape/Nodes respectent l'option. */}

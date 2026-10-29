@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Check, Download, FolderOpen, GitCompare, Link2, Pencil, Save, Trash2, Upload } from 'lucide-react';
+import { Check, Download, FolderOpen, GitCompare, Link2, Pencil, Save, Trash2, Upload, X } from 'lucide-react';
+import { compareColor } from '../lib/compareColors';
 import type { SavedBuild } from '../lib/buildStorage';
 import { computeLevel } from '../lib/simulation';
 import { SideDrawer } from './SideDrawer';
@@ -38,10 +39,12 @@ const actionClass =
 // exporter / importer en masse. Charger et comparer se font au niveau affiché (cf. App).
 export function BuildsDrawer({
   builds,
-  compareId,
+  compareIds,
   onSave,
   onLoad,
-  onCompare,
+  onToggleCompare,
+  onCompareAll,
+  onClearCompare,
   onShare,
   onRename,
   onDelete,
@@ -50,10 +53,13 @@ export function BuildsDrawer({
   onClose,
 }: {
   builds: SavedBuild[];
-  compareId: string | null;
+  // Builds comparés, dans l'ordre de sélection (qui fixe leur couleur, cf. compareColor).
+  compareIds: string[];
   onSave: (name: string) => void;
   onLoad: (id: string) => void;
-  onCompare: (id: string | null) => void;
+  onToggleCompare: (id: string) => void;
+  onCompareAll: () => void;
+  onClearCompare: () => void;
   onShare: (id: string) => void;
   onRename: (id: string, name: string) => void;
   onDelete: (id: string) => void;
@@ -147,6 +153,35 @@ export function BuildsDrawer({
         />
       </div>
 
+      {builds.length > 1 && (
+        <div className="mt-3 flex items-center justify-between gap-2 rounded-lg border border-neutral-800 px-3 py-2">
+          <span className="text-[11px] text-neutral-400">
+            {compareIds.length === 0
+              ? 'Aucun build comparé'
+              : `${compareIds.length} build${compareIds.length > 1 ? 's' : ''} comparé${compareIds.length > 1 ? 's' : ''}`}
+          </span>
+          {compareIds.length < builds.length ? (
+            <button
+              type="button"
+              onClick={onCompareAll}
+              className={`${actionClass} border-neutral-700 text-neutral-300 hover:border-neutral-500 hover:text-neutral-100`}
+            >
+              <GitCompare size={12} />
+              Tout comparer
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onClearCompare}
+              className={`${actionClass} border-neutral-700 text-neutral-300 hover:border-neutral-500 hover:text-neutral-100`}
+            >
+              <X size={12} />
+              Tout retirer
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="mt-5 space-y-3">
         {builds.length === 0 && (
           <p className="text-xs text-neutral-500">
@@ -155,14 +190,15 @@ export function BuildsDrawer({
         )}
         {builds.map(saved => {
           const summary = summarize(saved);
-          const isComparing = compareId === saved.id;
+          const compareIndex = compareIds.indexOf(saved.id);
+          const isComparing = compareIndex >= 0;
+          const color = isComparing ? compareColor(compareIndex) : undefined;
           const isEditing = editingId === saved.id;
           return (
             <div
               key={saved.id}
-              className={`rounded-xl border p-3 transition-colors ${
-                isComparing ? 'border-cyan-400/60 bg-cyan-400/5' : 'border-neutral-800 bg-neutral-950'
-              }`}
+              className="rounded-xl border p-3 transition-colors border-neutral-800 bg-neutral-950"
+              style={color ? { borderColor: color, boxShadow: `inset 3px 0 0 ${color}` } : undefined}
             >
               <div className="flex items-start gap-2">
                 <div className="flex-1 min-w-0">
@@ -221,12 +257,11 @@ export function BuildsDrawer({
                 </button>
                 <button
                   type="button"
-                  onClick={() => onCompare(isComparing ? null : saved.id)}
+                  onClick={() => onToggleCompare(saved.id)}
                   className={`${actionClass} ${
-                    isComparing
-                      ? 'border-cyan-400 bg-cyan-400/15 text-cyan-300'
-                      : 'border-neutral-700 text-neutral-300 hover:border-cyan-400/60 hover:text-cyan-300'
+                    isComparing ? '' : 'border-neutral-700 text-neutral-300 hover:border-neutral-500 hover:text-neutral-100'
                   }`}
+                  style={color ? { borderColor: color, color, backgroundColor: `${color}22` } : undefined}
                 >
                   {isComparing ? <Check size={12} /> : <GitCompare size={12} />}
                   {isComparing ? 'Comparé' : 'Comparer'}

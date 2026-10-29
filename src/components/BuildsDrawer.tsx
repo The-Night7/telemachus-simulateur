@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Check, Download, FolderOpen, GitCompare, Image, Images, Link2, Pencil, Save, Trash2, Upload, X } from 'lucide-react';
+import { Check, Download, FolderOpen, GitCompare, Image, Images, LayoutGrid, Link2, Pencil, Save, Trash2, Upload, X } from 'lucide-react';
 import { compareColor } from '../lib/compareColors';
 import type { SavedBuild } from '../lib/buildStorage';
 import { computeLevel } from '../lib/simulation';
@@ -68,7 +68,7 @@ export function BuildsDrawer({
   onDelete: (id: string) => void;
   onExport: () => void;
   onExportAllPng: () => void;
-  onExportComparePng: () => void;
+  onExportComparePng: (layout: 'overlay' | 'grid') => void;
   pngBusy: boolean;
   onImport: (file: File) => void;
   onClose: () => void;
@@ -165,7 +165,7 @@ export function BuildsDrawer({
           type="button"
           onClick={onExportAllPng}
           disabled={builds.length === 0 || pngBusy}
-          className={`${actionClass} justify-center whitespace-nowrap py-1.5 border-neutral-700 text-neutral-300 hover:border-yellow-500/60 hover:text-yellow-400 disabled:opacity-30 disabled:pointer-events-none`}
+          className={`${actionClass} col-span-2 justify-center whitespace-nowrap py-1.5 border-neutral-700 text-neutral-300 hover:border-yellow-500/60 hover:text-yellow-400 disabled:opacity-30 disabled:pointer-events-none`}
           title="Un zip avec la fiche radar de chaque build enregistré, au niveau affiché"
         >
           <Images size={12} />
@@ -173,7 +173,7 @@ export function BuildsDrawer({
         </button>
         <button
           type="button"
-          onClick={onExportComparePng}
+          onClick={() => onExportComparePng('overlay')}
           disabled={compareIds.length === 0}
           className={`${actionClass} justify-center whitespace-nowrap py-1.5 border-neutral-700 text-neutral-300 hover:border-yellow-500/60 hover:text-yellow-400 disabled:opacity-30 disabled:pointer-events-none`}
           title={
@@ -184,6 +184,20 @@ export function BuildsDrawer({
         >
           <Image size={12} />
           Comparaison{compareIds.length > 0 ? ` (${compareIds.length})` : ''}
+        </button>
+        <button
+          type="button"
+          onClick={() => onExportComparePng('grid')}
+          disabled={compareIds.length === 0}
+          className={`${actionClass} justify-center whitespace-nowrap py-1.5 border-neutral-700 text-neutral-300 hover:border-yellow-500/60 hover:text-yellow-400 disabled:opacity-30 disabled:pointer-events-none`}
+          title={
+            compareIds.length === 0
+              ? 'Cochez « Comparer » sur des builds pour exporter leur grille'
+              : 'Une planche : un petit radar par build comparé, superposé au build actuel'
+          }
+        >
+          <LayoutGrid size={12} />
+          Grille{compareIds.length > 0 ? ` (${compareIds.length})` : ''}
         </button>
       </div>
 

@@ -1,4 +1,4 @@
-import { Download, GitCompare, X } from 'lucide-react';
+import { Download, GitCompare, LayoutGrid, X } from 'lucide-react';
 import { STAT_KEYS, type Simulation, type StatKey } from '../lib/simulation';
 
 export interface CompareRow {
@@ -30,7 +30,7 @@ export function CompareTable({
   rows: CompareRow[];
   onRemove: (id: string) => void;
   onClear: () => void;
-  onExportPng: () => void;
+  onExportPng: (layout: 'overlay' | 'grid') => void;
 }) {
   const all = [current, ...rows];
   const best = (value: (row: CompareRow) => number) => Math.max(...all.map(value));
@@ -48,12 +48,20 @@ export function CompareTable({
         </h2>
         <div className="flex items-center gap-3">
           <button
-            onClick={onExportPng}
-            title="Exporter le graphique de la comparaison en PNG"
+            onClick={() => onExportPng('overlay')}
+            title="Une fiche PNG avec tous les builds superposés"
             className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-neutral-400 hover:text-yellow-400 transition-colors"
           >
             <Download size={12} />
             PNG
+          </button>
+          <button
+            onClick={() => onExportPng('grid')}
+            title="Une planche PNG avec un petit radar par build"
+            className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-neutral-400 hover:text-yellow-400 transition-colors"
+          >
+            <LayoutGrid size={12} />
+            Grille
           </button>
           <button
             onClick={onClear}

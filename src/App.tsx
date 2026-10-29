@@ -30,7 +30,7 @@ import { ModesDrawer } from './components/ModesDrawer';
 import { BuildsDrawer } from './components/BuildsDrawer';
 import { DescriptionsPanel } from './components/DescriptionsPanel';
 import { CompareTable, type CompareRow } from './components/CompareTable';
-import { COMPARE_COLORS, compareColor, exportCompareColor } from './lib/compareColors';
+import { compareColor, exportCompareColor } from './lib/compareColors';
 import tpPortrait from './assets/tp-pp.png';
 import telemachusHighTierPortrait from './assets/telemachus.jpg';
 import arlequinPortrait from './assets/arlequin.webp';
@@ -234,20 +234,19 @@ export default function App() {
     }
   };
 
-  // Une seule fiche : le build actuel avec les builds comparés superposés en pointillés.
-  const handleExportComparePng = () => {
+  // Comparaison en PNG : "overlay" = une fiche avec tous les builds comparés superposés
+  // en pointillés ; "grid" = une planche avec un petit radar par build.
+  const handleExportComparePng = (layout: 'overlay' | 'grid') => {
     if (compared.length === 0) return;
     const identity = radarIdentities[identityIndex];
     exportRadarPng(
       sheetFor(sim, build.tab, {
-        compares: compared.map(c => ({
-          label: c.name,
-          stats: c.sim.statsFinales,
-          color: exportCompareColor(COMPARE_COLORS.indexOf(c.color)),
-        })),
+        compares: compared.map((c, i) => ({ label: c.name, stats: c.sim.statsFinales, color: exportCompareColor(i) })),
         currentLabel: 'Build actuel',
+        compareBaseStats: sim.statsFinales,
+        compareLayout: layout,
       }),
-      `${identity.name.toLowerCase()}-comparaison-${today()}.png`
+      `${identity.name.toLowerCase()}-${layout === 'grid' ? 'grille' : 'comparaison'}-${today()}.png`
     );
   };
 

@@ -202,13 +202,17 @@ const writeJson = (key: string, value: unknown) => {
 export const loadCurrentBuild = () => readJson(KEYS.current);
 export const saveCurrentBuild = (portable: PortableBuild) => writeJson(KEYS.current, portable);
 
+const isSavedBuild = (b: unknown): b is SavedBuild => {
+  const c = b as Partial<SavedBuild> | null;
+  return (
+    !!c && typeof c.id === 'string' && typeof c.name === 'string' && typeof c.savedAt === 'number' &&
+    !!c.build && typeof c.build === 'object' && Array.isArray(c.build.s)
+  );
+};
+
 export const loadSavedBuilds = (): SavedBuild[] => {
   const raw = readJson(KEYS.saved);
-  if (!Array.isArray(raw)) return [];
-  return raw.filter(
-    (b): b is SavedBuild =>
-      b && typeof b.id === 'string' && typeof b.name === 'string' && typeof b.savedAt === 'number' && !!b.build
-  );
+  return Array.isArray(raw) ? raw.filter(isSavedBuild) : [];
 };
 export const storeSavedBuilds = (builds: SavedBuild[]) => writeJson(KEYS.saved, builds);
 
@@ -229,5 +233,26 @@ export const loadPrefs = (): Prefs => {
   };
 };
 export const storePrefs = (prefs: Prefs) => writeJson(KEYS.prefs, prefs);
+
+// --- Export / import en masse des builds enregistrés (fichier JSON) ---
+const EXPORT_FORMAT = 'telemachus-simulateur/builds';
+
+export const serializeSavedBuilds = (builds: SavedBuild[]) =>
+  JSON.stringify({ format: EXPORT_FORMAT, version: 1, exportedAt: new Date().toISOString(), builds }, null, 2);
+
+// Accepte un export de l'app ({ format, builds }) ou directement un tableau de builds.
+// Les entrées invalides sont ignorées ; chaque build importé reçoit un nouvel id pour
+// ne jamais écraser un build existant.
+export const parseImportedBuilds = (text: string): SavedBuild[] | null => {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    return null;
+  }
+  const list = Array.isArray(raw) ? raw : (raw as { builds?: unknown } | null)?.builds;
+  if (!Array.isArray(list)) return null;
+  return list.filter(isSavedBuild).map(b => ({ ...b, id: newSavedBuildId(), name: b.name.slice(0, 60) }));
+};
 
 export const newSavedBuildId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;

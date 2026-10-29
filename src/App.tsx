@@ -3,7 +3,7 @@ import { Download, Eye, EyeOff, FolderOpen, GitCompare, Redo2, RefreshCw, Rotate
 import { useCapacites } from './lib/useCapacites';
 import { useBuild } from './lib/useBuild';
 import { exportRadarPng, type RadarIdentity } from './lib/exportRadarPng';
-import { simulateBuild, STAT_KEYS, type StatKey, type SystemTab, type TargetModifier } from './lib/simulation';
+import { simulateBuild, STAT_KEYS, type BuildState, type StatKey, type SystemTab, type TargetModifier } from './lib/simulation';
 import { cycleBoost, normalizeBuild, resetBuild, switchTab, toggleExtraMode, toggleTargetModifier, updateSlot } from './lib/buildActions';
 import {
   buildShareUrl,
@@ -11,6 +11,8 @@ import {
   loadPrefs,
   loadSavedBuilds,
   newSavedBuildId,
+  parseImportedBuilds,
+  serializeSavedBuilds,
   storePrefs,
   storeSavedBuilds,
   toPortable,
@@ -107,14 +109,25 @@ export default function App() {
   );
   const identityIndex = Math.min(prefs.identityIndex, radarIdentities.length - 1);
 
+  // Un build enregistré est toujours chargé / comparé au niveau AFFICHÉ (Potentiel /
+  // Maîtrise actuels) : seuls ses capacités, modes, modificateurs et boosts sont repris,
+  // pour comparer des loadouts à niveau égal. Le niveau enregistré est ignoré.
+  const restoreAtDisplayedLevel = useCallback(
+    (saved: SavedBuild): BuildState | null => {
+      const restored = fromPortable(saved.build, capacites);
+      return restored && { ...restored, potential: build.potential, mastery: build.mastery };
+    },
+    [capacites, build.potential, build.mastery]
+  );
+
   // --- BUILD COMPARÉ ---
   const compared = useMemo(() => {
     const saved = compareId ? savedBuilds.find(b => b.id === compareId) : null;
     if (!saved || capacites.length === 0) return null;
-    const restored = fromPortable(saved.build, capacites);
+    const restored = restoreAtDisplayedLevel(saved);
     if (!restored) return null;
     return { saved, sim: simulateBuild(normalizeBuild(restored), capacites) };
-  }, [compareId, savedBuilds, capacites]);
+  }, [compareId, savedBuilds, capacites, restoreAtDisplayedLevel]);
 
   const activeBoostsCount = STAT_KEYS.filter(k => build.boosts[k] > 0 && sim.boostOptions[k][build.boosts[k] - 1]).length;
 
@@ -153,12 +166,46 @@ export default function App() {
 
   const handleLoadSaved = (id: string) => {
     const saved = savedBuilds.find(b => b.id === id);
-    const restored = saved && fromPortable(saved.build, capacites);
+    const restored = saved && restoreAtDisplayedLevel(saved);
     if (!restored) return;
     commit(restored);
     if (compareId === id) setCompareId(null);
     setBuildsOpen(false);
-    setToast({ message: `« ${saved.name} » chargé. Annuler pour revenir en arrière.` });
+    // À ce niveau, le tier peut avoir moins d'emplacements ou la réserve d'aura être
+    // plus petite que pour le build d'origine : on le signale plutôt que de le taire.
+    const check = simulateBuild(normalizeBuild(restored), capacites);
+    const lostSlots = restored.slots.filter(Boolean).length - check.slotsUsed;
+    const warnings = [
+      lostSlots > 0 && `${lostSlots} capacité${lostSlots > 1 ? 's' : ''} retirée${lostSlots > 1 ? 's' : ''} (tier trop bas)`,
+      check.currentAuraDrain > check.maxAura && "réserve d'aura dépassée",
+    ].filter(Boolean);
+    setToast({
+      message: `« ${saved.name} » chargé au niveau ${check.level.toFixed(1)}${warnings.length ? ` — ${warnings.join(', ')}` : ''}. Ctrl+Z pour annuler.`,
+    });
+  };
+
+  const handleExportBuilds = () => {
+    const blob = new Blob([serializeSavedBuilds(savedBuilds)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `telemachus-builds-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportBuilds = async (file: File) => {
+    const imported = parseImportedBuilds(await file.text());
+    if (!imported) return setToast({ message: "Fichier illisible : ce n'est pas un export de builds." });
+    // Un build identique (même nom, même contenu) déjà présent n'est pas dupliqué.
+    const signature = (b: SavedBuild) => `${b.name}\u0000${JSON.stringify(b.build)}`;
+    const existing = new Set(savedBuilds.map(signature));
+    const fresh = imported.filter(b => !existing.has(signature(b)));
+    setSavedBuilds(prev => [...fresh, ...prev]);
+    const skipped = imported.length - fresh.length;
+    setToast({
+      message: `${fresh.length} build${fresh.length > 1 ? 's' : ''} importé${fresh.length > 1 ? 's' : ''}${skipped ? ` (${skipped} déjà présent${skipped > 1 ? 's' : ''})` : ''}.`,
+    });
   };
 
   // Raccourcis : Ctrl/⌘+Z annuler, Ctrl/⌘+Maj+Z ou Ctrl+Y rétablir — sauf dans un
@@ -462,6 +509,8 @@ export default function App() {
             setSavedBuilds(prev => prev.filter(b => b.id !== id));
             if (compareId === id) setCompareId(null);
           }}
+          onExport={handleExportBuilds}
+          onImport={handleImportBuilds}
           onClose={closeBuilds}
         />
       )}

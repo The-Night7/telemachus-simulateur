@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Check, FolderOpen, GitCompare, Link2, Pencil, Save, Trash2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Check, Download, FolderOpen, GitCompare, Link2, Pencil, Save, Trash2, Upload } from 'lucide-react';
 import type { SavedBuild } from '../lib/buildStorage';
 import { computeLevel } from '../lib/simulation';
 import { SideDrawer } from './SideDrawer';
@@ -23,7 +23,7 @@ const summarize = (saved: SavedBuild) => {
         ? 'Déamp ÷2'
         : null;
   return {
-    level: computeLevel(build.p, build.m).toFixed(1),
+    savedLevel: computeLevel(build.p, build.m).toFixed(1),
     system: build.tab === 'alternative' ? 'Shine-City' : 'Classique',
     modifier,
     abilities,
@@ -34,7 +34,8 @@ const actionClass =
   'flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold border transition-colors';
 
 // Builds enregistrés dans le navigateur : sauvegarder le build courant, recharger,
-// comparer (contour pointillé sur le radar), partager par lien, renommer, supprimer.
+// comparer (contour pointillé sur le radar), partager par lien, renommer, supprimer,
+// exporter / importer en masse. Charger et comparer se font au niveau affiché (cf. App).
 export function BuildsDrawer({
   builds,
   compareId,
@@ -44,6 +45,8 @@ export function BuildsDrawer({
   onShare,
   onRename,
   onDelete,
+  onExport,
+  onImport,
   onClose,
 }: {
   builds: SavedBuild[];
@@ -54,12 +57,15 @@ export function BuildsDrawer({
   onShare: (id: string) => void;
   onRename: (id: string, name: string) => void;
   onDelete: (id: string) => void;
+  onExport: () => void;
+  onImport: (file: File) => void;
   onClose: () => void;
 }) {
   const [name, setName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // La confirmation de suppression expire d'elle-même (pas de boîte de dialogue).
   useEffect(() => {
@@ -81,7 +87,7 @@ export function BuildsDrawer({
   return (
     <SideDrawer
       title="Builds"
-      subtitle="Enregistrés dans ce navigateur. Comparez-en un au build actuel, ou partagez-le par lien."
+      subtitle="Enregistrés dans ce navigateur. Charger et comparer se font au niveau affiché (Potentiel / Maîtrise actuels)."
       icon={<FolderOpen size={18} className="text-yellow-500" />}
       onClose={onClose}
     >
@@ -107,6 +113,39 @@ export function BuildsDrawer({
           Enregistrer
         </button>
       </form>
+
+      <div className="mt-3 flex gap-2">
+        <button
+          type="button"
+          onClick={onExport}
+          disabled={builds.length === 0}
+          className={`${actionClass} flex-1 justify-center py-1.5 border-neutral-700 text-neutral-300 hover:border-yellow-500/60 hover:text-yellow-400 disabled:opacity-30 disabled:pointer-events-none`}
+          title="Télécharger tous les builds enregistrés dans un fichier JSON"
+        >
+          <Download size={12} />
+          Exporter tout
+        </button>
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className={`${actionClass} flex-1 justify-center py-1.5 border-neutral-700 text-neutral-300 hover:border-yellow-500/60 hover:text-yellow-400`}
+          title="Ajouter les builds d'un fichier JSON exporté (les builds existants sont conservés)"
+        >
+          <Upload size={12} />
+          Importer
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/json,.json"
+          className="hidden"
+          onChange={e => {
+            const file = e.target.files?.[0];
+            if (file) onImport(file);
+            e.target.value = '';
+          }}
+        />
+      </div>
 
       <div className="mt-5 space-y-3">
         {builds.length === 0 && (
@@ -155,7 +194,7 @@ export function BuildsDrawer({
                     </button>
                   )}
                   <p className="text-[11px] text-neutral-500 mt-0.5">
-                    Niv {summary.level} · {summary.system}
+                    Enregistré niv {summary.savedLevel} · {summary.system}
                     {summary.modifier ? ` · ${summary.modifier}` : ''} · {formatDate(saved.savedAt)}
                   </p>
                 </div>
